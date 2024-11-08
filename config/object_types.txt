@@ -1,0 +1,13 @@
+# First entry is object main name (e.g. TAXA)
+# followed by object sub names (e.g. Species)
+# To have standard empty as first sub item add ;; (empty sub name)
+#
+Dugong;;Dugong
+Dolphin;Unknown;Common Dolphin
+Ray;Unknown;Stingray;Skates;Electric Ray;Shovelnose;Unidentified small;Unidentified large
+Shark;Unknown;White;Hammerhead
+SeaSnake;Unknown;SeaSnake
+Whale;Unknown;Antartic;Minke;Killer;Southern Right;Antartic;Humpback;Fin;Pygmy Blue;Sperm;Pilot;Unidentified small;Unidentified large
+Turtle;Unknown;Sea Turtle
+Bird;Unknown;Penguins;Albatross;Pelican;Gull;Unidentified large
+Unknown Animal

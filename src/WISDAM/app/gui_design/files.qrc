@@ -1,0 +1,50 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>icons/ico-arrow-bottom.png</file>
+    <file>icons/lasso.svg</file>
+    <file>icons/lasso_active_selection.svg</file>
+    <file>icons/rectangle_active_selection.svg</file>
+    <file>icons/WISDAM_Icon_square_small.svg</file>
+    <file>icons/WISDAM_Icon_square.svg</file>
+    <file>icons/menu-main.svg</file>
+    <file>icons/menu-save.svg</file>
+    <file>icons/menu-map.svg</file>
+    <file>icons/menu-compare.svg</file>
+    <file>icons/menu-ai.svg</file>
+    <file>icons/menu-gallery.svg</file>
+    <file>icons/menu-image.svg</file>
+    <file>icons/menu-home.svg</file>
+    <file>icons/menu-import.svg</file>
+    <file>icons/linestring.svg</file>
+    <file>icons/linestring_active.svg</file>
+    <file>icons/point_active.svg</file>
+    <file>icons/menu-mug-tea.svg</file>
+    <file>icons/point.svg</file>
+    <file>icons/WISDAM_Icon Logo_Black.png</file>
+    <file>icons/WISDAM_Icon_square.png</file>
+    <file>icons/WISDAM_Aligned Logo_White.svg</file>
+    <file>icons/WISDAM_Hero Logo_White.svg</file>
+    <file>icons/flat_cross_icon.svg</file>
+    <file>icons/flat_tick_icon.svg</file>
+    <file>icons/flat_tick_icon_yellow.svg</file>
+    <file>icons/heading_info.svg</file>
+    <file>icons/rectangle_active.svg</file>
+    <file>icons/polygon_active.svg</file>
+    <file>icons/circle_active.svg</file>
+    <file>icons/polygon.svg</file>
+    <file>icons/rectangle.svg</file>
+    <file>icons/circle.svg</file>
+    <file>icons/grid_nav.svg</file>
+    <file>icons/fit_view.svg</file>
+    <file>icons/color_pick_background.png</file>
+    <file>icons/starred.svg</file>
+    <file>icons/ico-size-grip.png</file>
+    <file>icons/error-40.svg</file>
+    <file>icons/info-40.svg</file>
+    <file>icons/warning-40.svg</file>
+    <file>icons/ico-window-maximize.png</file>
+    <file>icons/ico-window-minimize.png</file>
+    <file>icons/ico-window-restore.png</file>
+    <file>icons/ico-x.png</file>
+  </qresource>
+</RCC>

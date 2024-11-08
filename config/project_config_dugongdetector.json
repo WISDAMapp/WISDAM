@@ -1,0 +1,122 @@
+{
+   "meta_config":
+   {
+		"wisdam_default_012024": 
+		{
+			"object_types": {
+				 "dugong": [
+					"",
+					"dugong"
+				 ],
+				 "dolphin": [
+					"unknown",
+					"common dolphin"
+				 ],
+				 "ray": [
+					"unknown",
+					"stingray",
+					"skates",
+					"electric ray",
+					"shovel nose",
+					"unidentified small",
+					"unidentified large"
+				 ],
+				 "shark": [
+					"unknown",
+					"white",
+					"hammerhead"
+				 ],
+				 "seasnake": [
+					"unknown",
+					"seasnake"
+				 ],
+				 "whale": [
+					"unknown",
+					"antarctic",
+					"minke",
+					"killer",
+					"southern right",
+					"humpback",
+					"fin",
+					"pygmy blue",
+					"sperm",
+					"pilot",
+					"unidentified small",
+					"unidentified large"
+				 ],
+				 "turtle": [
+					"unknown",
+					"sea turtle"
+				 ],
+				 "bird": [
+					"unknown",
+					"penguins",
+					"albatross",
+					"pelican",
+					"gull",
+					"unidentified small",
+					"unidentified large"
+				 ],
+				 "unknown animal": []
+			},
+			"object_main_type":{"naming": "Taxa"},
+			"object_sub_type" :
+				{
+				"naming": "Animal/Species",
+				"object_sub_type_option": { "name": "Species Surety",
+											 "value_0": "Certain",
+											 "value_1": "Probable",
+											 "value_2": "Guess",
+														 "start_value": 2}
+				},
+			"slider_triple1": 
+				{
+				 "name": "Individual Type",
+				 "value_0": "Single",
+				 "value_1": "Mother",
+				 "value_2": "Calf",
+				 "start_value": 0
+				},
+			"slider_triple2": 
+				{
+				 "name": "Water Position",
+				 "value_0": "Surface",
+				 "value_1": "Mid-water",
+				 "value_2": "Bottom",
+				 "start_value": 0
+				}
+		}
+	},
+	"environment_data":
+	{
+		"Turbidity": [
+			 "1",
+			 "2",
+			 "3",
+			 "4"
+		  ],
+		"Sea State": 
+		[
+			 "0",
+			 "1",
+			 "2",
+			 "3",
+			 "4",
+			 "5",
+			 "6"
+		  ],
+		"Glare": 
+		[
+			 "0",
+			 "1",
+			 "2",
+			 "3"
+		]
+	},
+	"environment_propagation":
+	{
+		"first_object_set_override_none_image": false,
+		"first_object_set_override_porpagated_image": false
+		
+   }
+}

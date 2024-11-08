@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg8548"
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   sodipodi:docname="menu-image.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8552" />
+  <sodipodi:namedview
+     id="namedview8550"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="19.500001"
+     inkscape:cx="8.6410251"
+     inkscape:cy="14.794871"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g8554" />
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Image"
+     id="g8554">
+    <rect
+       style="fill:none;stroke:#ffffff;stroke-width:2.0016;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="rect9742"
+       width="13.998404"
+       height="13.998402"
+       x="1.0007986"
+       y="1.0007986" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 0.92307687,8.461538 5.9487176,3.3846152 14.615384,11.846153"
+       id="path10210" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:1.678;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 9.8214846,7.5826923 12.157653,5.0286819 14.988011,7.4179174"
+       id="path10487" />
+  </g>
+</svg>
