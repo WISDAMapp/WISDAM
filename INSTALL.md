@@ -2,7 +2,12 @@
 
 ## Binary and Wheels
 The latest binary and wheel can be found at https://github.com/wisdamapp/wisdam/releases/latest
-There you will find a wheel which can 
+There you will find as well a wheel which could be used.
+
+> [!CAUTION]
+> WISDAM depends on a library called [WISDAMcore](https://github.com/wisdamapp/wisdamcore)
+> That library is up to date not available on PyPi
+> So first install that library in your environment. Otherwise WISDAM will not work!
 
 ### From Source
 In the `WISDAM` directory (same one where you found this file after cloning the git repo), execute:
