@@ -76,7 +76,7 @@ WISDAM is currently only available and tested for Microsoft Windows.
 The [building guide](INSTALL.md) can be used to get started with building WISDAM from source.
 
 ### Documentation
-Currently, for WISDAM a manual is available which is show within WISDAM or can be found in the 
+Currently, for WISDAM a manual is available which is available within WISDAM or can be found in the 
 subdirectory of the distribution "_internal" called "wisdam_manual.pdf". 
 
 Also, the current documentation is available at http://wisdamapp.github.io/wisdam/
