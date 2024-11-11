@@ -21,7 +21,6 @@
 import numpy
 import json
 from pathlib import Path
-from pyproj import CRS
 
 from db.dbHandler import DBHandler
 
@@ -29,7 +28,6 @@ from core_interface.wisdamIMAGE import WISDAMImage
 
 # core
 from WISDAMcore.mapping.base_class import MappingBase
-from WISDAMcore.transform.coordinates import CoordinatesTransformer
 
 
 # Will run in worker
@@ -72,10 +70,13 @@ def update_all_geoms(db_path: Path, mapper: MappingBase) -> tuple[int, int, int,
 
             if footprint is None or center is None:
                 sum_images_not_mapped += 1
-            else:
-                sum_images_mapped += 1
+
+                # If mapping failed we will use gsd and area from WISDAMImage.from_db
+                # which initializes to 0 anyhow if not stored in DB
                 gsd = image.gsd
                 area = image.area
+            else:
+                sum_images_mapped += 1
 
             # old slow version with single update call for every image
             # db.image_store_georef(image_id=image.id, gsd=gsd, area=area,

@@ -49,7 +49,11 @@ def image_gsd_union_area_calculate(images: list) -> tuple[float, float]:
     gsd_median = 0.0
     if len(gsd) > 0:
         gsd_array = np.array(gsd)
-        gsd_median = np.mean(gsd_array[gsd_array>0.0])
+        # it happened because of a bug that all GSD are 0.0 even if footprint was possible
+        # and the later gsd_array[gsd_array>0.0] did fail
+        # so to prevent that we will check if there are enough non 0 gsd values
+        if len(gsd_array[gsd_array > 0.0]) > 0:
+            gsd_median = np.mean(gsd_array[gsd_array>0.0])
 
     return area_union, gsd_median
 

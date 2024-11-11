@@ -1849,6 +1849,16 @@ class MainWindow(QMainWindow):
     def thread_result_heavy_worker(self, return_object: object):
 
         union_area, img_gsd, gis_objects, node_list, gis_geom, self.color_dict_gis_objects = return_object
+
+        # There have been cases where img_gsd became none because it was not set in DB and calculation crashed
+        # because all GSD was 0.0 due to bug.
+        # Just to be sure if that happens set to 0.0
+        if img_gsd is None:
+            img_gsd = 0.0
+
+        if union_area is None:
+            union_area = 0.0
+
         self.ui.prj_label_image_union_area.setText('%3.1e' % union_area + 'm²')
         self.ui.prj_label_image_gsd.setText('%2.1f' % (img_gsd * 100) + 'cm')
 
