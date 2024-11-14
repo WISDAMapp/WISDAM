@@ -1680,7 +1680,7 @@ QPushButton:pressed {
                 <string notr="true"/>
                </property>
                <property name="currentIndex">
-                <number>0</number>
+                <number>1</number>
                </property>
                <widget class="QWidget" name="page_home">
                 <property name="sizePolicy">
@@ -2547,7 +2547,7 @@ QPushButton:pressed {
 }</string>
                    </property>
                    <property name="text">
-                    <string notr="true">START - Import Image Folder</string>
+                    <string notr="true">START - Import</string>
                    </property>
                   </widget>
                   <widget class="QStackedWidget" name="imp_stack_type">
@@ -2556,7 +2556,7 @@ QPushButton:pressed {
                      <x>50</x>
                      <y>100</y>
                      <width>401</width>
-                     <height>221</height>
+                     <height>241</height>
                     </rect>
                    </property>
                    <property name="currentIndex">
@@ -2644,9 +2644,9 @@ QPushButton:pressed {
                      <property name="geometry">
                       <rect>
                        <x>10</x>
-                       <y>50</y>
+                       <y>60</y>
                        <width>381</width>
-                       <height>191</height>
+                       <height>171</height>
                       </rect>
                      </property>
                      <property name="frameShape">
@@ -2661,10 +2661,10 @@ QPushButton:pressed {
                       </property>
                       <property name="geometry">
                        <rect>
-                        <x>10</x>
-                        <y>120</y>
-                        <width>361</width>
-                        <height>61</height>
+                        <x>90</x>
+                        <y>110</y>
+                        <width>211</width>
+                        <height>51</height>
                        </rect>
                       </property>
                       <property name="font">
@@ -2698,10 +2698,10 @@ QPushButton:pressed {
                       </property>
                       <property name="geometry">
                        <rect>
-                        <x>10</x>
-                        <y>10</y>
-                        <width>361</width>
-                        <height>61</height>
+                        <x>90</x>
+                        <y>0</y>
+                        <width>211</width>
+                        <height>51</height>
                        </rect>
                       </property>
                       <property name="font">
@@ -2732,8 +2732,8 @@ QPushButton:pressed {
                      <widget class="QRadioButton" name="imp_rd_recursive_logfiles_folder">
                       <property name="geometry">
                        <rect>
-                        <x>70</x>
-                        <y>90</y>
+                        <x>90</x>
+                        <y>80</y>
                         <width>241</width>
                         <height>20</height>
                        </rect>
@@ -3711,7 +3711,7 @@ for META data</string>
                      </font>
                     </property>
                     <property name="text">
-                     <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;!OPTIONAL! - Override CRS (e.g. for JPG orhto where no &amp;quot;.prj&amp;quot;-File is present, or for CSV importer)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;CRS like e.g &amp;quot;EPSG:4326+3855&amp;quot; or &amp;quot;EPSG:28533&amp;quot;: &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Override CRS (e.g. for JPG orhto where no &amp;quot;.prj&amp;quot;-File is present, or for CSV importer) - &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Optional for most Importers&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;CRS like e.g &amp;quot;EPSG:4326+3855&amp;quot; or &amp;quot;EPSG:28533&amp;quot;: &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="wordWrap">
                      <bool>true</bool>
@@ -3721,9 +3721,9 @@ for META data</string>
                     <property name="geometry">
                      <rect>
                       <x>10</x>
-                      <y>80</y>
+                      <y>90</y>
                       <width>341</width>
-                      <height>41</height>
+                      <height>31</height>
                      </rect>
                     </property>
                     <property name="font">
@@ -10292,9 +10292,9 @@ QPushButton:pressed {
  <connections/>
  <buttongroups>
   <buttongroup name="buttonGroup_digitizing_color_object"/>
+  <buttongroup name="buttonGroup_gallery_order"/>
   <buttongroup name="buttonGroup_gis_color_images"/>
   <buttongroup name="buttonGroup_gis_color_objects"/>
   <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
-  <buttongroup name="buttonGroup_gallery_order"/>
  </buttongroups>
 </ui>

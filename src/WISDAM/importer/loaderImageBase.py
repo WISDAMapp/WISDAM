@@ -41,6 +41,8 @@ class ImageBaseLoader:
         self.name = 'base'
         self.loader_type = LoaderType.EXIF_Loader
         self.crs_input_show = False
+        self.crs_input_mandatory = False
+        self.log_file_contains_image_path = False
 
     @abstractmethod
     def get(self, **kwargs) -> tuple[ImageBase, int, int] | None:
@@ -54,6 +56,7 @@ class ImageBaseLoader:
     @abstractmethod
     def logfile_suffix() -> list[str] | None:
         """return the possible suffixes of your logfiles in the format as: ['*.csv'] or ['*.txt', '*.csv']
+        Will be used for recursive import of logfiles or if image folder is used to search for logfiles
         """
 
         pass
@@ -85,6 +88,10 @@ class ImageBaseLoader:
                 data = data.iloc[0]
 
         You can have a look at the aeroglob importer, how columns can be renamed or only needed columns are extracted
+
+        IF your logfile contains absolute image paths which can be used for image import, the image paths have to be in
+        a collumn named "path"
+        Check the opk_csv.py importer to see an example
 
         :arg log_file: Path to the logfile used to read info or path to folder containing log files.
         :return: Pandas Dataframe or None if failed

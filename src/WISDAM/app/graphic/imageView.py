@@ -278,7 +278,7 @@ class ImageView(QGraphicsView):
 
                 self.send_text_label_walk_modus.emit('END OF IMAGE')
             else:
-                self.send_text_label_walk_modus.emit('WALK MODUS ON')
+                self.send_text_label_walk_modus.emit('WALK MODE ON')
 
     def nav_walk_backward(self):
         if self.walk_grid_vector is not None:
@@ -292,7 +292,7 @@ class ImageView(QGraphicsView):
             if self.grid_walk_index == 0:
                 self.send_text_label_walk_modus.emit('END OF IMAGE')
             else:
-                self.send_text_label_walk_modus.emit('WALK MODUS ON')
+                self.send_text_label_walk_modus.emit('WALK MODE ON')
 
     def nav_right(self):
         if self.nav_walk:

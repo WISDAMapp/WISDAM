@@ -89,7 +89,7 @@ from app.var_classes import (ColorGui,
                              point_size, ObjectSourceList,
                              GalleryRoles, url_wisdam, logging_style, Selection)
 from compare.utils import CompareList, compare_list_header, CompareType
-from compare.search import  compare_searcher, compare_searcher_single_db_ai_to_ai_review
+from compare.search import compare_searcher, compare_searcher_single_db_ai_to_ai_review
 from db.environment import propagate_env_data_next_image
 from importer.importerWisdam import IMAGEImporter
 from importer.loaderImageBase import LoaderType
@@ -139,7 +139,6 @@ path_to_shape = Path(__file__).resolve().parent / "data" / 'shapes' / "land_wgs8
 path_to_bin = Path(__file__).resolve().with_name("bin")
 if not path_to_bin.exists():
     path_to_bin = Path(__file__).resolve().parent.parent.parent / "bin"
-
 
 path_to_exiftool = path_to_bin / 'exiftool.exe'
 path_to_current_directory = Path(__file__).parent.resolve()
@@ -797,8 +796,8 @@ class MainWindow(QMainWindow):
         self.pop_user.show()
 
         # Test if docker is running
-        #change_led_color(self.ui.led_docker_service, on=docker_running())
-        #self.ui.led_docker_service.clicked.connect(self.led_docker_check)
+        # change_led_color(self.ui.led_docker_service, on=docker_running())
+        # self.ui.led_docker_service.clicked.connect(self.led_docker_check)
 
     # ------------------------------------------------------------------------------------------------------------
     # Change menu action
@@ -2229,11 +2228,10 @@ class MainWindow(QMainWindow):
 
             if hard_propagate:
                 if self.data_environment is not None:
+                    self.data_environment = propagate_env_data_next_image(self.data_environment)
 
-                        self.data_environment = propagate_env_data_next_image(self.data_environment)
-
-                        self.db.store_image_environment_data(self.data_environment, self.current_image_id)
-                        self.ui.environment_image.data = self.data_environment
+                    self.db.store_image_environment_data(self.data_environment, self.current_image_id)
+                    self.ui.environment_image.data = self.data_environment
 
             # Get environmental data if present in image Database
             env_data = self.db.load_image_environment_data(self.current_image_id)
@@ -2248,7 +2246,6 @@ class MainWindow(QMainWindow):
 
                     # Propagation is only possible if the current image's env is not already set
                     if self.data_environment:
-
                         self.data_environment = propagate_env_data_next_image(self.data_environment)
 
                         self.db.store_image_environment_data(self.data_environment, self.current_image_id)
@@ -2976,7 +2973,7 @@ class MainWindow(QMainWindow):
     # --------------------------------------------------------------
     # Project page
     # --------------------------------------------------------------
-    #def led_docker_check(self):
+    # def led_docker_check(self):
     #    change_led_color(self.ui.led_docker_service, on=docker_running())
 
     def update_info(self):
@@ -3116,6 +3113,12 @@ class MainWindow(QMainWindow):
         self.ui.frame_logfile_buttons.setVisible(not self.ui.imp_rd_logfile_image_folders.isChecked())
         self.log_file = None
 
+        if self.input_data_types.input_type_current.log_file_contains_image_path and \
+                not self.ui.imp_rd_logfile_image_folders.isChecked():
+            self.ui.imp_rd_recursive.hide()
+        else:
+            self.ui.imp_rd_recursive.show()
+
     def logfile_chooser(self):
         self.log_file = None
         self.ui.imp_rd_recursive_logfiles_folder.setChecked(False)
@@ -3135,6 +3138,8 @@ class MainWindow(QMainWindow):
         self.ui.imp_rd_recursive.setChecked(False)
 
         self.log_file = None
+
+        self.hide_log_import_buttons()
 
         self.ui.imp_stack_type.setCurrentWidget(self.ui.imp_stack_empty)
         self.ui.imp_epsg_input.setText(None)
@@ -3182,6 +3187,21 @@ class MainWindow(QMainWindow):
         flag_log_fom_image_folder = self.ui.imp_rd_logfile_image_folders.isChecked()
         flag_recursive_log = self.ui.imp_rd_recursive_logfiles_folder.isChecked()
 
+        # check overriding CRS
+        crs_manual = None  # CRS("EPSG:4326+3855")
+        crs_text = self.ui.imp_epsg_input.text()
+        if self.input_data_types.input_type_current.crs_input_mandatory:
+            if not crs_text:
+                logger.error("This importer rquires CRS to be specified")
+                return
+
+        if crs_text:
+            try:
+                crs_manual = CRS(crs_text)
+            except pyproj.exceptions.CRSError:
+                logger.error("Specified CRS not working")
+                return
+
         if not self.db_is_locked:
             self.image_scene.working_instruction = False
             self.image_scene.current_instruction = Instructions.No_Instruction
@@ -3200,18 +3220,6 @@ class MainWindow(QMainWindow):
                 folder = self.log_file.parent.as_posix()
             else:
                 folder = '.'
-
-            # check overriding CRS
-            crs_manual = None  # CRS("EPSG:4326+3855")
-
-            crs_text = self.ui.imp_epsg_input.text()
-            if crs_text:
-                try:
-                    crs_manual = CRS(crs_text)
-                except pyproj.exceptions.CRSError:
-                    logger.error("Specified CRS not working")
-                    self.ui.imp_epsg_input.setText(None)
-                    return
 
             manual_georef = None
             if self.ui.imp_stack_georef.isVisible():
@@ -3251,48 +3259,53 @@ class MainWindow(QMainWindow):
                             'Some input is set - maybe no numbers or not valid (check Lat, Long)')
                         return
 
-            image_path = QFileDialog.getExistingDirectory(self, caption="Load Images", dir=folder)
+            # Check if we need to open Dialogue for image folders
+            image_path = ''
+            if (not self.input_data_types.input_type_current.log_file_contains_image_path) or (
+                    self.ui.imp_rd_logfile_image_folders.isChecked()):
+                image_path = QFileDialog.getExistingDirectory(self, caption="Load Images", dir=folder)
+                if not image_path:
+                    return
 
-            if image_path:
-                self.db_is_locked = 'Database locked for image loading'
-                self.ui.progressBar_importer.setValue(0)
+            self.db_is_locked = 'Database locked for image loading'
+            self.ui.progressBar_importer.setValue(0)
 
-                # Survey information entered by user
-                flight_ref = self.ui.import_image_reference.text()
-                survey_block = self.ui.import_image_block.text()
-                transect = self.ui.import_image_transect.text()
+            # Survey information entered by user
+            flight_ref = self.ui.import_image_reference.text()
+            survey_block = self.ui.import_image_block.text()
+            transect = self.ui.import_image_transect.text()
 
-                # Meta data entered by user
-                operator = self.ui.import_image_meta_operator.text()
-                camera_ref = self.ui.import_image_meta_camera.text()
-                conditions = self.ui.import_image_conditions.text()
-                comments = self.ui.import_image_meta_comment.toPlainText()
-                meta_user = {'operator': operator, 'camera_ref': camera_ref, 'conditions': conditions,
-                             'comments': comments}
+            # Meta data entered by user
+            operator = self.ui.import_image_meta_operator.text()
+            camera_ref = self.ui.import_image_meta_camera.text()
+            conditions = self.ui.import_image_conditions.text()
+            comments = self.ui.import_image_meta_comment.toPlainText()
+            meta_user = {'operator': operator, 'camera_ref': camera_ref, 'conditions': conditions,
+                         'comments': comments}
 
-                # if self.ui.input_adj_rel_height.text() == "0.0":
-                #     rel_h = 0
-                # else:
-                #     rel_h = float(self.ui.input_adj_rel_height.text())
+            # if self.ui.input_adj_rel_height.text() == "0.0":
+            #     rel_h = 0
+            # else:
+            #     rel_h = float(self.ui.input_adj_rel_height.text())
 
-                self.ui.imp_georef_status.setText('')
+            self.ui.imp_georef_status.setText('')
 
-                worker = Worker(process_folder, input_path=Path(image_path), db_path=self.db.path, user=self.user,
-                                mapper=self.mapper, input_data_class=self.input_data_types, logfile_path=self.log_file,
-                                meta_user=meta_user,
-                                flight_ref=flight_ref, survey_block=survey_block, transect=transect,
-                                crs_manual=crs_manual,
-                                georef_input=manual_georef,
-                                flag_recursive_image=flag_recursive_image,
-                                flag_recursive_log=flag_recursive_log,
-                                flag_log_fom_image_folder=flag_log_fom_image_folder,
-                                path_to_exiftool=path_to_exiftool, progress_callback=True)
-                worker.signals.result.connect(self.thread_output_image_import)
-                worker.signals.finished.connect(self.thread_complete_image_import)
-                worker.signals.progress.connect(self.progress_fn)
-                worker.signals.error.connect(self.thread_error)
-                self.ui.waiting_spinner_main.start()
-                self.threadpool.start(worker)
+            worker = Worker(process_folder, input_path=Path(image_path), db_path=self.db.path, user=self.user,
+                            mapper=self.mapper, input_data_class=self.input_data_types, logfile_path=self.log_file,
+                            meta_user=meta_user,
+                            flight_ref=flight_ref, survey_block=survey_block, transect=transect,
+                            crs_manual=crs_manual,
+                            georef_input=manual_georef,
+                            flag_recursive_image=flag_recursive_image,
+                            flag_recursive_log=flag_recursive_log,
+                            flag_log_fom_image_folder=flag_log_fom_image_folder,
+                            path_to_exiftool=path_to_exiftool, progress_callback=True)
+            worker.signals.result.connect(self.thread_output_image_import)
+            worker.signals.finished.connect(self.thread_complete_image_import)
+            worker.signals.progress.connect(self.progress_fn)
+            worker.signals.error.connect(self.thread_error)
+            self.ui.waiting_spinner_main.start()
+            self.threadpool.start(worker)
         else:
             logger.warning(self.db_is_locked)
 

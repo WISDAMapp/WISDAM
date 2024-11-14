@@ -40,7 +40,7 @@ from db.dbHandler import DBHandler
 
 # WISDAM core
 from WISDAMcore.mapping.base_class import MappingBase
-from WISDAMcore.transform.coordinates import CoordinatesTransformer
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,8 @@ def img_readable(file: str) -> bool:
     return True
 
 
-def process_folder(input_path: Path, db_path: Path, user: str, mapper: MappingBase, input_data_class: IMAGEImporter,
+def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: MappingBase,
+                   input_data_class: IMAGEImporter,
                    logfile_path: Path, meta_user: dict, flight_ref: str = '', survey_block: str = '',
                    transect: str = '',
                    crs_manual: CRS | None = None, georef_input: list | None = None,
@@ -126,17 +127,29 @@ def process_folder(input_path: Path, db_path: Path, user: str, mapper: MappingBa
 
             return success_dict
 
-    # PATH handling images
-    if flag_recursive_image:
-        image_list = os_sorted(list(input_path.rglob('*')))
+    # If we have a log file loader where the absolute image paths are specified
+    # we do not actually need to iterate over images, we just check if images exist
+    if input_data_class.input_type_current.loader_type is LoaderType.Logfile_Loader and \
+            input_data_class.input_type_current.log_file_contains_image_path:
+
+        folder_image_list = os_sorted(set([x for x in log_data['path'] if Path(x).exists()]))
+
+        if len(folder_image_list) < 1:
+            logger.warning("None of the images specified in logfile exist.")
+
+    # Normal approach to find image files in specified folders
     else:
-        image_list = os_sorted(list(input_path.glob('*')))
+        # PATH handling images
+        if flag_recursive_image:
+            image_list = os_sorted(list(input_path.rglob('*')))
+        else:
+            image_list = os_sorted(list(input_path.glob('*')))
 
-    for f in image_list:
-        if f.is_file():
+        for f in image_list:
+            if f.is_file():
 
-            if img_readable(f.as_posix()):
-                folder_image_list.append(f.as_posix())
+                if img_readable(f.as_posix()):
+                    folder_image_list.append(f.as_posix())
 
     success_dict['img_nr'] = len(folder_image_list)
 
@@ -321,5 +334,6 @@ def process_folder(input_path: Path, db_path: Path, user: str, mapper: MappingBa
             raise e
 
     else:
-        progress_callback.emit((1, 0))
+        # logger.warning("No images found which can be imported")
+        progress_callback.emit((1, 1))
         return success_dict

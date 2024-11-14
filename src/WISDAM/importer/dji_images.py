@@ -83,7 +83,7 @@ class DJIStandard(ImageBaseLoader):
                 y_exif = -y_exif
             z_exif = meta_data.get('EXIF:GPSAltitude', None)
 
-            #if meta_data.get('XMP:RelativeAltitude', None):
+            # if meta_data.get('XMP:RelativeAltitude', None):
             #    z_exif = meta_data['XMP:RelativeAltitude']
             #    crs_hor_exif = 4326
             #    crs_vert_exif = 3855
@@ -107,17 +107,22 @@ class DJIStandard(ImageBaseLoader):
         yaw = None
         pitch = None
         gimbal_used = False
-        if {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
-            pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
-            roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
-            yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
-
-        elif {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
+        
+        if {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
             pitch = float(meta_data['XMP:CameraPitch']) * np.pi / 180.0
             roll = float(meta_data['XMP:CameraRoll']) * np.pi / 180.0
             yaw = float(meta_data['XMP:CameraYaw']) * np.pi / 180.0
 
-        #elif {'XMP:FlightRollDegree', 'XMP:FlightYawDegree', 'XMP:FlightPitchDegree'} <= meta_data.keys():
+        elif {'MakerNotes:CameraRoll', 'MakerNotes:CameraYaw', 'MakerNotes:CameraPitch'} <= meta_data.keys():
+            pitch = float(meta_data['MakerNotes:CameraPitch']) * np.pi / 180.0
+            roll = float(meta_data['MakerNotes:CameraRoll']) * np.pi / 180.0
+            yaw = float(meta_data['MakerNotes:CameraYaw']) * np.pi / 180.0
+
+        elif {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
+            pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
+            roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
+            yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
+        # elif {'XMP:FlightRollDegree', 'XMP:FlightYawDegree', 'XMP:FlightPitchDegree'} <= meta_data.keys():
         #    roll = float(meta_data['XMP:FlightRollDegree']) * np.pi / 180.0
         #    yaw = float(meta_data['XMP:FlightYawDegree']) * np.pi / 180.0
         #    pitch = float(meta_data['XMP:FlightPitchDegree']) * np.pi / 180.0

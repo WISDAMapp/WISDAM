@@ -98,10 +98,31 @@ class EXIFPose(ImageBaseLoader):
                 position = np.array([x, y, z])
 
         # Orientation
-        if {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
+        pitch = None
+        roll = None
+        yaw = None
+        
+        if {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
+            pitch = float(meta_data['XMP:CameraPitch']) * np.pi / 180.0
+            roll = float(meta_data['XMP:CameraRoll']) * np.pi / 180.0
+            yaw = float(meta_data['XMP:CameraYaw']) * np.pi / 180.0
+
+        elif {'MakerNotes:CameraRoll', 'MakerNotes:CameraYaw', 'MakerNotes:CameraPitch'} <= meta_data.keys():
+            pitch = float(meta_data['MakerNotes:CameraPitch']) * np.pi / 180.0
+            roll = float(meta_data['MakerNotes:CameraRoll']) * np.pi / 180.0
+            yaw = float(meta_data['MakerNotes:CameraYaw']) * np.pi / 180.0
+        
+        elif {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
             pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
             roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
             yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
+
+        elif {'MakerNotes:Roll', 'MakerNotes:Yaw', 'MakerNotes:Pitch'} <= meta_data.keys():
+            pitch = float(meta_data.get('MakerNotes:Pitch', 0.0)) * np.pi / 180.0
+            roll = float(meta_data.get('MakerNotes:Roll', 0.0)) * np.pi / 180.0
+            yaw = float(meta_data.get('MakerNotes:Yaw', 0.0)) * np.pi / 180.0
+
+        if pitch is not None:
 
             # Rotation of IMAGE still in Body System
             rot_sys = np.array([[cos(pitch) * cos(yaw), sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw),

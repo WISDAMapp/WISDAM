@@ -1067,10 +1067,10 @@ class Ui_MainWindow(object):
 "	background-color: rgb(35, 40, 49);\n"
 "	border: 2px solid rgb(43, 50, 61);\n"
 "}")
-        self.imp_btn_image_folder.setText(u"START - Import Image Folder")
+        self.imp_btn_image_folder.setText(u"START - Import")
         self.imp_stack_type = QStackedWidget(self.tab)
         self.imp_stack_type.setObjectName(u"imp_stack_type")
-        self.imp_stack_type.setGeometry(QRect(50, 100, 401, 221))
+        self.imp_stack_type.setGeometry(QRect(50, 100, 401, 241))
         self.imp_stack_height = QWidget()
         self.imp_stack_height.setObjectName(u"imp_stack_height")
         self.frame_adj_rel_height = QFrame(self.imp_stack_height)
@@ -1098,13 +1098,13 @@ class Ui_MainWindow(object):
         self.imp_rd_logfile_image_folders.setAutoExclusive(False)
         self.frame_logfile_buttons = QFrame(self.imp_stack_logFile)
         self.frame_logfile_buttons.setObjectName(u"frame_logfile_buttons")
-        self.frame_logfile_buttons.setGeometry(QRect(10, 50, 381, 191))
+        self.frame_logfile_buttons.setGeometry(QRect(10, 60, 381, 171))
         self.frame_logfile_buttons.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_logfile_buttons.setFrameShadow(QFrame.Shadow.Raised)
         self.imp_btn_logfile_folder = QPushButton(self.frame_logfile_buttons)
         self.imp_btn_logfile_folder.setObjectName(u"imp_btn_logfile_folder")
         self.imp_btn_logfile_folder.setEnabled(True)
-        self.imp_btn_logfile_folder.setGeometry(QRect(10, 120, 361, 61))
+        self.imp_btn_logfile_folder.setGeometry(QRect(90, 110, 211, 51))
         self.imp_btn_logfile_folder.setFont(font2)
         self.imp_btn_logfile_folder.setStyleSheet(u"QPushButton {\n"
 "	border: 2px solid rgb(52, 59, 72);\n"
@@ -1122,7 +1122,7 @@ class Ui_MainWindow(object):
         self.imp_btn_logfile = QPushButton(self.frame_logfile_buttons)
         self.imp_btn_logfile.setObjectName(u"imp_btn_logfile")
         self.imp_btn_logfile.setEnabled(True)
-        self.imp_btn_logfile.setGeometry(QRect(10, 10, 361, 61))
+        self.imp_btn_logfile.setGeometry(QRect(90, 0, 211, 51))
         self.imp_btn_logfile.setFont(font2)
         self.imp_btn_logfile.setStyleSheet(u"QPushButton {\n"
 "	border: 2px solid rgb(52, 59, 72);\n"
@@ -1139,7 +1139,7 @@ class Ui_MainWindow(object):
 "}")
         self.imp_rd_recursive_logfiles_folder = QRadioButton(self.frame_logfile_buttons)
         self.imp_rd_recursive_logfiles_folder.setObjectName(u"imp_rd_recursive_logfiles_folder")
-        self.imp_rd_recursive_logfiles_folder.setGeometry(QRect(70, 90, 241, 20))
+        self.imp_rd_recursive_logfiles_folder.setGeometry(QRect(90, 80, 241, 20))
         self.imp_rd_recursive_logfiles_folder.setFont(font14)
         self.imp_rd_recursive_logfiles_folder.setText(u"Recursive search for logfiles")
         self.imp_rd_recursive_logfiles_folder.setAutoExclusive(False)
@@ -1452,11 +1452,11 @@ class Ui_MainWindow(object):
         self.label_26.setObjectName(u"label_26")
         self.label_26.setGeometry(QRect(10, 4, 341, 71))
         self.label_26.setFont(font1)
-        self.label_26.setText(u"<html><head/><body><p><span style=\" font-size:8pt;\">!OPTIONAL! - Override CRS (e.g. for JPG orhto where no &quot;.prj&quot;-File is present, or for CSV importer)</span></p><p><span style=\" font-size:10pt;\">CRS like e.g &quot;EPSG:4326+3855&quot; or &quot;EPSG:28533&quot;: </span></p></body></html>")
+        self.label_26.setText(u"<html><head/><body><p><span style=\" font-size:8pt;\">Override CRS (e.g. for JPG orhto where no &quot;.prj&quot;-File is present, or for CSV importer) - </span><span style=\" font-size:10pt;\">Optional for most Importers</span></p><p><span style=\" font-size:10pt;\">CRS like e.g &quot;EPSG:4326+3855&quot; or &quot;EPSG:28533&quot;: </span></p></body></html>")
         self.label_26.setWordWrap(True)
         self.imp_epsg_input = QLineEdit(self.frame_imp_epsg)
         self.imp_epsg_input.setObjectName(u"imp_epsg_input")
-        self.imp_epsg_input.setGeometry(QRect(10, 80, 341, 41))
+        self.imp_epsg_input.setGeometry(QRect(10, 90, 341, 31))
         self.imp_epsg_input.setFont(font1)
         self.imp_epsg_input.setText(u"")
         self.tab_imports.addTab(self.tab, "")
@@ -4261,7 +4261,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.page_stack.setCurrentIndex(0)
+        self.page_stack.setCurrentIndex(1)
         self.tab_imports.setCurrentIndex(0)
         self.imp_stack_type.setCurrentIndex(1)
         self.stack_image_test.setCurrentIndex(0)

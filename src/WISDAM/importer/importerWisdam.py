@@ -30,6 +30,7 @@ from importer.exifPose import EXIFPose
 from importer.orthoGeneral import OrthoGeneral
 from importer.dji_images import DJIStandard
 from importer.sd_cam_no_focal import SdXlsxNoFocal
+from importer.opk_csv import OmegaPhiKappCSV
 
 from WISDAMcore.image.base_class import ImageBase
 
@@ -40,7 +41,7 @@ from WISDAMcore.image.base_class import ImageBase
 class IMAGEImporter:
     """Holder Class to add all Importers and call/show them"""
     def __init__(self):
-        self.input_class_list = [SimpleImage(), EXIFPose(), DJIStandard(), WINGRAOmegaPhiKappa(),
+        self.input_class_list = [SimpleImage(), EXIFPose(), DJIStandard(),OmegaPhiKappCSV(), WINGRAOmegaPhiKappa(),
                                  VARDAMurdoch(), AircraftAeroGlobe(), OrthoGeneral(), SdXlsxNoFocal()]
         self.input_type_current = ImageBaseLoader()
 
