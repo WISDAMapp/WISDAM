@@ -100,7 +100,9 @@ def draw_geometry_projections(scene: ImageScene,
     object_type = object_data['object_type']
     if geom['type'] == 'Point':
 
-        p_pixel = image.image_model.project(np.array(geom['coordinates']))[0, :]
+        result_projection = image.image_model.project(np.array(geom['coordinates']))
+
+        p_pixel, pixel_mask = result_projection
         if p_pixel is None:
             return
 
@@ -113,7 +115,7 @@ def draw_geometry_projections(scene: ImageScene,
                                    reviewed=object_data['reviewed'],
                                    source=object_data['source'])
 
-        new_item.setRect(p_pixel[0] - point_size / 2.0, p_pixel[1] - point_size / 2.0,
+        new_item.setRect(p_pixel[0][0] - point_size / 2.0, p_pixel[0][1] - point_size / 2.0,
                          point_size, point_size)
 
     elif geom['type'] == 'LineString':

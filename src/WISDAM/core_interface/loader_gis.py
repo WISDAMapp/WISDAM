@@ -74,9 +74,9 @@ def draw_footprints(footprint, color, persistent_index):
 
         item_point.setToolTip("ID: %i ; %s" % (footprint['id'], footprint['name']))
 
-        item_point.setRect(footprint['x'] - point_size_gis_standard / 8.0,
-                           -footprint['y'] - point_size_gis_standard / 8.0,
-                           point_size_gis_standard / 4.0, point_size_gis_standard / 4.0)
+        item_point.setRect(footprint['x'] - point_size_gis_standard / 10.0,
+                           -footprint['y'] - point_size_gis_standard / 10.0,
+                           point_size_gis_standard / 5.0, point_size_gis_standard / 5.0)
 
         item_footprint.setParentItem(item_point)
         item_footprint.setVisible(False)
@@ -103,8 +103,8 @@ def draw_geom(geom_data, point_size: float, color_value):
                                        reviewed=geom_data['reviewed'],
                                        source=geom_data['source'],
                                        pen_width=0)
-            new_item.setRect(geom['coordinates'][0] - point_size / 2.0, -geom['coordinates'][1] - point_size / 2.0,
-                             point_size, point_size)
+            new_item.setRect(geom['coordinates'][0] - point_size / 14.0, -geom['coordinates'][1] - point_size / 14.0,
+                             point_size/7, point_size/7)
 
         elif geom['type'] == 'LineString':
 
@@ -118,7 +118,7 @@ def draw_geom(geom_data, point_size: float, color_value):
                                       reviewed=geom_data['reviewed'],
                                       source=geom_data['source'],
                                       pen_width=0,
-                                      stroke_buffer=point_size_gis_standard / 2)
+                                      stroke_buffer=point_size_gis_standard / 6)
 
             path = QPainterPath(QPointF(geom['coordinates'][0][0], -geom['coordinates'][0][1]))
             for coo in geom['coordinates'][1:]:
