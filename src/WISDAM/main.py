@@ -33,6 +33,7 @@ from pathlib import Path
 from collections import OrderedDict
 import pyproj
 from pyproj import CRS, datadir as pyproj_datadir
+from multiprocessing import freeze_support
 
 # PYSIDE imports
 from PySide6.QtWidgets import (QMainWindow, QAbstractItemView, QApplication, QFileDialog, QMenu,
@@ -3542,7 +3543,8 @@ def main():
     pyproj_datadir.append_data_dir(path_to_proj_dir.as_posix())
     # Nuitka and PyInstaller already  bundling now the libraries in the correct place
     # pyproj.datadir.set_data_dir((path_to_datadir / "proj").as_posix())
-
+    
+    freeze_support()
     app = QApplication()
     QFontDatabase.addApplicationFont('app/gui_design/fonts/segoeui.ttf')
     QFontDatabase.addApplicationFont('app/gui_design/fonts/segoeuib.ttf')
