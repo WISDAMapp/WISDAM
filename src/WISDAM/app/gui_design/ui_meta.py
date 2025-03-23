@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QHBoxLayout,
 
 from app.custom_elements.comboInteractive import InteractiveCombo
 from app.custom_elements.layoutEnvironment import EnvironmentLayout
+from app.custom_elements.verticallabel import VerticalLabel
 from . import files_rc
 
 class Ui_popup_meta(object):
@@ -455,14 +456,14 @@ class Ui_popup_meta(object):
 "}")
         self.cropped_image = QLabel(self.frame_center)
         self.cropped_image.setObjectName(u"cropped_image")
-        self.cropped_image.setGeometry(QRect(35, 10, 400, 400))
+        self.cropped_image.setGeometry(QRect(35, 30, 400, 390))
         sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.cropped_image.sizePolicy().hasHeightForWidth())
         self.cropped_image.setSizePolicy(sizePolicy3)
-        self.cropped_image.setMinimumSize(QSize(400, 400))
-        self.cropped_image.setMaximumSize(QSize(400, 400))
+        self.cropped_image.setMinimumSize(QSize(400, 390))
+        self.cropped_image.setMaximumSize(QSize(400, 390))
         self.cropped_image.setFont(font1)
         self.cropped_image.setFrameShadow(QFrame.Shadow.Raised)
         self.cropped_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1188,6 +1189,26 @@ class Ui_popup_meta(object):
         self.label_8.setStyleSheet(u"border: 1px solid rgba(170, 170, 255,100);\n"
 "border-radius:15px;")
         self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.le_scale_horizontal = QLabel(self.frame_center)
+        self.le_scale_horizontal.setObjectName(u"le_scale_horizontal")
+        self.le_scale_horizontal.setGeometry(QRect(100, 0, 271, 21))
+        font7 = QFont()
+        font7.setPointSize(13)
+        font7.setBold(True)
+        font7.setItalic(True)
+        font7.setUnderline(False)
+        font7.setStrikeOut(False)
+        self.le_scale_horizontal.setFont(font7)
+        self.le_scale_horizontal.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.le_scale_vertical = VerticalLabel(self.frame_center)
+        self.le_scale_vertical.setObjectName(u"le_scale_vertical")
+        self.le_scale_vertical.setGeometry(QRect(10, 120, 21, 211))
+        self.le_scale_vertical.setFont(font7)
+        self.le_scale_vertical.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.le_scale_vertical.setLocale(QLocale(QLocale.English, QLocale.Austria))
+        self.le_scale_vertical.setScaledContents(False)
+        self.le_scale_vertical.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.le_scale_vertical.setWordWrap(False)
         self.frame_meta_object.raise_()
         self.btn_save.raise_()
         self.cropped_image.raise_()
@@ -1198,6 +1219,8 @@ class Ui_popup_meta(object):
         self.txt_notes.raise_()
         self.frame_subtype.raise_()
         self.label_8.raise_()
+        self.le_scale_horizontal.raise_()
+        self.le_scale_vertical.raise_()
 
         self.verticalLayout.addWidget(self.frame_center)
 
@@ -1253,5 +1276,7 @@ class Ui_popup_meta(object):
         self.le_sub_type_option_value_2.setText("")
         self.le_sub_type_option_name.setText("")
         self.label_8.setText(QCoreApplication.translate("popup_meta", u"META DATA", None))
+        self.le_scale_horizontal.setText("")
+        self.le_scale_vertical.setText("")
     # retranslateUi
 

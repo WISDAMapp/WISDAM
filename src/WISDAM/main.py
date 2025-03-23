@@ -1448,6 +1448,13 @@ class MainWindow(QMainWindow):
 
         obj_id, geom_type, coordinates_wgs84, gsd, area = return_tuple
 
+        if self.popup_meta.isVisible():
+
+            if gsd is not None:
+                if gsd > 0.0:
+
+                    self.popup_meta.set_scale(gsd)
+
         # We do not need to check if Object ID exists, sqlite update will simply find not the ID
         geojson = coordinates_wgs84.geojson(geom_type=geom_type)
         self.db.update_object_mapping(obj_id, geojson=geojson, gsd=gsd, area=area)

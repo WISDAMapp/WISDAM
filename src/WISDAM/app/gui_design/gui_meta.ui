@@ -997,9 +997,9 @@ QPushButton:pressed {
       <property name="geometry">
        <rect>
         <x>35</x>
-        <y>10</y>
+        <y>30</y>
         <width>400</width>
-        <height>400</height>
+        <height>390</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -1011,13 +1011,13 @@ QPushButton:pressed {
       <property name="minimumSize">
        <size>
         <width>400</width>
-        <height>400</height>
+        <height>390</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
         <width>400</width>
-        <height>400</height>
+        <height>390</height>
        </size>
       </property>
       <property name="font">
@@ -3394,6 +3394,68 @@ border-radius:15px;</string>
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QLabel" name="le_scale_horizontal">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>0</y>
+        <width>271</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+        <italic>true</italic>
+        <bold>true</bold>
+        <underline>false</underline>
+        <strikeout>false</strikeout>
+       </font>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="VerticalLabel" name="le_scale_vertical">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>21</width>
+        <height>211</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>13</pointsize>
+        <italic>true</italic>
+        <bold>true</bold>
+        <underline>false</underline>
+        <strikeout>false</strikeout>
+       </font>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LayoutDirection::LeftToRight</enum>
+      </property>
+      <property name="locale">
+       <locale language="English" country="Austria"/>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="scaledContents">
+       <bool>false</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="wordWrap">
+       <bool>false</bool>
+      </property>
+     </widget>
      <zorder>frame_meta_object</zorder>
      <zorder>btn_save</zorder>
      <zorder>cropped_image</zorder>
@@ -3404,6 +3466,8 @@ border-radius:15px;</string>
      <zorder>txt_notes</zorder>
      <zorder>frame_subtype</zorder>
      <zorder>label_8</zorder>
+     <zorder>le_scale_horizontal</zorder>
+     <zorder>le_scale_vertical</zorder>
     </widget>
    </item>
   </layout>
@@ -3419,6 +3483,11 @@ border-radius:15px;</string>
    <class>InteractiveCombo</class>
    <extends>QComboBox</extends>
    <header>app.custom_elements.comboInteractive.h</header>
+  </customwidget>
+  <customwidget>
+   <class>VerticalLabel</class>
+   <extends>QLabel</extends>
+   <header>app.custom_elements.verticallabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -227,7 +227,7 @@ class ImageScene(QGraphicsScene):
                     self.working_instruction = False
                     coordinates = [event.scenePos().x(), event.scenePos().y()]
                     point_item.object_id = self.store_sightings(
-                        QRect(int(coordinates[0]) - 200, int(coordinates[1]) - 200, 400, 400),
+                        QRect(int(coordinates[0]) - 25, int(coordinates[1]) - 25, 50, 50),
                         'Point', [event.scenePos()])
                     # point_item.setToolTip(tooltip)
                     self.addItem(point_item)

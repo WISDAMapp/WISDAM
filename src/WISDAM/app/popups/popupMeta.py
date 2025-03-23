@@ -23,9 +23,9 @@ from collections import OrderedDict
 import logging
 
 from PySide6 import QtCore
-from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import (QPixmap)
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import QWidget, QLabel
+from PySide6.QtGui import (QPixmap, QPainter)
+from PySide6.QtCore import Qt, Signal, Slot, QSize
 
 from app.gui_design.ui_meta import Ui_popup_meta
 
@@ -78,6 +78,7 @@ class POPUPMeta(QWidget):
         self.config_meta_type = ''
         self.mapping_table = {}
         self.object_types = OrderedDict()
+        self.pixmap_orig_size = (0, 0)
 
         self.change_image_env_none = False
         self.change_image_env_propagate = False
@@ -101,6 +102,18 @@ class POPUPMeta(QWidget):
 
     def set_db(self, db):
         self.db = db
+
+    def set_scale(self, gsd: float):
+        unit = "m"
+        unit_scale = 1
+        length_v = gsd * self.pixmap_orig_size[1]
+        length_h = gsd * self.pixmap_orig_size[0]
+
+        if length_v < 0.50 or length_h < 0.50:
+            unit = "cm"
+            unit_scale = 100
+        self.ui.le_scale_vertical.setText("%3.2f %s" % (length_v * unit_scale, unit))
+        self.ui.le_scale_horizontal.setText("%3.2f %s" % (length_h * unit_scale, unit))
 
     @Slot(object)
     def env_changed(self, config: dict):
@@ -133,7 +146,8 @@ class POPUPMeta(QWidget):
 
             if config.get("environment_propagation", False):
                 self.change_image_env_none = config["environment_propagation"]["first_object_set_override_none_image"]
-                self.change_image_env_propagate = config["environment_propagation"]["first_object_set_override_porpagated_image"]
+                self.change_image_env_propagate = config["environment_propagation"][
+                    "first_object_set_override_porpagated_image"]
 
             first_key = list(config['meta_config'].keys())[0]
             self.config_meta_type = first_key
@@ -550,6 +564,10 @@ class POPUPMeta(QWidget):
         data = self.db.load_objects_single(self.object_id)
         self.image_id = data["image"]
 
+        self.pixmap_orig_size = (0, 0)
+        self.ui.le_scale_vertical.setText(None)
+        self.ui.le_scale_horizontal.setText(None)
+
         # Environment data
         # Get environment data from image
         # If the object has stored as well environment data it will be preferred
@@ -581,10 +599,15 @@ class POPUPMeta(QWidget):
         # Load the sub image of the object which is stored as blob binary in jpg
         pixmap = QPixmap()
         pixmap.loadFromData(data['cropped_image'], "JPG")
+        self.pixmap_orig_size = (pixmap.width(), pixmap.height())
         # Scale to the size of widget to draw in
         w = self.ui.cropped_image.width()
         h = self.ui.cropped_image.height()
         self.ui.cropped_image.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
+
+        if data["gsd"]:
+            if data["gsd"] > 0.0:
+                self.set_scale(data["gsd"])
 
         meta_data = {}
         if data['data']:
@@ -826,7 +849,6 @@ class POPUPMeta(QWidget):
                 # If image has no env data or only propagated than assign env if data is set here to image
                 if ((self.image_env_data_type is None and self.change_image_env_none) or
                         (self.image_env_data_type in [1, 3] and self.change_image_env_propagate)):
-
                     self.db.store_image_environment_data(self.data_env, self.image_id)
 
             self.object_change.emit(self.object_id, self.image_id)
