@@ -1441,6 +1441,14 @@ class DBHandler:
         self.con.commit()
         return data.lastrowid
 
+    def se_active_status_all(self, active: bool):
+        query = r"""update ai_detections
+                    set active=:active_int
+                    where imported=0
+                """
+        data = self.con.execute(query, {'active_int': 1 if active else 0})
+        self.con.commit()
+
     def ai_create_detection_multi(self, query_list):
 
         #{'image_id': image_id,

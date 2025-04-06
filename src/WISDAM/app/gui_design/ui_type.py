@@ -354,8 +354,8 @@ class Ui_popup_type(object):
         font1.setPointSize(9)
         self.frame_main.setFont(font1)
         self.frame_main.setStyleSheet(u"background-color: rgb(34, 36, 50);")
-        self.frame_main.setFrameShape(QFrame.NoFrame)
-        self.frame_main.setFrameShadow(QFrame.Raised)
+        self.frame_main.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_main.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout = QVBoxLayout(self.frame_main)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -366,8 +366,8 @@ class Ui_popup_type(object):
         self.frame_top.setMaximumSize(QSize(16777215, 40))
         self.frame_top.setStyleSheet(u"background-color:rgb(85, 85, 85);\n"
 "color: white;")
-        self.frame_top.setFrameShape(QFrame.NoFrame)
-        self.frame_top.setFrameShadow(QFrame.Raised)
+        self.frame_top.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_top.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_2 = QHBoxLayout(self.frame_top)
         self.horizontalLayout_2.setSpacing(10)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -376,7 +376,7 @@ class Ui_popup_type(object):
         self.lbl_icon.setObjectName(u"lbl_icon")
         self.lbl_icon.setMinimumSize(QSize(30, 30))
         self.lbl_icon.setMaximumSize(QSize(30, 30))
-        self.lbl_icon.setPixmap(QPixmap(u":/icons/icons/WISDAM_Icon_square_small.png"))
+        self.lbl_icon.setPixmap(QPixmap(u":/icons/icons/WISDAM_Icon_square_small.svg"))
 
         self.horizontalLayout_2.addWidget(self.lbl_icon)
 
@@ -389,7 +389,7 @@ class Ui_popup_type(object):
         self.label_title.setFont(font2)
         self.label_title.setStyleSheet(u"background: transparent;\n"
 "")
-        self.label_title.setFrameShadow(QFrame.Raised)
+        self.label_title.setFrameShadow(QFrame.Shadow.Raised)
 
         self.horizontalLayout_2.addWidget(self.label_title)
 
@@ -408,8 +408,8 @@ class Ui_popup_type(object):
         font3.setBold(True)
         self.frame_center.setFont(font3)
         self.frame_center.setStyleSheet(u"")
-        self.frame_center.setFrameShape(QFrame.NoFrame)
-        self.frame_center.setFrameShadow(QFrame.Raised)
+        self.frame_center.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_center.setFrameShadow(QFrame.Shadow.Raised)
         self.btn_ok = QPushButton(self.frame_center)
         self.btn_ok.setObjectName(u"btn_ok")
         self.btn_ok.setGeometry(QRect(30, 66, 88, 21))

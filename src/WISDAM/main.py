@@ -60,6 +60,7 @@ from app.popups.popupImageMeta import POPUPImageMeta
 from app.popups.popupMapper import POPUPMapper
 from app.popups.popupAbout import POPUPAbout
 from app.popups.popupTextInput import POPUPTextInput
+from app.popups.popupConfirm import POPUPConfirm
 # Model Views, List
 from app.model_views.imageListView import (ImageListModel, digitizer_image_panel_assign_model,
                                            IconCenterDelegate, RolesImagePane)
@@ -98,6 +99,7 @@ from WISDAM import software_version
 
 # AI imports
 from ai.wisdam_ai_wrapper import WISDAMAi, import_ai_detections_to_objects
+from ai.import_objects import change_active_all
 # from ai.wisdam_docker import docker_running
 from ai.base_class import AILoaderType
 
@@ -679,6 +681,10 @@ class MainWindow(QMainWindow):
         self.ui.rd_toggle_labels.clicked.connect(self.toggle_ai_label)
         self.ui.ai_cmb_input_type.currentIndexChanged.connect(self.ai_input_chooser)
         self.ui.btn_load_ai_res_filesystem.clicked.connect(self.load_ai_results_filesystem)
+
+        self.ui.btn_ai_activate_all.clicked.connect(lambda: self.ai_change_active_all(activate=True))
+        self.ui.btn_ai_deactivate_all.clicked.connect(lambda: self.ai_change_active_all(activate=False))
+
         self.ui.btn_ai_toggle_props.clicked.connect(lambda: toggle_visible_frame(self.ui.btn_ai_toggle_props,
                                                                                  self.ui.frame_ai_properties))
 
@@ -1452,7 +1458,6 @@ class MainWindow(QMainWindow):
 
             if gsd is not None:
                 if gsd > 0.0:
-
                     self.popup_meta.set_scale(gsd)
 
         # We do not need to check if Object ID exists, sqlite update will simply find not the ID
@@ -1660,6 +1665,7 @@ class MainWindow(QMainWindow):
         self.popup_meta.configure_object_types(config)
 
         self.update_table_views()
+        self.ui.ai_waiting_spinner.stop()
 
     @Slot()
     def thread_complete_ai_run(self):
@@ -1806,6 +1812,22 @@ class MainWindow(QMainWindow):
                 worker.signals.error.connect(self.thread_error)
                 self.threadpool.start(worker)
                 self.ai_time_processing = time.time()
+                self.ui.ai_waiting_spinner.start()
+            else:
+                logger.warning(self.db_is_locked)
+
+    def ai_change_active_all(self, activate: bool = False):
+        if self.db is not None:
+            if not self.db_is_locked:
+
+                v = POPUPConfirm("Are you sure about that operation?")
+                if v.exec():
+                    self.db_is_locked = "Locked for change active Status of all Detections"
+                    worker = Worker(change_active_all, self.db.path, activate)
+                    worker.signals.finished.connect(self.thread_complete_ai_run)
+                    worker.signals.error.connect(self.thread_error)
+                    self.threadpool.start(worker)
+                    self.ui.ai_waiting_spinner.start()
             else:
                 logger.warning(self.db_is_locked)
 
@@ -3550,7 +3572,7 @@ def main():
     pyproj_datadir.append_data_dir(path_to_proj_dir.as_posix())
     # Nuitka and PyInstaller already  bundling now the libraries in the correct place
     # pyproj.datadir.set_data_dir((path_to_datadir / "proj").as_posix())
-    
+
     freeze_support()
     app = QApplication()
     QFontDatabase.addApplicationFont('app/gui_design/fonts/segoeui.ttf')

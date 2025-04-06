@@ -11,5 +11,6 @@ pyside6-uic.exe --from-imports -o ..\src\WISDAM\app\gui_design\ui_project_creato
 pyside6-uic.exe --from-imports -o ..\src\WISDAM\app\gui_design\ui_image_meta.py ..\src\WISDAM\app\gui_design\gui_image_meta.ui
 pyside6-uic.exe --from-imports -o ..\src\WISDAM\app\gui_design\ui_mapper.py  ..\src\WISDAM\app\gui_design\gui_mapper.ui
 pyside6-uic.exe --from-imports -o ..\src\WISDAM\app\gui_design\ui_about.py   ..\src\WISDAM\app\gui_design\gui_about.ui
+pyside6-uic.exe --from-imports -o ..\src\WISDAM\app\gui_design\ui_confirm.py   ..\src\WISDAM\app\gui_design\gui_confirm.ui
 
 pyside6-rcc.exe  -o ..\src\WISDAM\app\gui_design\files_rc.py ..\src\WISDAM\app\gui_design\files.qrc

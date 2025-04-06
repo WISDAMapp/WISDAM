@@ -42,6 +42,13 @@ from WISDAMcore.exceptions import MappingError
 logger = logging.getLogger(__name__)
 
 
+def change_active_all(db_path: Path, active: bool):
+
+    db = DBHandler.from_path(db_path, '')
+
+    db.se_active_status_all(active)
+
+
 def process_detections_to_ai_detections(db_path: Path, user: str, ai_process_name: str,
                                         detections: dict[str, list[AIDetectionImport]],
                                         queue: Queue | None = None):
@@ -367,7 +374,7 @@ def process_ai_detections_to_objects(db_path: Path, user: str,
                                            'geom3d': json.dumps(geojson3d)})
                         success += 1
 
-                queue.put((len(ai_detections), idx_image))
+                queue.put(('progress', (len(ai_detections), idx_image)))
                 # We will store to db if query list has more than 100 entries
                 if len(query_list) > 150:
                     db.objects_create_from_ai_multi(query_list)

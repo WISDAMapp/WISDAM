@@ -799,10 +799,10 @@ QSlider::handle:vertical:pressed {
       <string notr="true">background-color: rgb(34, 36, 50);</string>
      </property>
      <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
+      <enum>QFrame::Shape::NoFrame</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <property name="spacing">
@@ -839,10 +839,10 @@ QSlider::handle:vertical:pressed {
 color: white;</string>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="spacing">
@@ -878,7 +878,7 @@ color: white;</string>
             <string/>
            </property>
            <property name="pixmap">
-            <pixmap resource="files.qrc">:/icons/icons/WISDAM_Icon_square_small.png</pixmap>
+            <pixmap resource="files.qrc">:/icons/icons/WISDAM_Icon_square_small.svg</pixmap>
            </property>
           </widget>
          </item>
@@ -899,7 +899,7 @@ color: white;</string>
 </string>
            </property>
            <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
+            <enum>QFrame::Shadow::Raised</enum>
            </property>
            <property name="text">
             <string>CHANGE TYPE</string>
@@ -927,10 +927,10 @@ color: white;</string>
          <string notr="true"/>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <widget class="QPushButton" name="btn_ok">
          <property name="geometry">

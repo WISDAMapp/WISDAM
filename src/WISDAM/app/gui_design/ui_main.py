@@ -3558,6 +3558,54 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_16.addItem(self.verticalSpacer)
 
+        self.btn_ai_activate_all = QPushButton(self.frame_24)
+        self.btn_ai_activate_all.setObjectName(u"btn_ai_activate_all")
+        self.btn_ai_activate_all.setEnabled(True)
+        self.btn_ai_activate_all.setMinimumSize(QSize(100, 40))
+        self.btn_ai_activate_all.setFont(font16)
+        self.btn_ai_activate_all.setStyleSheet(u"QPushButton {\n"
+"	border: 2px solid rgb(52, 59, 72);\n"
+"	border-radius: 5px;	\n"
+"	background-color: rgb(52, 59, 72);\n"
+"}\n"
+"QPushButton:hover {\n"
+"	background-color: rgb(57, 65, 80);\n"
+"	border: 2px solid rgb(61, 70, 86);\n"
+"}\n"
+"QPushButton:pressed {	\n"
+"	background-color: rgb(35, 40, 49);\n"
+"	border: 2px solid rgb(43, 50, 61);\n"
+"}")
+        self.btn_ai_activate_all.setText(u"Activate all Detections")
+
+        self.verticalLayout_16.addWidget(self.btn_ai_activate_all)
+
+        self.btn_ai_deactivate_all = QPushButton(self.frame_24)
+        self.btn_ai_deactivate_all.setObjectName(u"btn_ai_deactivate_all")
+        self.btn_ai_deactivate_all.setEnabled(True)
+        self.btn_ai_deactivate_all.setMinimumSize(QSize(100, 40))
+        self.btn_ai_deactivate_all.setFont(font16)
+        self.btn_ai_deactivate_all.setStyleSheet(u"QPushButton {\n"
+"	border: 2px solid rgb(52, 59, 72);\n"
+"	border-radius: 5px;	\n"
+"	background-color: rgb(52, 59, 72);\n"
+"}\n"
+"QPushButton:hover {\n"
+"	background-color: rgb(57, 65, 80);\n"
+"	border: 2px solid rgb(61, 70, 86);\n"
+"}\n"
+"QPushButton:pressed {	\n"
+"	background-color: rgb(35, 40, 49);\n"
+"	border: 2px solid rgb(43, 50, 61);\n"
+"}")
+        self.btn_ai_deactivate_all.setText(u"Deactivate all Detections")
+
+        self.verticalLayout_16.addWidget(self.btn_ai_deactivate_all)
+
+        self.verticalSpacer_10 = QSpacerItem(20, 60, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+        self.verticalLayout_16.addItem(self.verticalSpacer_10)
+
         self.btn_import_ai = QPushButton(self.frame_24)
         self.btn_import_ai.setObjectName(u"btn_import_ai")
         self.btn_import_ai.setEnabled(True)
@@ -4261,7 +4309,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.page_stack.setCurrentIndex(1)
+        self.page_stack.setCurrentIndex(6)
         self.tab_imports.setCurrentIndex(0)
         self.imp_stack_type.setCurrentIndex(1)
         self.stack_image_test.setCurrentIndex(0)
