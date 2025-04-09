@@ -18,6 +18,16 @@
 # ==============================================================================
 
 
+# Some info about DJI tags and values
+
+# For older DJI models there was some inconsistency in the tags
+# Also the altitude was quite strange for some old models
+
+# https://dl.djicdn.com/downloads/p4-multispectral/20200717/P4_Multispectral_Image_Processing_Guide_EN.pdf
+# https://dl.djicdn.com/downloads/DJI_Mavic_3_Enterprise/20230829/Mavic_3M_Image_Processing_Guide_EN.pdf
+# https://exiftool.org/TagNames/DJI.html
+
+
 import logging
 import numpy as np
 from numpy import sin, cos
@@ -36,8 +46,11 @@ from WISDAMcore.transform.rotation import Rotation
 
 logger = logging.getLogger(__name__)
 
-aircraft_notation_to_front_notation = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]]) #  Angles of aircraft are defined in X forware, y right and z down
-swap_ned_to_enu_coo_system = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])  #  Swap from NED to ENU coordinates
+#  Angles of aircraft are defined in X forware, y right and z down
+aircraft_notation_to_front_notation = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+
+#  Swap from NED to ENU coordinates
+swap_ned_to_enu_coo_system = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
 swap_body_cam = np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
 swap_body_cam_gimbal = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
 
@@ -106,19 +119,26 @@ class DJIStandard(ImageBaseLoader):
         roll = None
         yaw = None
         pitch = None
-        gimbal_used = False
+        angle_in_direction_of_view = False
         
         if {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
+            angle_in_direction_of_view = True
             pitch = float(meta_data['XMP:CameraPitch']) * np.pi / 180.0
             roll = float(meta_data['XMP:CameraRoll']) * np.pi / 180.0
             yaw = float(meta_data['XMP:CameraYaw']) * np.pi / 180.0
 
         elif {'MakerNotes:CameraRoll', 'MakerNotes:CameraYaw', 'MakerNotes:CameraPitch'} <= meta_data.keys():
+            angle_in_direction_of_view = True
             pitch = float(meta_data['MakerNotes:CameraPitch']) * np.pi / 180.0
             roll = float(meta_data['MakerNotes:CameraRoll']) * np.pi / 180.0
             yaw = float(meta_data['MakerNotes:CameraYaw']) * np.pi / 180.0
 
         elif {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
+            pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
+            roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
+            yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
+
+        elif {'MakerNotes:Roll', 'MakerNotes:Yaw', 'MakerNotes:Pitch'} <= meta_data.keys():
             pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
             roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
             yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
@@ -128,7 +148,7 @@ class DJIStandard(ImageBaseLoader):
         #    pitch = float(meta_data['XMP:FlightPitchDegree']) * np.pi / 180.0
 
         elif {'XMP:GimbalRollDegree', 'XMP:GimbalYawDegree', 'XMP:GimbalPitchDegree'} <= meta_data.keys():
-            gimbal_used = True
+            angle_in_direction_of_view = True
             roll = float(meta_data['XMP:GimbalRollDegree']) * np.pi / 180.0
             yaw = float(meta_data['XMP:GimbalYawDegree']) * np.pi / 180.0
             pitch = (float(meta_data['XMP:GimbalPitchDegree'])) * np.pi / 180.0
@@ -145,7 +165,10 @@ class DJIStandard(ImageBaseLoader):
             # Bring rotation into the cameras coordinate system. X left, Y top, Z backwards of viewing direction
             rot_enu_body = (swap_ned_to_enu_coo_system @ rot_sys) @ aircraft_notation_to_front_notation
 
-            if gimbal_used:
+            # If angle_in_direction_of_view is True we will assume the Angles refere to a system where
+            # the viewing direction is specified in the angles
+            # The other version is that the sensor direction is the one used. so for nadir images the sensor is horizontal
+            if angle_in_direction_of_view:
                 rot_enu_cam = rot_enu_body @ swap_body_cam_gimbal
             else:
                 rot_enu_cam = rot_enu_body @ swap_body_cam

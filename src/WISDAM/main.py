@@ -3152,14 +3152,14 @@ class MainWindow(QMainWindow):
     def logfile_chooser(self):
         self.log_file = None
         self.ui.imp_rd_recursive_logfiles_folder.setChecked(False)
-        logfile, _ = QFileDialog.getOpenFileName(self, caption="Choose Logfile", dir='.')
+        logfile, _ = QFileDialog.getOpenFileName(self, caption="Choose Logfile", dir=self.db.path.parent.as_posix())
         if logfile:
             if Path(logfile).is_file():
                 self.log_file = Path(logfile)
 
     def logfile_path_chooser(self):
         self.log_file = None
-        logfile_path = QFileDialog.getExistingDirectory(self, caption="Choose Logfile Folder", dir='.')
+        logfile_path = QFileDialog.getExistingDirectory(self, caption="Choose Logfile Folder", dir=self.db.path.parent.as_posix())
         if logfile_path:
             self.log_file = Path(logfile_path)
 
@@ -3249,7 +3249,7 @@ class MainWindow(QMainWindow):
             if self.log_file is not None:
                 folder = self.log_file.parent.as_posix()
             else:
-                folder = '.'
+                folder = self.db.path.parent.as_posix()
 
             manual_georef = None
             if self.ui.imp_stack_georef.isVisible():

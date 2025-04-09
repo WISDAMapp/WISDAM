@@ -17,6 +17,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 # ==============================================================================
 
+# We follow the specifications from here, but there is nothing standardized at all
+# https://support.pix4d.com/hc/en-us/articles/360016450032
 
 import logging
 import numpy as np

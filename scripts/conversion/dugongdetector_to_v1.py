@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,11 +45,8 @@ from WISDAMcore.transform.coordinates import CoordinatesTransformer
 from multiprocessing import Pool
 
 
-def f(x):
-    return x * x
-
-
 path_to_bin = Path(__file__).resolve().parent.parent.with_name("bin")
+path_to_config = Path(__file__).resolve().parent.parent.with_name("config")
 
 
 def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
@@ -57,10 +54,10 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
     pyproj.network.set_network_enabled(active=True)
     print(file_convert.name, "start conversion")
 
-    if (path_to_bin / "project_config_dugongdetector_wisdamv1.json").exists():
-        config = json.load(open(path_to_bin / "project_config_dugongdetector_wisdamv1.json", 'r'))
+    if (path_to_config / "project_config_dugongdetector.json").exists():
+        config = json.load(open(path_to_config / "project_config_dugongdetector.json", 'r'))
     else:
-        config = json.load(open("project_config_dugongdetector_wisdamv1.json", 'r'))
+        raise FileNotFoundError("Config File not found under config")
 
     db_connection_old = dbapi2.connect(file_convert)
     init(db_connection_old)
@@ -90,21 +87,31 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
     color_scheme_start = {"projection": {"attribute": "projection", "colors": {0: "#96ffaa00", 1: "#96ff007f"}}}
     db_new.color_scheme = color_scheme_start
 
-    query = r"""select images.*, Count(sightings.image) as obj_count, 
+    query = r"""select images.*, 
                  asgeojson(images.footprint) as geom,
                  asgeojson(images.position) as position_json from images
                  left join sightings on images.id = sightings.image
                  group by images.id
                  order by images.id"""
+
+    query = r"""select *, 
+                 asgeojson(images.footprint) as geom,
+                 asgeojson(images.position) as position_json from images
+                 WHERE  id  IN(SELECT  image FROM  sightings)
+                 order by id
+                 """
+
     images = db_connection_old.execute(query).fetchall()
 
     images_dict = {}
-
+    images_dict_all = {}
+    image_count = 0
     for data in tqdm(images):
 
         # if objects:
         #    print(len(objects))
 
+        image_count +=1
         path = Path(data["path"])
         image_user = data["user"]
         width = data["width"]
@@ -119,10 +126,11 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
             c_x = ior['x0']
             c_y = ior['y0']
 
-            try:
-                camera = CameraOpenCVPerspective(width, height, fx=focal_pixel, fy=focal_pixel, cx=c_x, cy=c_y)
-            except:
-                raise "An error occurred while creating Camera for %s" % path.as_posix()
+            if focal_pixel != 0.0:
+                try:
+                    camera = CameraOpenCVPerspective(width, height, fx=focal_pixel, fy=focal_pixel, cx=c_x, cy=c_y)
+                except:
+                    raise TypeError("An error occurred while creating Camera for %s" % path.as_posix())
 
         position = None
         utm_crs = None
@@ -225,16 +233,24 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
                                               'inspected': data['inspected'],
                                               'footprint_json': footprint}
 
-    print(file_convert.name, "start image insertion")
-    db_new.image_create_multi_all_fields(images_dict)
-    print(file_convert.name, "images inserted")
+        if image_count > 1000:
+            db_new.image_create_multi_all_fields(images_dict)
+            image_count = 0
+            images_dict_all.update(images_dict)
+            images_dict = {}
+
+    if image_count > 0:
+        print(file_convert.name, "start image insertion")
+        db_new.image_create_multi_all_fields(images_dict)
+        print(file_convert.name, "images inserted")
+        images_dict_all.update(images_dict)
 
     images_new = db_new.load_images_list()
 
     images_new_dict = {item['path']: item for item in images_new}
 
     images_dict_id = {}
-    for key, value in images_dict.items():
+    for key, value in images_dict_all.items():
         image_id = images_new_dict[key]['id']
         images_dict_id[image_id] = value['image']
         images_dict_id[image_id].id = image_id
@@ -325,22 +341,20 @@ def multi_conversion(parent_path: Path, path_out: Path):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 3:
-        print("First parameter: Either file path or folder where sqlites are converted.")
-        print("Second parameter: Output folder")
-        sys.exit()
+    path_src = input("Enter Source Sqlite or Folder: ")
+    path_out = input("Enter Destination Folder: ")
 
-    path_src = Path(sys.argv[1])
-    path_out = Path(sys.argv[2])
+    print("Source: " + path_src)
+    print("Destination: " + path_out)
+
+    path_src = Path(path_src)
+    path_out = Path(path_out)
 
     if path_out.is_file():
         print("The second parameter has to bhe the output directory and not a file")
         sys.exit()
 
     sqlite_extension = path_to_bin / 'spatialite-loadable-modules-5.0.0-win-amd64'
-    if not sqlite_extension.exists():
-        sqlite_extension = Path(__file__).resolve().parent.parent.with_name(
-            "bin") / 'spatialite-loadable-modules-5.0.0-win-amd64'
 
     os.environ['PATH'] = ';'.join([sqlite_extension.as_posix(), os.environ['PATH']])
     # enable pyproj network capabilities for downloading raster and transformation grids

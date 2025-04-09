@@ -47,6 +47,7 @@ class AircraftAeroGlobe(ImageBaseLoader):
         super().__init__()
         self.name = 'Aircraft AeroGlobe'
         self.loader_type = LoaderType.Logfile_Loader
+        self.crs_input_show = True
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:
@@ -75,7 +76,11 @@ class AircraftAeroGlobe(ImageBaseLoader):
 
         # the names of the log_data pandas dataframe is defined in extract logfiles
 
-        meta_data.pop("EXIF:FocalPlaneResolutionUnit")
+        crs_data: CRS = kwargs['crs']
+
+        # not sure anymore why I did this, probably because there was some problem with the GFX camera
+        # meta_data.pop("EXIF:FocalPlaneResolutionUnit")
+
         camera, width, height = estimate_camera_from_meta_dict(meta_dict=meta_data)
 
         position = None
@@ -89,9 +94,11 @@ class AircraftAeroGlobe(ImageBaseLoader):
         data = log_data.loc[log_data['id'].str.contains(image_path.stem)]
         if not data.empty:
             data = data.iloc[0]
-            crs_exif = CRS("EPSG:4979")
-            #crs_exif = CRS("EPSG:4326+3855")
-            result = point_convert_utm_wgs84_egm2008(crs_exif, data.lng, data.lat, data.alt)
+
+            if crs_data is None:
+                crs_data = CRS("EPSG:4979")
+
+            result = point_convert_utm_wgs84_egm2008(crs_data, data.lng, data.lat, data.alt)
 
             if result is not None:
                 x, y, z, crs = result
