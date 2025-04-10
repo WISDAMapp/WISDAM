@@ -68,6 +68,7 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                    flag_recursive_image: bool = False,
                    flag_recursive_log: bool = False,
                    flag_log_fom_image_folder: bool = False,
+                   vertical_ref: str = '',
                    path_to_exiftool: Path | None = None,
                    progress_callback=None) -> dict | None:
     # Get IMAGES of folder and get Exif meta data
@@ -224,7 +225,8 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                                                        crs=crs_manual,
                                                        georef_input=georef_input,
                                                        log_data=log_data,
-                                                       image_meta_data=meta_data)
+                                                       image_meta_data=meta_data,
+                                                       vertical_ref=vertical_ref)
 
                 # result is only None if it completely fails to open the image aka not width and height can be read.
                 if result is None:

@@ -124,7 +124,7 @@ class WINGRAOmegaPhiKappa(ImageBaseLoader):
         if not row.empty:
             row = row.iloc[0]
 
-            crs = CRS("EPSG:4326+5773")
+            crs = CRS("EPSG:4326+3855")
             result = point_convert_utm_wgs84_egm2008(crs, row.lon, row.lat, row.alt)
 
             if result is not None:

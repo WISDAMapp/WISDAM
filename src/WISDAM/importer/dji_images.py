@@ -77,6 +77,7 @@ class DJIStandard(ImageBaseLoader):
     def get(self, image_path: Path, meta_data: dict, **kwargs) -> tuple[ImageBase, int, int] | None:
 
         crs_data: CRS = kwargs['crs']
+        vertical_ref: str = kwargs['vertical_ref']
 
         camera, width, height = estimate_camera_from_meta_dict(meta_dict=meta_data)
         position = None
@@ -102,8 +103,18 @@ class DJIStandard(ImageBaseLoader):
             #    crs_vert_exif = 3855
 
             if crs_data is None:
-                crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
-                crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                if vertical_ref == 'orthometric':
+                    crs_hor_exif = 4326
+                    crs_vert_exif = 3855
+
+                else:
+                    crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
+                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                if meta_data.get('XMP:HorizCS', None) is not None:
+                    crs_hor_exif = meta_data['XMP:HorizCS']
+                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
 
                 if crs_vert_exif == 'ellipsoidal':
                     crs_data = CRS(crs_hor_exif).to_3d()
@@ -120,7 +131,7 @@ class DJIStandard(ImageBaseLoader):
         yaw = None
         pitch = None
         angle_in_direction_of_view = False
-        
+
         if {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
             angle_in_direction_of_view = True
             pitch = float(meta_data['XMP:CameraPitch']) * np.pi / 180.0
@@ -139,9 +150,9 @@ class DJIStandard(ImageBaseLoader):
             yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
 
         elif {'MakerNotes:Roll', 'MakerNotes:Yaw', 'MakerNotes:Pitch'} <= meta_data.keys():
-            pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
-            roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
-            yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
+            pitch = float(meta_data.get('MakerNotes:Pitch', 0.0)) * np.pi / 180.0
+            roll = float(meta_data.get('MakerNotes:Roll', 0.0)) * np.pi / 180.0
+            yaw = float(meta_data.get('MakerNotes:Yaw', 0.0)) * np.pi / 180.0
         # elif {'XMP:FlightRollDegree', 'XMP:FlightYawDegree', 'XMP:FlightPitchDegree'} <= meta_data.keys():
         #    roll = float(meta_data['XMP:FlightRollDegree']) * np.pi / 180.0
         #    yaw = float(meta_data['XMP:FlightYawDegree']) * np.pi / 180.0
@@ -153,6 +164,13 @@ class DJIStandard(ImageBaseLoader):
             yaw = float(meta_data['XMP:GimbalYawDegree']) * np.pi / 180.0
             pitch = (float(meta_data['XMP:GimbalPitchDegree'])) * np.pi / 180.0
 
+        elif {'MakerNotes:GimbalRollDegree',
+              'MakerNotes:GimbalYawDegree',
+              'MakerNotes:GimbalPitchDegree'} <= meta_data.keys():
+            angle_in_direction_of_view = True
+            roll = float(meta_data['MakerNotes:GimbalRollDegree']) * np.pi / 180.0
+            yaw = float(meta_data['MakerNotes:GimbalYawDegree']) * np.pi / 180.0
+            pitch = (float(meta_data['MakerNotes:GimbalPitchDegree'])) * np.pi / 180.0
         if pitch is not None and roll is not None and yaw is not None:
 
             # Rotation of IMAGE
@@ -167,7 +185,8 @@ class DJIStandard(ImageBaseLoader):
 
             # If angle_in_direction_of_view is True we will assume the Angles refere to a system where
             # the viewing direction is specified in the angles
-            # The other version is that the sensor direction is the one used. so for nadir images the sensor is horizontal
+            # The other version is that the sensor direction is the one used.
+            # So for nadir images the sensor is horizontal
             if angle_in_direction_of_view:
                 rot_enu_cam = rot_enu_body @ swap_body_cam_gimbal
             else:

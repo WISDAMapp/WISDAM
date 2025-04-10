@@ -48,6 +48,7 @@ class OmegaPhiKappCSV(ImageBaseLoader):
         self.crs_input_show = True
         self.crs_input_mandatory = True
         self.log_file_contains_image_path = True
+        self.info_text = "Columns for the CSV file path,x,y,z,omega,phi,kappa"
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

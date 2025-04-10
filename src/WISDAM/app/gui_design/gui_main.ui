@@ -1680,7 +1680,7 @@ QPushButton:pressed {
                 <string notr="true"/>
                </property>
                <property name="currentIndex">
-                <number>6</number>
+                <number>1</number>
                </property>
                <widget class="QWidget" name="page_home">
                 <property name="sizePolicy">
@@ -2556,7 +2556,7 @@ QPushButton:pressed {
                      <x>50</x>
                      <y>100</y>
                      <width>401</width>
-                     <height>241</height>
+                     <height>231</height>
                     </rect>
                    </property>
                    <property name="currentIndex">
@@ -2615,6 +2615,60 @@ QPushButton:pressed {
                        <string>Adjust relative altitude for all images to [m]:</string>
                       </property>
                      </widget>
+                    </widget>
+                   </widget>
+                   <widget class="QWidget" name="imp_stack_vert_ref">
+                    <widget class="QRadioButton" name="imp_rd_ortho_heights">
+                     <property name="geometry">
+                      <rect>
+                       <x>30</x>
+                       <y>39</y>
+                       <width>331</width>
+                       <height>61</height>
+                      </rect>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>11</pointsize>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string notr="true">GPS heights refere to orthometric heights
+(mean sea level, heights above geoid)</string>
+                     </property>
+                     <property name="autoExclusive">
+                      <bool>true</bool>
+                     </property>
+                     <attribute name="buttonGroup">
+                      <string notr="true">buttonGroup_importer_vert_reference</string>
+                     </attribute>
+                    </widget>
+                    <widget class="QRadioButton" name="imp_rd_ell_heights">
+                     <property name="geometry">
+                      <rect>
+                       <x>30</x>
+                       <y>120</y>
+                       <width>311</width>
+                       <height>51</height>
+                      </rect>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>11</pointsize>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string notr="true">GPS heights refere to ellipsoid heights
+(directly from GNSS)</string>
+                     </property>
+                     <property name="autoExclusive">
+                      <bool>true</bool>
+                     </property>
+                     <attribute name="buttonGroup">
+                      <string notr="true">buttonGroup_importer_vert_reference</string>
+                     </attribute>
                     </widget>
                    </widget>
                    <widget class="QWidget" name="imp_stack_logFile">
@@ -3088,10 +3142,10 @@ QPushButton:pressed {
                    </property>
                    <property name="geometry">
                     <rect>
-                     <x>70</x>
+                     <x>50</x>
                      <y>40</y>
                      <width>361</width>
-                     <height>61</height>
+                     <height>51</height>
                     </rect>
                    </property>
                    <property name="font">
@@ -3680,9 +3734,9 @@ for META data</string>
                   <widget class="QFrame" name="frame_imp_epsg">
                    <property name="geometry">
                     <rect>
-                     <x>70</x>
+                     <x>40</x>
                      <y>350</y>
-                     <width>361</width>
+                     <width>421</width>
                      <height>131</height>
                     </rect>
                    </property>
@@ -3700,8 +3754,8 @@ for META data</string>
                      <rect>
                       <x>10</x>
                       <y>4</y>
-                      <width>341</width>
-                      <height>71</height>
+                      <width>401</width>
+                      <height>91</height>
                      </rect>
                     </property>
                     <property name="font">
@@ -3711,7 +3765,7 @@ for META data</string>
                      </font>
                     </property>
                     <property name="text">
-                     <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Override CRS (e.g. for JPG orhto where no &amp;quot;.prj&amp;quot;-File is present, or for CSV importer) - &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Optional for most Importers&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;CRS like e.g &amp;quot;EPSG:4326+3855&amp;quot; or &amp;quot;EPSG:28533&amp;quot;: &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Override CRS - Optional for most Importers&lt;br/&gt;&lt;/span&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;e.g. JPG orhtos where no &amp;quot;.prj&amp;quot;-File is present, mandatory for CSV importer&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;CRS like EPSG:4326+3855 or EPSG:4979&lt;br/&gt;or EPSG:28533 for orthophotos&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="wordWrap">
                      <bool>true</bool>
@@ -3736,6 +3790,43 @@ for META data</string>
                      <string notr="true"/>
                     </property>
                    </widget>
+                  </widget>
+                  <widget class="QPushButton" name="imp_btn_loader_help">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="geometry">
+                    <rect>
+                     <x>420</x>
+                     <y>50</y>
+                     <width>31</width>
+                     <height>31</height>
+                    </rect>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+	border: 2px solid rgb(52, 59, 72);
+	border-radius: 5px;	
+	background-color: rgb(52, 59, 72);
+}
+QPushButton:hover {
+	background-color: rgb(57, 65, 80);
+	border: 2px solid rgb(61, 70, 86);
+}
+QPushButton:pressed {	
+	background-color: rgb(35, 40, 49);
+	border: 2px solid rgb(43, 50, 61);
+}</string>
+                   </property>
+                   <property name="text">
+                    <string notr="true">?</string>
+                   </property>
                   </widget>
                  </widget>
                 </widget>
@@ -10383,10 +10474,11 @@ QPushButton:pressed {
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
-  <buttongroup name="buttonGroup_gallery_order"/>
-  <buttongroup name="buttonGroup_digitizing_color_object"/>
   <buttongroup name="buttonGroup_gis_color_objects"/>
+  <buttongroup name="buttonGroup_digitizing_color_object"/>
+  <buttongroup name="buttonGroup_gallery_order"/>
   <buttongroup name="buttonGroup_gis_color_images"/>
+  <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
+  <buttongroup name="buttonGroup_importer_vert_reference"/>
  </buttongroups>
 </ui>

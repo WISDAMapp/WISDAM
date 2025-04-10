@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 aircraft_notation_to_front_notation = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
 swap_ned_to_enu_coo_system = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
 swap_body_cam = np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
+swap_body_cam_gimbal = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
 
 
 class EXIFPose(ImageBaseLoader):
@@ -62,9 +63,11 @@ class EXIFPose(ImageBaseLoader):
 
         return None
 
-    def get(self,  image_path: Path, meta_data: dict, **kwargs) -> tuple[ImageBase, int, int] | None:
+    def get(self, image_path: Path, meta_data: dict, **kwargs) -> tuple[ImageBase, int, int] | None:
 
         crs_data: CRS = kwargs['crs']
+        vertical_ref: str = kwargs['vertical_ref']
+
         position = None
         orientation = None
         crs = None
@@ -85,8 +88,18 @@ class EXIFPose(ImageBaseLoader):
             z_exif = meta_data.get('EXIF:GPSAltitude', None)
 
             if crs_data is None:
-                crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
-                crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                if vertical_ref is 'orthometric':
+                    crs_hor_exif = 4326
+                    crs_vert_exif = 3855
+
+                else:
+                    crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
+                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                if meta_data.get('XMP:HorizCS', None) is not None:
+                    crs_hor_exif = meta_data['XMP:HorizCS']
+                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
 
                 if crs_vert_exif == 'ellipsoidal':
                     crs_data = CRS(crs_hor_exif).to_3d()
@@ -103,17 +116,19 @@ class EXIFPose(ImageBaseLoader):
         pitch = None
         roll = None
         yaw = None
-        
+        angle_in_direction_of_view = False
         if {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
+            angle_in_direction_of_view = True
             pitch = float(meta_data['XMP:CameraPitch']) * np.pi / 180.0
             roll = float(meta_data['XMP:CameraRoll']) * np.pi / 180.0
             yaw = float(meta_data['XMP:CameraYaw']) * np.pi / 180.0
 
         elif {'MakerNotes:CameraRoll', 'MakerNotes:CameraYaw', 'MakerNotes:CameraPitch'} <= meta_data.keys():
+            angle_in_direction_of_view = True
             pitch = float(meta_data['MakerNotes:CameraPitch']) * np.pi / 180.0
             roll = float(meta_data['MakerNotes:CameraRoll']) * np.pi / 180.0
             yaw = float(meta_data['MakerNotes:CameraYaw']) * np.pi / 180.0
-        
+
         elif {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
             pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
             roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
@@ -125,7 +140,6 @@ class EXIFPose(ImageBaseLoader):
             yaw = float(meta_data.get('MakerNotes:Yaw', 0.0)) * np.pi / 180.0
 
         if pitch is not None:
-
             # Rotation of IMAGE still in Body System
             rot_sys = np.array([[cos(pitch) * cos(yaw), sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw),
                                  cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw)],
@@ -135,7 +149,12 @@ class EXIFPose(ImageBaseLoader):
 
             # Bring rotation into the cameras coordinate system. X left, Y top, Z backwards of viewing direction
             rot_enu_body = (swap_ned_to_enu_coo_system @ rot_sys) @ aircraft_notation_to_front_notation
-            rot_enu_cam = rot_enu_body @ swap_body_cam
+
+            if angle_in_direction_of_view:
+                rot_enu_cam = rot_enu_body @ swap_body_cam_gimbal
+            else:
+                rot_enu_cam = rot_enu_body @ swap_body_cam
+
             orientation = Rotation(rot_enu_cam)
 
         image = IMAGEPerspective(width=width, height=height, camera=camera, crs=crs,

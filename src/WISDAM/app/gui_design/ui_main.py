@@ -1070,7 +1070,7 @@ class Ui_MainWindow(object):
         self.imp_btn_image_folder.setText(u"START - Import")
         self.imp_stack_type = QStackedWidget(self.tab)
         self.imp_stack_type.setObjectName(u"imp_stack_type")
-        self.imp_stack_type.setGeometry(QRect(50, 100, 401, 241))
+        self.imp_stack_type.setGeometry(QRect(50, 100, 401, 231))
         self.imp_stack_height = QWidget()
         self.imp_stack_height.setObjectName(u"imp_stack_height")
         self.frame_adj_rel_height = QFrame(self.imp_stack_height)
@@ -1088,6 +1088,27 @@ class Ui_MainWindow(object):
         self.label_37.setObjectName(u"label_37")
         self.label_37.setGeometry(QRect(20, 30, 231, 16))
         self.imp_stack_type.addWidget(self.imp_stack_height)
+        self.imp_stack_vert_ref = QWidget()
+        self.imp_stack_vert_ref.setObjectName(u"imp_stack_vert_ref")
+        self.imp_rd_ortho_heights = QRadioButton(self.imp_stack_vert_ref)
+        self.buttonGroup_importer_vert_reference = QButtonGroup(MainWindow)
+        self.buttonGroup_importer_vert_reference.setObjectName(u"buttonGroup_importer_vert_reference")
+        self.buttonGroup_importer_vert_reference.addButton(self.imp_rd_ortho_heights)
+        self.imp_rd_ortho_heights.setObjectName(u"imp_rd_ortho_heights")
+        self.imp_rd_ortho_heights.setGeometry(QRect(30, 39, 331, 61))
+        self.imp_rd_ortho_heights.setFont(font14)
+        self.imp_rd_ortho_heights.setText(u"GPS heights refere to orthometric heights\n"
+"(mean sea level, heights above geoid)")
+        self.imp_rd_ortho_heights.setAutoExclusive(True)
+        self.imp_rd_ell_heights = QRadioButton(self.imp_stack_vert_ref)
+        self.buttonGroup_importer_vert_reference.addButton(self.imp_rd_ell_heights)
+        self.imp_rd_ell_heights.setObjectName(u"imp_rd_ell_heights")
+        self.imp_rd_ell_heights.setGeometry(QRect(30, 120, 311, 51))
+        self.imp_rd_ell_heights.setFont(font14)
+        self.imp_rd_ell_heights.setText(u"GPS heights refere to ellipsoid heights\n"
+"(directly from GNSS)")
+        self.imp_rd_ell_heights.setAutoExclusive(True)
+        self.imp_stack_type.addWidget(self.imp_stack_vert_ref)
         self.imp_stack_logFile = QWidget()
         self.imp_stack_logFile.setObjectName(u"imp_stack_logFile")
         self.imp_rd_logfile_image_folders = QRadioButton(self.imp_stack_logFile)
@@ -1231,7 +1252,7 @@ class Ui_MainWindow(object):
         self.imp_cmb_input_type = QComboBox(self.tab)
         self.imp_cmb_input_type.setObjectName(u"imp_cmb_input_type")
         self.imp_cmb_input_type.setEnabled(True)
-        self.imp_cmb_input_type.setGeometry(QRect(70, 40, 361, 61))
+        self.imp_cmb_input_type.setGeometry(QRect(50, 40, 361, 51))
         font16 = QFont()
         font16.setFamilies([u"Segoe UI"])
         font16.setPointSize(10)
@@ -1444,21 +1465,40 @@ class Ui_MainWindow(object):
         self.stack_image_test.addWidget(self.page_ortho_test)
         self.frame_imp_epsg = QFrame(self.tab)
         self.frame_imp_epsg.setObjectName(u"frame_imp_epsg")
-        self.frame_imp_epsg.setGeometry(QRect(70, 350, 361, 131))
+        self.frame_imp_epsg.setGeometry(QRect(40, 350, 421, 131))
         self.frame_imp_epsg.setStyleSheet(u"background-color: rgb(52, 59, 72);border-radius: 5px;")
         self.frame_imp_epsg.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_imp_epsg.setFrameShadow(QFrame.Shadow.Raised)
         self.label_26 = QLabel(self.frame_imp_epsg)
         self.label_26.setObjectName(u"label_26")
-        self.label_26.setGeometry(QRect(10, 4, 341, 71))
+        self.label_26.setGeometry(QRect(10, 4, 401, 91))
         self.label_26.setFont(font1)
-        self.label_26.setText(u"<html><head/><body><p><span style=\" font-size:8pt;\">Override CRS (e.g. for JPG orhto where no &quot;.prj&quot;-File is present, or for CSV importer) - </span><span style=\" font-size:10pt;\">Optional for most Importers</span></p><p><span style=\" font-size:10pt;\">CRS like e.g &quot;EPSG:4326+3855&quot; or &quot;EPSG:28533&quot;: </span></p></body></html>")
+        self.label_26.setText(u"<html><head/><body><p><span style=\" font-size:10pt;\">Override CRS - Optional for most Importers<br/></span><span style=\" font-size:8pt;\">e.g. JPG orhtos where no &quot;.prj&quot;-File is present, mandatory for CSV importer</span></p><p><span style=\" font-size:10pt;\">CRS like EPSG:4326+3855 or EPSG:4979<br/>or EPSG:28533 for orthophotos</span></p><p><br/></p></body></html>")
         self.label_26.setWordWrap(True)
         self.imp_epsg_input = QLineEdit(self.frame_imp_epsg)
         self.imp_epsg_input.setObjectName(u"imp_epsg_input")
         self.imp_epsg_input.setGeometry(QRect(10, 90, 341, 31))
         self.imp_epsg_input.setFont(font1)
         self.imp_epsg_input.setText(u"")
+        self.imp_btn_loader_help = QPushButton(self.tab)
+        self.imp_btn_loader_help.setObjectName(u"imp_btn_loader_help")
+        self.imp_btn_loader_help.setEnabled(False)
+        self.imp_btn_loader_help.setGeometry(QRect(420, 50, 31, 31))
+        self.imp_btn_loader_help.setFont(font2)
+        self.imp_btn_loader_help.setStyleSheet(u"QPushButton {\n"
+"	border: 2px solid rgb(52, 59, 72);\n"
+"	border-radius: 5px;	\n"
+"	background-color: rgb(52, 59, 72);\n"
+"}\n"
+"QPushButton:hover {\n"
+"	background-color: rgb(57, 65, 80);\n"
+"	border: 2px solid rgb(61, 70, 86);\n"
+"}\n"
+"QPushButton:pressed {	\n"
+"	background-color: rgb(35, 40, 49);\n"
+"	border: 2px solid rgb(43, 50, 61);\n"
+"}")
+        self.imp_btn_loader_help.setText(u"?")
         self.tab_imports.addTab(self.tab, "")
         self.tab_imports.setTabText(self.tab_imports.indexOf(self.tab), u"Import Images")
         self.progressBar_importer = QProgressBar(self.page_import)
@@ -4309,7 +4349,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.page_stack.setCurrentIndex(6)
+        self.page_stack.setCurrentIndex(1)
         self.tab_imports.setCurrentIndex(0)
         self.imp_stack_type.setCurrentIndex(1)
         self.stack_image_test.setCurrentIndex(0)

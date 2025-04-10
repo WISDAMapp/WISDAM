@@ -3180,6 +3180,10 @@ class MainWindow(QMainWindow):
         if self.input_data_types.input_type_current.loader_type == LoaderType.Logfile_Loader:
             self.ui.imp_stack_type.setCurrentWidget(self.ui.imp_stack_logFile)
 
+        if self.input_data_types.input_type_current.loader_type == LoaderType.EXIF_Loader:
+            self.ui.imp_stack_type.setCurrentWidget(self.ui.imp_stack_vert_ref)
+            self.ui.imp_rd_ortho_heights.setChecked(True)
+
         if self.input_data_types.input_type_current.crs_input_show:
             self.ui.frame_imp_epsg.show()
         else:
@@ -3252,6 +3256,17 @@ class MainWindow(QMainWindow):
                 folder = self.db.path.parent.as_posix()
 
             manual_georef = None
+
+            vertical_ref = ''
+            if self.ui.imp_stack_vert_ref.isVisible():
+
+                if self.ui.imp_rd_ortho_heights.isChecked():
+                    vertical_ref = 'orthometric'
+
+                # The button is currently exclusive and we will check if text is orthometric in DJI end EXIF importer
+                #elif self.ui.imp_rd_ell_heights.isChecked():
+                #    vertical_ref = 'ellipsoid'
+
             if self.ui.imp_stack_georef.isVisible():
 
                 if (self.ui.imp_georef_latitude.text() or
@@ -3329,6 +3344,7 @@ class MainWindow(QMainWindow):
                             flag_recursive_image=flag_recursive_image,
                             flag_recursive_log=flag_recursive_log,
                             flag_log_fom_image_folder=flag_log_fom_image_folder,
+                            vertical_ref=vertical_ref,
                             path_to_exiftool=path_to_exiftool, progress_callback=True)
             worker.signals.result.connect(self.thread_output_image_import)
             worker.signals.finished.connect(self.thread_complete_image_import)
