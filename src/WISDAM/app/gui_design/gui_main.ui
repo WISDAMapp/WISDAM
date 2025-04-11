@@ -3793,7 +3793,7 @@ for META data</string>
                   </widget>
                   <widget class="QPushButton" name="imp_btn_loader_help">
                    <property name="enabled">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                    <property name="geometry">
                     <rect>
@@ -10474,11 +10474,11 @@ QPushButton:pressed {
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_gis_color_objects"/>
   <buttongroup name="buttonGroup_digitizing_color_object"/>
-  <buttongroup name="buttonGroup_gallery_order"/>
-  <buttongroup name="buttonGroup_gis_color_images"/>
   <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
+  <buttongroup name="buttonGroup_gis_color_images"/>
   <buttongroup name="buttonGroup_importer_vert_reference"/>
+  <buttongroup name="buttonGroup_gis_color_objects"/>
+  <buttongroup name="buttonGroup_gallery_order"/>
  </buttongroups>
 </ui>

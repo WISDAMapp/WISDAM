@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,6 +34,15 @@ class OrthoGeneral(ImageBaseLoader):
         self.name = 'Orthoimagery using Rasterio'
         self.loader_type = LoaderType.Ortho_Loader
         self.crs_input_show = True
+
+    @staticmethod
+    def info_text() -> str | None:
+        text = ("This importer uses Rasterio library to load orthoimagery.\n"
+                "Most File formats supported by GDAL can be used. Most common are TIF files.\n\n"
+                "If the file format has no meta information about the coordinate system, it needs to be stated.\n"
+                "For ortho photos a 2D coordinate system is enough like EPSG:25833 (UTM-zone 33).")
+
+        return text
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

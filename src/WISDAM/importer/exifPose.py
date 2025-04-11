@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,6 +53,17 @@ class EXIFPose(ImageBaseLoader):
         self.crs_input_show = True
 
     @staticmethod
+    def info_text() -> str | None:
+
+        text = ("General EXIF/XMP Loader\n"
+                "If XMP tags HorizCS and VertCS are not present the coordinate system used is WGS84 with EGM2008 heights.\n"
+                "Use the option to change to WGS84 with ellipsoid heights.\n\n"
+                "Override the coordinate system for RTK flights where specific CRS was used.")
+
+
+        return text
+
+    @staticmethod
     def logfile_suffix() -> list[str] | None:
         """return the possible suffixes of your logfiles in the format as: ['*.csv'] or ['*.txt', '*.csv']
         """
@@ -89,7 +100,7 @@ class EXIFPose(ImageBaseLoader):
 
             if crs_data is None:
 
-                if vertical_ref is 'orthometric':
+                if vertical_ref == 'orthometric':
                     crs_hor_exif = 4326
                     crs_vert_exif = 3855
 

@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -62,6 +62,17 @@ class DJIStandard(ImageBaseLoader):
         self.name = 'DJI Different Versions'
         self.loader_type = LoaderType.EXIF_Loader
         self.crs_input_show = True
+
+    @staticmethod
+    def info_text() -> str | None:
+
+        text = ("DJI importer. This importer uses the image's metadata (EXIF/XMP) to get the exterior orientation.\n"
+                "Be aware that over the years the meta data seem to be slightly inconsistent to what they are referring.\n\n"
+                "Most problematic is the height stated. The field 'GPSAltitude' is soley used for the images altitude.\n"
+                "Some models store orthometric heights based on geoid (height above mean sea level), others store ellipsoid heights in that field."
+                "\n\nIf you think the projections are wrong try to use ellipsoid height.")
+
+        return text
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

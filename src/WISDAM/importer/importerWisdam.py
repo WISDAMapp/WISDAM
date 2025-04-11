@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -56,6 +56,10 @@ class IMAGEImporter:
     def get_current_loader_type(self):
 
         return self.input_type_current.loader_type
+
+    def get_current_info_text(self):
+
+        return self.input_type_current.info_text()
 
     def set_input_class(self, name: str):
         for input_type in self.input_class_list:

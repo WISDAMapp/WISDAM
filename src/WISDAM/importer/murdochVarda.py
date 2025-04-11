@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,6 +44,11 @@ class VARDAMurdoch(ImageBaseLoader):
         super().__init__()
         self.name = 'ScanEagle Murdoch'
         self.loader_type = LoaderType.EXIF_Loader
+        self.crs_input_show = False
+
+    @staticmethod
+    def info_text():
+        return None
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

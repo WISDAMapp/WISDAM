@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,7 +39,15 @@ class SimpleImage(ImageBaseLoader):
         super().__init__()
         self.name = 'Simple Perspective Image'
         self.loader_type = LoaderType.SimpleImage_Loader
-        #self.loader_type = LoaderType.SimpleImage_Loader
+
+    @staticmethod
+    def info_text() -> str | None:
+
+        text = ("This importer will import images only for annotations/verification."
+                "\nNo goe-reference information will be stored.\n"
+                "Image footprint and objects can not be mapped.")
+
+        return text
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

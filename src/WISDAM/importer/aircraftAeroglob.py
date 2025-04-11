@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,6 +48,14 @@ class AircraftAeroGlobe(ImageBaseLoader):
         self.name = 'Aircraft AeroGlobe'
         self.loader_type = LoaderType.Logfile_Loader
         self.crs_input_show = True
+
+    @staticmethod
+    def info_text() -> str | None:
+
+        text = ("Specific loader for AeroGlob data.\n\n"
+                "Try to use coordinate system EPSG:4326+3855 for older logfiles.")
+
+        return text
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

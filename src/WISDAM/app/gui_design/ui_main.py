@@ -1482,7 +1482,7 @@ class Ui_MainWindow(object):
         self.imp_epsg_input.setText(u"")
         self.imp_btn_loader_help = QPushButton(self.tab)
         self.imp_btn_loader_help.setObjectName(u"imp_btn_loader_help")
-        self.imp_btn_loader_help.setEnabled(False)
+        self.imp_btn_loader_help.setEnabled(True)
         self.imp_btn_loader_help.setGeometry(QRect(420, 50, 31, 31))
         self.imp_btn_loader_help.setFont(font2)
         self.imp_btn_loader_help.setStyleSheet(u"QPushButton {\n"

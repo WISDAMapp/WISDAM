@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ from WISDAMcore.transform.rotation import Rotation
 
 logger = logging.getLogger(__name__)
 
-
 mandatory_header = ["path", "x", "y", "z", "omega", "phi", "kappa"]
 
 
@@ -48,7 +47,17 @@ class OmegaPhiKappCSV(ImageBaseLoader):
         self.crs_input_show = True
         self.crs_input_mandatory = True
         self.log_file_contains_image_path = True
-        self.info_text = "Columns for the CSV file path,x,y,z,omega,phi,kappa"
+
+    @staticmethod
+    def info_text() -> str | None:
+
+        text = ("Importer using CSV files and standard photogrammetric angles Omega,Phi,Kappa"
+                "\n\nSeperator for columns is ',' "
+                "\nThere has to be a header row specifying the columns -> path,x,y,z,omega,phi,kappa\n\n"
+                "Omega, Phi, Kappa angles are in degree.\nThe path has to be the full path to an existing image\n"
+                "The Coordinate system is mandatory to specify")
+
+        return text
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:

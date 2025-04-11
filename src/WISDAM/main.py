@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ from multiprocessing import freeze_support
 
 # PYSIDE imports
 from PySide6.QtWidgets import (QMainWindow, QAbstractItemView, QApplication, QFileDialog, QMenu,
-                               QGraphicsPixmapItem, QSizeGrip)
+                               QGraphicsPixmapItem, QSizeGrip, QMessageBox)
 from PySide6.QtCore import (Slot, QSize, SignalInstance, QRunnable, Signal, QThreadPool, QEasingCurve,
                             QPropertyAnimation, QEvent, QObject, QRect, Qt, QModelIndex, QPersistentModelIndex, QPointF)
 from PySide6.QtPdf import QPdfDocument
@@ -640,10 +640,17 @@ class MainWindow(QMainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Import PAGE
         # Load Data
+
+        # Its in the Gui -> change importer Class to have information about that
+        # self.ui.imp_btn_loader_help.hide()
+
         self.ui.imp_rd_logfile_image_folders.clicked.connect(self.hide_log_import_buttons)
         self.ui.imp_btn_logfile.clicked.connect(self.logfile_chooser)
         self.ui.imp_btn_logfile_folder.clicked.connect(self.logfile_path_chooser)
         self.ui.imp_btn_image_folder.clicked.connect(self.import_image_folder)
+
+        self.ui.imp_btn_loader_help.clicked.connect(self.input_helper)
+
         # Change Input Data Type
         self.ui.imp_cmb_input_type.currentIndexChanged.connect(self.image_input_chooser)
         # self.ui.combo_external_type.currentIndexChanged.connect(self.external_chooser)
@@ -3163,6 +3170,17 @@ class MainWindow(QMainWindow):
         if logfile_path:
             self.log_file = Path(logfile_path)
 
+    def input_helper(self):
+
+        if self.input_data_types.input_type_current.info_text() is not None:
+            msg_box = QMessageBox()
+            msg_box.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+            msg_box.setText(self.input_data_types.input_type_current.info_text())
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.setDefaultButton(QMessageBox.StandardButton.Ok)
+            msg_box.setStyleSheet("background-color: rgb(127, 84,0);color: rgb(255, 255, 255);")
+            msg_box.exec()
+
     def image_input_chooser(self):
         self.input_data_types.set_input_class(self.ui.imp_cmb_input_type.currentText())
         self.ui.imp_rd_recursive.setChecked(False)
@@ -3226,7 +3244,7 @@ class MainWindow(QMainWindow):
         crs_text = self.ui.imp_epsg_input.text()
         if self.input_data_types.input_type_current.crs_input_mandatory:
             if not crs_text:
-                logger.error("This importer rquires CRS to be specified")
+                logger.error("This importer requires CRS to be specified")
                 return
 
         if crs_text:

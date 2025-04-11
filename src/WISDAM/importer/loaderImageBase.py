@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,11 +44,20 @@ class ImageBaseLoader:
         self.crs_input_mandatory = False
         self.log_file_contains_image_path = False
 
+    @staticmethod
+    @abstractmethod
+    def info_text() -> str | None:
+        """return a description of the loader or None if no description available (popup will not be shown)
+        """
+
+        return None
+
+
     @abstractmethod
     def get(self, **kwargs) -> tuple[ImageBase, int, int] | None:
         """Gets image model from inputs.
 
-        :return: Image Class otherwise None if failed
+        :return: (Image Class, width, height) otherwise None if failed
         """
         pass
 

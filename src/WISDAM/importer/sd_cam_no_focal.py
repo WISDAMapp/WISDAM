@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,6 +50,11 @@ class SdXlsxNoFocal(ImageBaseLoader):
         super().__init__()
         self.name = 'Custom SAU XLSX no FOCAL'
         self.loader_type = LoaderType.Logfile_Loader
+
+    @staticmethod
+    def info_text() -> str | None:
+
+       return None
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:
