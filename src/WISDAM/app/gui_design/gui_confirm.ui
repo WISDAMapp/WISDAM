@@ -835,7 +835,7 @@ QSlider::handle:vertical:pressed {
          </size>
         </property>
         <property name="styleSheet">
-         <string notr="true">background-color:rgb(85, 85, 85);
+         <string notr="true">background-color:rgb(85, 50,50);
 color: white;</string>
         </property>
         <property name="frameShape">

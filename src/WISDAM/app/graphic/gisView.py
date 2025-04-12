@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ class GISView(QGraphicsView):
 
     # Zoom system
     def zoom(self, f):
-        # print(self.transform().m11(), f)
+
         if self.transform().m11() < 5000000 and f > 1:
             self.scale(f, f)
         if self.transform().m11() > 2 and f < 1:
@@ -93,7 +93,7 @@ class GISView(QGraphicsView):
                     self.item_group_node.show()
 
     def wheelEvent(self, event):
-        # print(self.mapToScene(event.pos()))
+
         num_degrees = event.angleDelta().y() / 10  # event.delta() / 10 #
         num_steps = num_degrees / 15.0
         # self.centerOn(self.mapToScene(event.pos()))
@@ -105,7 +105,6 @@ class GISView(QGraphicsView):
 
     # Mouse bindings
     def mousePressEvent(self, event):
-        # print(event.pos())
 
         self._dragPos = event.position()
         if event.buttons() == Qt.LeftButton:

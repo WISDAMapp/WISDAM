@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ from PySide6.QtGui import (QPixmap, QPainter)
 from PySide6.QtCore import Qt, Signal, Slot, QSize
 
 from app.gui_design.ui_meta import Ui_popup_meta
+from app.popups.popupConfirm import POPUPConfirm
 
 from db.dbHandler import DBHandler
 
@@ -856,8 +857,12 @@ class POPUPMeta(QWidget):
 
     @QtCore.Slot()
     def delete_item(self):
-        self.object_delete.emit(self.object_id, self.image_id)
-        self.close()
+
+        v = POPUPConfirm("Are you sure about removing object?")
+        if v.exec():
+
+            self.object_delete.emit(self.object_id, self.image_id)
+            self.close()
 
 
 def map_slider_to_text(value, slider_config):

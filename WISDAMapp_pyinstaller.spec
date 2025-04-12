@@ -16,11 +16,17 @@ sys.path.append(path_to_wisdam.as_posix())
 
 try:
 	import WISDAMcore
-except ModuleNotFoundError:
+	from WISDAMcore import ArrayNx2
+	print("import")
+except (ModuleNotFoundError, ImportError):
 	path_to_WISDAMcore = path_to_repo_main.parent / "WISDAMcore"
 	if path_to_WISDAMcore.exists():
-		path_to_WISDAMcore_src = path_to_WISDAMcore / "src"
+		path_to_WISDAMcore_src = path_to_WISDAMcore / "src" / "WISDAMcore"
 		sys.path.append(path_to_WISDAMcore_src.as_posix())
+		print(path_to_WISDAMcore_src)
+		import WISDAMcore
+		from WISDAMcore import ArrayNx2
+		print("import")
 	else:
 		print("\nThe package WISDAMcore can not be found.\nEXIT")
 		raise SystemExit

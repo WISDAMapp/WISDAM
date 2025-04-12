@@ -44,7 +44,7 @@ class VARDAMurdoch(ImageBaseLoader):
         super().__init__()
         self.name = 'ScanEagle Murdoch'
         self.loader_type = LoaderType.EXIF_Loader
-        self.crs_input_show = False
+        self.crs_input_show = True
 
     @staticmethod
     def info_text():
@@ -64,6 +64,8 @@ class VARDAMurdoch(ImageBaseLoader):
     def get(self,  **kwargs) -> tuple[ImageBase, int, int] | None:
 
         meta_data = kwargs.pop('meta_data')
+        crs_data: CRS = kwargs['crs']
+        vertical_ref: str = kwargs['vertical_ref']
 
         camera, width, height = estimate_camera_from_meta_dict(meta_dict=meta_data)
         position = None
@@ -83,15 +85,26 @@ class VARDAMurdoch(ImageBaseLoader):
                 y_exif = -y_exif
             z_exif = meta_data.get('EXIF:GPSAltitude', None)
 
-            crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
-            crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+            if crs_data is None:
 
-            if crs_vert_exif == 'ellipsoidal':
-                crs_exif = CRS(crs_hor_exif).to_3d()
-            else:
-                crs_exif = CompoundCRS(str(crs_hor_exif) + '+'+str(crs_vert_exif), [crs_hor_exif, crs_vert_exif])
+                if vertical_ref == 'orthometric':
+                    crs_hor_exif = 4326
+                    crs_vert_exif = 3855
 
-            result = point_convert_utm_wgs84_egm2008(crs_exif, x_exif, y_exif, z_exif)
+                else:
+                    crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
+                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                if meta_data.get('XMP:HorizCS', None) is not None:
+                    crs_hor_exif = meta_data['XMP:HorizCS']
+                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                if crs_vert_exif == 'ellipsoidal':
+                    crs_data = CRS(crs_hor_exif).to_3d()
+                else:
+                    crs_data = CompoundCRS(str(crs_hor_exif) + '+' + str(crs_vert_exif), [crs_hor_exif, crs_vert_exif])
+
+            result = point_convert_utm_wgs84_egm2008(crs_data, x_exif, y_exif, z_exif)
 
             if result is not None:
                 x, y, z, crs = result

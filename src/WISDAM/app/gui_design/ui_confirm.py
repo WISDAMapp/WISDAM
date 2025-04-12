@@ -363,7 +363,7 @@ class Ui_popup_confirm(object):
         self.frame_top.setObjectName(u"frame_top")
         self.frame_top.setMinimumSize(QSize(0, 40))
         self.frame_top.setMaximumSize(QSize(16777215, 40))
-        self.frame_top.setStyleSheet(u"background-color:rgb(85, 85, 85);\n"
+        self.frame_top.setStyleSheet(u"background-color:rgb(85, 50,50);\n"
 "color: white;")
         self.frame_top.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_top.setFrameShadow(QFrame.Shadow.Raised)

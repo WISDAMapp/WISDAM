@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -103,7 +103,7 @@ class AIListModel(QAbstractListModel):
     def data(self, index: QModelIndex, role=Qt.DisplayRole):
         if not index.isValid():
             return None
-        # print(role)
+
         row_id = index.row()
         if row_id >= len(self._data) or row_id < 0:
             return None

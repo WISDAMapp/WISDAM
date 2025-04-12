@@ -351,7 +351,7 @@ class Ui_popup_about(object):
 "If you find any missing information please file an issue. License info can also be found in the folder license. Double click to expand license information.")
         self.label_2 = QLabel(self.frame_center)
         self.label_2.setObjectName(u"label_2")
-        self.label_2.setGeometry(QRect(290, 10, 541, 141))
+        self.label_2.setGeometry(QRect(290, 10, 541, 161))
         self.label_2.setText(u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -360,9 +360,11 @@ class Ui_popup_about(object):
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt; font-weight:700; color:#b49629;\">WISDAM</span><span style=\" font-size:11pt;\"> </span><span style=\" font-size:11pt; font-weight:700;\">(</span><span style=\" font-size:11pt; font-weight:700; color:#b49629;\">Wildlife Imagery Survey \u2013 Detection and Mapping</span><span style=\" font-size:11pt; font-weight:700;\">)</span><span style=\" font-size:11"
-                        "pt;\"> is a software package for digitalization of objects within images and to enrich objects with meta data.<br />Information about the WISDAM Project can be found at www.wisdamapp.org </span></p>\n"
+                        "pt;\"> is a software package for digitalization of objects within images and to enrich objects with meta data.<br />Information about the WISDAM Project can be found at </span><span style=\" font-size:11pt; font-weight:700;\">www.wisdamapp.org </span></p>\n"
 "<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:11pt;\"><br /></p>\n"
-"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt;\">The Repository can be found at github.com/wisdamapp. </span><span style=\" font-size:11pt; font-weight:700; color:#da4900;\">It's the main source for discussion, bug reporting and info how to get involved.</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt;\">The Repository can be found at </span><span style=\" font-size:11pt; font-weight:700;\">github.com/wisdamapp</span><span style=\" font-size:11pt;\">.</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:11pt; font-weight:700; color:#da4900;\">It's the main contact point f"
+                        "or discussion, bug reporting and info how to get involved.</span></p>\n"
 "<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>")
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.label_2.setWordWrap(True)
@@ -370,7 +372,7 @@ class Ui_popup_about(object):
         self.label_2.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
         self.lbl_copyright = QLabel(self.frame_center)
         self.lbl_copyright.setObjectName(u"lbl_copyright")
-        self.lbl_copyright.setGeometry(QRect(290, 160, 531, 81))
+        self.lbl_copyright.setGeometry(QRect(290, 190, 531, 81))
         font4 = QFont()
         font4.setPointSize(12)
         font4.setBold(True)

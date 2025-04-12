@@ -1049,10 +1049,12 @@ class MainWindow(QMainWindow):
         There are references to image db in Ai detections, configuration and
         on geometries. So that must be changed first"""
 
-        images_id = self.db.get_image_id_by_folder(folder)
-        if images_id is not None:
-            self.db.delete_images(images_id)
-            self.reload_database()
+        v = POPUPConfirm("Sure about removing images of folder from database?")
+        if v.exec():
+            images_id = self.db.get_image_id_by_folder(folder)
+            if images_id is not None:
+                self.db.delete_images(images_id)
+                self.reload_database()
 
     @Slot(list)
     def delete_images(self, images_id: list):
@@ -1061,8 +1063,10 @@ class MainWindow(QMainWindow):
         There are references to image db in Ai detections, configuration and
         on geometries. So that must be changed first"""
 
-        self.db.delete_images(images_id)
-        self.reload_database()
+        v = POPUPConfirm("Are you sure about removing images from database?")
+        if v.exec():
+            self.db.delete_images(images_id)
+            self.reload_database()
 
     @Slot(object)
     def change_image_meta_folder(self, folder: Path):
@@ -3488,7 +3492,9 @@ class MainWindow(QMainWindow):
                 # Color project name in top frame
                 # Yellow border -  border: 3px solid rgb(187, 184, 87);border-radius:15px
                 # Main color as background #2c313c
-                self.ui.lbl_database_name.setStyleSheet(r"""background-color:#476647; border-radius:8px""")
+                self.ui.lbl_database_name.setStyleSheet("border: 3px solid rgb(187, 184, 87);border-radius:15px;"
+                                                        "background-color:#476647;")
+                #self.ui.lbl_database_name.setStyleSheet(r""" border-radius:8px""")
 
                 images = self.db.load_images_list()
 

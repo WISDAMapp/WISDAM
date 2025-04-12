@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import logging
 
 from PySide6.QtWidgets import QDialog
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QCursor
+
 
 from app.gui_design.ui_confirm import Ui_popup_confirm
 
@@ -34,6 +36,20 @@ class POPUPConfirm(QDialog):  # Inheritance of the QDialog class
         super().__init__()
         self.ui = Ui_popup_confirm()
         self.ui.setupUi(self)
+        pos = QCursor.pos()
+
+        # Need to test on dual screen
+        try:
+            if pos.y() > self.screen().availableSize().height() - 150:
+                pos.setY(pos.y() - 150)
+
+            if pos.x() > self.screen().availableSize().width() - 300:
+                pos.setX(pos.x() - 300)
+
+            self.move(pos)
+        except:
+            pass
+
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
 

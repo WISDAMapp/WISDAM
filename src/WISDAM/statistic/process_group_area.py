@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ def spatial_cluster_processing(db_path: Path, distance: float = 20.0, queue=None
             while len(current_cluster) != len_cluster:
                 groups = []
                 len_cluster = len(current_cluster)
-                # print(len_cluster)
+
                 cluster_numpy = numpy.array(current_cluster)
                 for idx, x in enumerate(object_list):
                     x_numpy = numpy.array(x[1])

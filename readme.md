@@ -14,15 +14,15 @@ The software uses the power of georeferenced images to map objects and to use th
 
 WISDAM handle images from different sources (such as piloted aircraft and drones) and allow you to import them with their georeference information. Alternatively you can import orthophotos.
 
-With this georeference information, image footprints and geometries of objects can be mapped to real world coordinates. For mapping in WISDAM either a raster model (e.g. DTM, DSM) or a simple plain (e.g. sea level) can be used.
+With this geo-reference information, image footprints and geometries of objects can be mapped to real world coordinates. For mapping in WISDAM either a raster model (e.g. DTM, DSM) or a simple plain (e.g. sea level) can be used.
 
 WISDAM also allows you to run an AI background process on images, to extract objects that my not have been detected through manual review process. WISDAM helps to visualise and enrich these objects with meta-data.
 
 WISDAM has been designed to optimise the workflow of environmental observation and is focused on the fast and easy handling of images and digitisation of objects. 
 
 > [!IMPORTANT]  
-> WISDAM is under development and did undergo a major refactoring, if you encounter any bugs (crashes, error, wrong calculations).
-> Please submit a bug issue as described under contribution. You can save the information from the logfile within WIASDAM 
+> WISDAM is under development and did undergo a major refactoring. If you encounter any bugs (crashes, error, wrong calculations),
+> please submit a bug issue as described under contribution. You can save the information from the logfile within WISDAM
 > and error message was printed.
 
 
@@ -110,7 +110,7 @@ Source codes used for libraries under the GPL can be found at [dependency source
 ## Licence
 WISDAM is licensed under the GPLv3.
 
-Copyright (C) 2024 Martin Wieser
+Copyright (C) 2025 Martin Wieser
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or(at your option) any later version.
 

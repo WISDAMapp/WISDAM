@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -207,11 +207,19 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                     date_time = meta_image_time(meta_data)
 
                     # ADDITIONAL metadata no must have
-                    make = meta_data.get("EXIF:Make", '')
-                    model = meta_data.get("EXIF:Model", '')
-                    f_number = meta_data.get("EXIF:FNumber", '')
-                    iso = meta_data.get("EXIF:ISO", '')
-                    lens_info = meta_data.get("EXIF:LensInfo", '')
+                    make = str(meta_data.get("EXIF:Make", ''))
+                    model = str(meta_data.get("EXIF:Model", ''))
+                    try:
+                        f_number = float(meta_data.get("EXIF:FNumber", 0.0))
+                    except ValueError:
+                        f_number = 0.0
+
+                    # There is a problem with the exporter of geopandas that all same properties have to be the same
+                    try:
+                        iso = int(meta_data.get("EXIF:ISO", 0))
+                    except ValueError:
+                        iso = 0
+                    lens_info = str(meta_data.get("EXIF:LensInfo", ''))
                     meta_image = {'make': make, 'model': model, 'f_number': f_number,
                                   'iso': iso, 'lens_info': lens_info}
 

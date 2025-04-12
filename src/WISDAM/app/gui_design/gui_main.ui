@@ -1680,7 +1680,7 @@ QPushButton:pressed {
                 <string notr="true"/>
                </property>
                <property name="currentIndex">
-                <number>1</number>
+                <number>8</number>
                </property>
                <widget class="QWidget" name="page_home">
                 <property name="sizePolicy">
@@ -10188,6 +10188,12 @@ QPushButton:pressed {
                    <property name="spacing">
                     <number>5</number>
                    </property>
+                   <property name="topMargin">
+                    <number>10</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>5</number>
+                   </property>
                    <item>
                     <widget class="QPushButton" name="btn_open_manual">
                      <property name="font">
@@ -10474,11 +10480,11 @@ QPushButton:pressed {
  </resources>
  <connections/>
  <buttongroups>
+  <buttongroup name="buttonGroup_gallery_order"/>
+  <buttongroup name="buttonGroup_gis_color_images"/>
+  <buttongroup name="buttonGroup_gis_color_objects"/>
+  <buttongroup name="buttonGroup_importer_vert_reference"/>
   <buttongroup name="buttonGroup_digitizing_color_object"/>
   <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
-  <buttongroup name="buttonGroup_gis_color_images"/>
-  <buttongroup name="buttonGroup_importer_vert_reference"/>
-  <buttongroup name="buttonGroup_gis_color_objects"/>
-  <buttongroup name="buttonGroup_gallery_order"/>
  </buttongroups>
 </ui>

@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -62,10 +62,8 @@ from PySide6.QtGui import (
 from db.dbHandler import DBHandler
 from app.var_classes import (GalleryData, ColorGui, GalleryRoles, icon_margin, spacing_grid,
                              text_margin, source_switch, icon_footer_padding, GalleryIconSize)
+from app.popups.popupConfirm import POPUPConfirm
 from WISDAMcore.image.base_class import ImageType
-
-
-# https://bazaar.launchpad.net/~dlynch3/rapid/zeromq_pyqt/view/head:/raphodo/thumbnaildisplay.py
 
 
 class GalleryListModel(QAbstractListModel):
@@ -199,6 +197,7 @@ class GalleryListModel(QAbstractListModel):
 
         Does not touch database or other variables.
         """
+
         self.layoutAboutToBeChanged.emit()
         position = None
         for idx, row in enumerate(self._data):
@@ -437,12 +436,16 @@ class GalleryView(QListView):
 
     @Slot()
     def delete(self) -> None:
-        index = self.clickedIndex
-        if index.isValid():
-            index_model = index.model().mapToSource(index)
-            self.object_delete.emit(index_model.data(GalleryRoles.id),
-                                    index_model.data(GalleryRoles.image))
-        self.clickedIndex = QPersistentModelIndex()
+
+        v = POPUPConfirm("Are you sure about that operation?")
+        if v.exec():
+
+            index = self.clickedIndex
+            if index.isValid():
+                index_model = index.model().mapToSource(index)
+                self.object_delete.emit(index_model.data(GalleryRoles.id),
+                                        index_model.data(GalleryRoles.image))
+            self.clickedIndex = QPersistentModelIndex()
 
     def top_left(self):
         return QPoint(icon_margin, icon_margin)

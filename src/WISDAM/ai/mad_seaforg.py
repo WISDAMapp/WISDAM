@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ def read_file_detections(path_file: Path) -> list | None:
                 image = ','.join(row)
 
             elif len(row) >= 4:
-                # print(ai_values)
+
                 ai_values = ','.join(row).split(' ')
                 object_type = ai_values[0]
                 probability = float(ai_values[2].replace('%', '')) / 100.0

@@ -4235,6 +4235,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_11 = QVBoxLayout()
         self.verticalLayout_11.setSpacing(5)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.verticalLayout_11.setContentsMargins(-1, 10, 5, -1)
         self.btn_open_manual = QPushButton(self.page_help)
         self.btn_open_manual.setObjectName(u"btn_open_manual")
         self.btn_open_manual.setFont(font15)
@@ -4349,7 +4350,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.page_stack.setCurrentIndex(1)
+        self.page_stack.setCurrentIndex(8)
         self.tab_imports.setCurrentIndex(0)
         self.imp_stack_type.setCurrentIndex(1)
         self.stack_image_test.setCurrentIndex(0)

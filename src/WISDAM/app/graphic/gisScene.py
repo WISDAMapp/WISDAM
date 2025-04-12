@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -327,7 +327,7 @@ class GISScene(QGraphicsScene):
         # If user is in selection mode current selection will be added to the selection path
         # by union. Otherwise, the sub polygons of the selection path would select/unselect each item
         # by undefined behaviour. Probably by the order polygons are created.
-        # print(self.selection_polygon)
+
         self.delete_selection_polygon()
 
         # Propagate the selection of footprints to the image pane

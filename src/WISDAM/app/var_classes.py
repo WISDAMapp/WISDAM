@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2025 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import numpy as np
 
 
 license_version = "GNU General Public License v3 or later (GPLv3+)"
-build_year = "2024"
+build_year = "2025"
 
 url_wisdam = "https://wisdamapp.org"
 
