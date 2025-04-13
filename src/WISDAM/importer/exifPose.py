@@ -56,10 +56,10 @@ class EXIFPose(ImageBaseLoader):
     def info_text() -> str | None:
 
         text = ("General EXIF/XMP Loader\n"
-                "If XMP tags HorizCS and VertCS are not present the coordinate system used is WGS84 with EGM2008 heights.\n"
+                "If XMP tags HorizCS and VertCS are not present the coordinate system "
+                "used is WGS84 with EGM2008 heights.\n"
                 "Use the option to change to WGS84 with ellipsoid heights.\n\n"
                 "Override the coordinate system for RTK flights where specific CRS was used.")
-
 
         return text
 
@@ -149,6 +149,20 @@ class EXIFPose(ImageBaseLoader):
             pitch = float(meta_data.get('MakerNotes:Pitch', 0.0)) * np.pi / 180.0
             roll = float(meta_data.get('MakerNotes:Roll', 0.0)) * np.pi / 180.0
             yaw = float(meta_data.get('MakerNotes:Yaw', 0.0)) * np.pi / 180.0
+
+        elif {'XMP:GimbalRollDegree', 'XMP:GimbalYawDegree', 'XMP:GimbalPitchDegree'} <= meta_data.keys():
+            angle_in_direction_of_view = True
+            roll = float(meta_data['XMP:GimbalRollDegree']) * np.pi / 180.0
+            yaw = float(meta_data['XMP:GimbalYawDegree']) * np.pi / 180.0
+            pitch = (float(meta_data['XMP:GimbalPitchDegree'])) * np.pi / 180.0
+
+        elif {'MakerNotes:GimbalRollDegree',
+              'MakerNotes:GimbalYawDegree',
+              'MakerNotes:GimbalPitchDegree'} <= meta_data.keys():
+            angle_in_direction_of_view = True
+            roll = float(meta_data['MakerNotes:GimbalRollDegree']) * np.pi / 180.0
+            yaw = float(meta_data['MakerNotes:GimbalYawDegree']) * np.pi / 180.0
+            pitch = (float(meta_data['MakerNotes:GimbalPitchDegree'])) * np.pi / 180.0
 
         if pitch is not None:
             # Rotation of IMAGE still in Body System

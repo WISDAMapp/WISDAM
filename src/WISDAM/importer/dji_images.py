@@ -184,7 +184,7 @@ class DJIStandard(ImageBaseLoader):
             pitch = (float(meta_data['MakerNotes:GimbalPitchDegree'])) * np.pi / 180.0
         if pitch is not None and roll is not None and yaw is not None:
 
-            # Rotation of IMAGE
+            # Rotation of IMAGE in Body System
             rot_sys = np.array([[cos(pitch) * cos(yaw), sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw),
                                  cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw)],
                                 [cos(pitch) * sin(yaw), sin(roll) * sin(pitch) * sin(yaw) + cos(roll) * cos(yaw),
