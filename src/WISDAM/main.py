@@ -3205,6 +3205,7 @@ class MainWindow(QMainWindow):
         if self.input_data_types.input_type_current.loader_type == LoaderType.EXIF_Loader:
             self.ui.imp_stack_type.setCurrentWidget(self.ui.imp_stack_vert_ref)
             self.ui.imp_rd_ortho_heights.setChecked(True)
+            self.ui.imp_rel_h_start.setText(None)
 
         if self.input_data_types.input_type_current.crs_input_show:
             self.ui.frame_imp_epsg.show()
@@ -3280,10 +3281,24 @@ class MainWindow(QMainWindow):
             manual_georef = None
 
             vertical_ref = ''
+            height_rel = 0.0
             if self.ui.imp_stack_vert_ref.isVisible():
 
                 if self.ui.imp_rd_ortho_heights.isChecked():
                     vertical_ref = 'orthometric'
+                elif self.ui.imp_rd_rel_heights.isChecked():
+                    vertical_ref = "relative"
+                    if self.ui.imp_rel_h_start.text() == "":
+                        logger.error("If relative height is set, the start height needs to be set")
+                        return
+                    else:
+                        try:
+                            height_rel = float(self.ui.imp_rel_h_start.text() )
+                        except ValueError:
+                            logger.error("The value can not be converted to a float value")
+                            return
+
+
 
                 # The button is currently exclusive and we will check if text is orthometric in DJI end EXIF importer
                 #elif self.ui.imp_rd_ell_heights.isChecked():
@@ -3366,7 +3381,7 @@ class MainWindow(QMainWindow):
                             flag_recursive_image=flag_recursive_image,
                             flag_recursive_log=flag_recursive_log,
                             flag_log_fom_image_folder=flag_log_fom_image_folder,
-                            vertical_ref=vertical_ref,
+                            vertical_ref=vertical_ref, height_rel=height_rel,
                             path_to_exiftool=path_to_exiftool, progress_callback=True)
             worker.signals.result.connect(self.thread_output_image_import)
             worker.signals.finished.connect(self.thread_complete_image_import)

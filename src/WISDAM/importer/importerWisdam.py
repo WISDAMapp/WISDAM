@@ -78,7 +78,8 @@ class IMAGEImporter:
         return result
 
     def run_importer(self, image_path: Path, crs: CRS | None = None,
-                     georef_input=None, log_data: list[object] | None = None, vertical_ref: str = '',
+                     georef_input=None, log_data: list[object] | None = None,
+                     vertical_ref: str = '', height_rel: float = 0.0,
                      image_meta_data: dict | None = None) -> tuple[ImageBase, int, int] | None:
         if image_meta_data is None:
             image_meta_data = {}
@@ -87,6 +88,6 @@ class IMAGEImporter:
 
         result = self.input_type_current.get(image_path=image_path, crs=crs,
                                              georef_input=georef_input, meta_data=image_meta_data, log_data=log_data,
-                                             vertical_ref=vertical_ref)
+                                             vertical_ref=vertical_ref, height_rel=height_rel)
 
         return result

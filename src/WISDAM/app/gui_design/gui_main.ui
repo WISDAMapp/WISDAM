@@ -1680,7 +1680,7 @@ QPushButton:pressed {
                 <string notr="true"/>
                </property>
                <property name="currentIndex">
-                <number>8</number>
+                <number>1</number>
                </property>
                <widget class="QWidget" name="page_home">
                 <property name="sizePolicy">
@@ -2622,9 +2622,9 @@ QPushButton:pressed {
                      <property name="geometry">
                       <rect>
                        <x>30</x>
-                       <y>39</y>
+                       <y>20</y>
                        <width>331</width>
-                       <height>61</height>
+                       <height>51</height>
                       </rect>
                      </property>
                      <property name="font">
@@ -2648,7 +2648,7 @@ QPushButton:pressed {
                      <property name="geometry">
                       <rect>
                        <x>30</x>
-                       <y>120</y>
+                       <y>90</y>
                        <width>311</width>
                        <height>51</height>
                       </rect>
@@ -2669,6 +2669,54 @@ QPushButton:pressed {
                      <attribute name="buttonGroup">
                       <string notr="true">buttonGroup_importer_vert_reference</string>
                      </attribute>
+                    </widget>
+                    <widget class="QRadioButton" name="imp_rd_rel_heights">
+                     <property name="geometry">
+                      <rect>
+                       <x>30</x>
+                       <y>160</y>
+                       <width>331</width>
+                       <height>61</height>
+                      </rect>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>11</pointsize>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string notr="true">Use Relative Height Tag as Z source.
+
+Need to specify start height:</string>
+                     </property>
+                     <property name="autoExclusive">
+                      <bool>true</bool>
+                     </property>
+                     <attribute name="buttonGroup">
+                      <string notr="true">buttonGroup_importer_vert_reference</string>
+                     </attribute>
+                    </widget>
+                    <widget class="QLineEdit" name="imp_rel_h_start">
+                     <property name="geometry">
+                      <rect>
+                       <x>260</x>
+                       <y>190</y>
+                       <width>131</width>
+                       <height>31</height>
+                      </rect>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>9</pointsize>
+                      </font>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">background-color: rgb(92,99, 112)</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
                     </widget>
                    </widget>
                    <widget class="QWidget" name="imp_stack_logFile">
@@ -10480,11 +10528,11 @@ QPushButton:pressed {
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_gallery_order"/>
+  <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
   <buttongroup name="buttonGroup_gis_color_images"/>
+  <buttongroup name="buttonGroup_digitizing_color_object"/>
+  <buttongroup name="buttonGroup_gallery_order"/>
   <buttongroup name="buttonGroup_gis_color_objects"/>
   <buttongroup name="buttonGroup_importer_vert_reference"/>
-  <buttongroup name="buttonGroup_digitizing_color_object"/>
-  <buttongroup name="buttonGroup_digitizing_geometric_operation"/>
  </buttongroups>
 </ui>

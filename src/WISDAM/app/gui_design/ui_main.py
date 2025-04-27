@@ -1095,7 +1095,7 @@ class Ui_MainWindow(object):
         self.buttonGroup_importer_vert_reference.setObjectName(u"buttonGroup_importer_vert_reference")
         self.buttonGroup_importer_vert_reference.addButton(self.imp_rd_ortho_heights)
         self.imp_rd_ortho_heights.setObjectName(u"imp_rd_ortho_heights")
-        self.imp_rd_ortho_heights.setGeometry(QRect(30, 39, 331, 61))
+        self.imp_rd_ortho_heights.setGeometry(QRect(30, 20, 331, 51))
         self.imp_rd_ortho_heights.setFont(font14)
         self.imp_rd_ortho_heights.setText(u"GPS heights refere to orthometric heights\n"
 "(mean sea level, heights above geoid)")
@@ -1103,11 +1103,25 @@ class Ui_MainWindow(object):
         self.imp_rd_ell_heights = QRadioButton(self.imp_stack_vert_ref)
         self.buttonGroup_importer_vert_reference.addButton(self.imp_rd_ell_heights)
         self.imp_rd_ell_heights.setObjectName(u"imp_rd_ell_heights")
-        self.imp_rd_ell_heights.setGeometry(QRect(30, 120, 311, 51))
+        self.imp_rd_ell_heights.setGeometry(QRect(30, 90, 311, 51))
         self.imp_rd_ell_heights.setFont(font14)
         self.imp_rd_ell_heights.setText(u"GPS heights refere to ellipsoid heights\n"
 "(directly from GNSS)")
         self.imp_rd_ell_heights.setAutoExclusive(True)
+        self.imp_rd_rel_heights = QRadioButton(self.imp_stack_vert_ref)
+        self.buttonGroup_importer_vert_reference.addButton(self.imp_rd_rel_heights)
+        self.imp_rd_rel_heights.setObjectName(u"imp_rd_rel_heights")
+        self.imp_rd_rel_heights.setGeometry(QRect(30, 160, 331, 61))
+        self.imp_rd_rel_heights.setFont(font14)
+        self.imp_rd_rel_heights.setText(u"Use Relative Height Tag as Z source.\n"
+"\n"
+"Need to specify start height:")
+        self.imp_rd_rel_heights.setAutoExclusive(True)
+        self.imp_rel_h_start = QLineEdit(self.imp_stack_vert_ref)
+        self.imp_rel_h_start.setObjectName(u"imp_rel_h_start")
+        self.imp_rel_h_start.setGeometry(QRect(260, 190, 131, 31))
+        self.imp_rel_h_start.setFont(font8)
+        self.imp_rel_h_start.setStyleSheet(u"background-color: rgb(92,99, 112)")
         self.imp_stack_type.addWidget(self.imp_stack_vert_ref)
         self.imp_stack_logFile = QWidget()
         self.imp_stack_logFile.setObjectName(u"imp_stack_logFile")
@@ -4350,7 +4364,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.page_stack.setCurrentIndex(8)
+        self.page_stack.setCurrentIndex(1)
         self.tab_imports.setCurrentIndex(0)
         self.imp_stack_type.setCurrentIndex(1)
         self.stack_image_test.setCurrentIndex(0)
@@ -4389,6 +4403,7 @@ class Ui_MainWindow(object):
         self.led_elevation_service.setText("")
         self.input_adj_rel_height.setText(QCoreApplication.translate("MainWindow", u"0.0", None))
         self.label_37.setText(QCoreApplication.translate("MainWindow", u"Adjust relative altitude for all images to [m]:", None))
+        self.imp_rel_h_start.setText("")
         self.imp_btn_logfile_folder.setText(QCoreApplication.translate("MainWindow", u"Select Log File Folder", None))
         self.imp_btn_logfile.setText(QCoreApplication.translate("MainWindow", u"Select Single Log File", None))
         self.label_38.setText(QCoreApplication.translate("MainWindow", u"Height (reference  is geoid) [m]", None))

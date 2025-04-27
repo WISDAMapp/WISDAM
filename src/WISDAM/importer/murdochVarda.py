@@ -66,6 +66,7 @@ class VARDAMurdoch(ImageBaseLoader):
         meta_data = kwargs.pop('meta_data')
         crs_data: CRS = kwargs['crs']
         vertical_ref: str = kwargs['vertical_ref']
+        height_rel: str = kwargs['height_rel']
 
         camera, width, height = estimate_camera_from_meta_dict(meta_dict=meta_data)
         position = None
@@ -85,6 +86,13 @@ class VARDAMurdoch(ImageBaseLoader):
                 y_exif = -y_exif
             z_exif = meta_data.get('EXIF:GPSAltitude', None)
 
+            rel_z_exif = None
+            if vertical_ref == 'relative':
+                rel_z_exif = meta_data.get('XMP:RelativeAltitude', None)
+                if rel_z_exif is not None:
+                    z_exif = height_rel + float(rel_z_exif)
+
+
             if crs_data is None:
 
                 if vertical_ref == 'orthometric':
@@ -98,6 +106,11 @@ class VARDAMurdoch(ImageBaseLoader):
                 if meta_data.get('XMP:HorizCS', None) is not None:
                     crs_hor_exif = meta_data['XMP:HorizCS']
                     crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
+
+                # This is now an override if relative height is specified:
+                if rel_z_exif is not None:
+                    crs_hor_exif = 4326
+                    crs_vert_exif = 3855
 
                 if crs_vert_exif == 'ellipsoidal':
                     crs_data = CRS(crs_hor_exif).to_3d()
