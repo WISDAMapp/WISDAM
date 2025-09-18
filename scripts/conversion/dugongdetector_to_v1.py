@@ -42,22 +42,26 @@ from WISDAMcore.transform.rotation import Rotation
 from WISDAMcore.transform.utm_converter import point_convert_utm_wgs84_egm2008
 from WISDAMcore.transform.coordinates import CoordinatesTransformer
 
-from multiprocessing import Pool
-
-
 path_to_bin = Path(__file__).resolve().parent.parent.with_name("bin")
-path_to_config = Path(__file__).resolve().parent.parent.with_name("config")
+
+if not path_to_bin.exists():
+    path_to_bin = Path(__file__).resolve().with_name("bin")
+
+    if not path_to_bin.exists():
+        raise RuntimeError("Some files are missing")
+
+if (path_to_bin / "project_config_dugongdetector.json").exists():
+    config = json.load(open(path_to_bin / "project_config_dugongdetector.json", 'r'))
+elif (Path(__file__).resolve().parent / "project_config_dugongdetector.json").exists():
+    config = json.load(open(Path(__file__).resolve().parent / "project_config_dugongdetector.json", 'r'))
+else:
+    raise FileNotFoundError("Config File not found under config")
 
 
-def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
+def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_images: bool):
     t1 = time.time()
     pyproj.network.set_network_enabled(active=True)
     print(file_convert.name, "start conversion")
-
-    if (path_to_config / "project_config_dugongdetector.json").exists():
-        config = json.load(open(path_to_config / "project_config_dugongdetector.json", 'r'))
-    else:
-        raise FileNotFoundError("Config File not found under config")
 
     db_connection_old = dbapi2.connect(file_convert)
     init(db_connection_old)
@@ -94,24 +98,30 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
                  group by images.id
                  order by images.id"""
 
-    query = r"""select *, 
-                 asgeojson(images.footprint) as geom,
-                 asgeojson(images.position) as position_json from images
-                 WHERE  id  IN(SELECT  image FROM  sightings)
-                 order by id
-                 """
+    if flag_all_images:
+        query = r"""select *, 
+                     asgeojson(images.footprint) as geom,
+                     asgeojson(images.position) as position_json from images
+                     """
+    else:
+        query = r"""select *, 
+                     asgeojson(images.footprint) as geom,
+                     asgeojson(images.position) as position_json from images
+                     WHERE  id  IN(SELECT  image FROM  sightings)
+                     order by id
+                     """
 
     images = db_connection_old.execute(query).fetchall()
 
     images_dict = {}
     images_dict_all = {}
     image_count = 0
-    for data in tqdm(images):
+    for data in tqdm(images, position=1, leave=False):
 
         # if objects:
         #    print(len(objects))
 
-        image_count +=1
+        image_count += 1
         path = Path(data["path"])
         image_user = data["user"]
         width = data["width"]
@@ -315,38 +325,51 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path):
     db_new.close()
 
     # db_new.store_image_all_fields_many(image_list)
-    finish = file_save.parent / (file_save.stem + '_finish1.sqlite')
+    finish = file_save.parent / (file_save.stem + '_finish.sqlite')
+    if finish.exists():
+        datetime_string = datetime.now().strftime("%H%M%S")
+        finish = file_save.parent / (file_save.stem + '_' + datetime_string + ' _finish.sqlite')
     os.rename(file_save.as_posix(), finish)
     print(file_save.name, "finish", (time.time() - t1) / 60)
 
 
-def multi_conversion(parent_path: Path, path_out: Path):
+def multi_conversion(parent_path: Path, path_out: Path, flag_all_images: bool):
     sqlite_files = parent_path.rglob('*.sqlite')
 
-    with Pool(6) as pool:
-        mapping_list = []
-        for sqlite in sqlite_files:
-            p = sqlite
+    for file_to_use in tqdm(sqlite_files, position=0, leave=False):
+        datetime_str = datetime.now().strftime("%y%m%d")
+        p_output = path_out / (file_to_use.stem + '_v10X_%s.sqlite' % datetime_str)
 
-            datetime_str = datetime.now().strftime("%y%m%d_%H%M%S")
-            p_output = path_out / (p.stem + '_wisdam_104_%s.sqlite' % datetime_str)
-
-            p_output.unlink(missing_ok=True)
-            mapping_list.append((p, p_output))
-
-        print("Number of conversions %i" % len(mapping_list))
-        pool.starmap(convert_dugong_detector_to_v1, mapping_list)
-        # convert_dugong_detector_to_v1(p, p1)
+        p_output.unlink(missing_ok=True)
+        convert_dugong_detector_to_v1(file_to_use, p_output, flag_all_images)
 
 
 if __name__ == "__main__":
 
-    path_src = input("Enter Source Sqlite or Folder: ")
-    path_out = input("Enter Destination Folder: ")
+    if len(sys.argv) in (3, 4):
+        path_src = sys.argv[1]
+        path_out = sys.argv[2]
+
+        if len(sys.argv) == 3:
+            all_images = input("Import all images? (yes/no): ")
+
+        else:
+            all_images = sys.argv[3]
+
+    else:
+
+        path_src = input("Enter Source Sqlite or Folder: ")
+        path_out = input("Enter Destination Folder: ")
+        all_images = input("Import all images? (yes/no): ")
+
+    if all_images is None:
+        all_images = "No"
 
     print("Source: " + path_src)
     print("Destination: " + path_out)
+    print("All images will be imported" if all_images.lower() in ("yes", "y") else "Import only images with objects")
 
+    all_images = True if all_images.lower() in ("yes", "y") else False
     path_src = Path(path_src)
     path_out = Path(path_out)
 
@@ -361,9 +384,9 @@ if __name__ == "__main__":
     pyproj.network.set_network_enabled(active=True)
 
     if path_src.is_dir():
-        multi_conversion(path_src, path_out)
+        multi_conversion(path_src, path_out, all_images)
     else:
-        datetime_string = datetime.now().strftime("%y%m%d_%H%M%S")
-        p_out = path_out / (path_out.stem + '_wisdam_105_%s.sqlite' % datetime_string)
+        datetime_string = datetime.now().strftime("%y%m%d")
+        p_out = path_out / (path_src.stem + '_v10X_%s.sqlite' % datetime_string)
         p_out.unlink(missing_ok=True)
-        convert_dugong_detector_to_v1(path_src, p_out)
+        convert_dugong_detector_to_v1(path_src, p_out, all_images)

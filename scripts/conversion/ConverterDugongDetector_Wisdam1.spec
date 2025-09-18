@@ -7,18 +7,47 @@ import importlib.metadata
 import toml
 
 
-sys.path.append(Path(r"src\WISDAMapp").as_posix())
-sys.path.append(Path(r"..\wisdamcore\src").as_posix())
+specpath = Path(os.path.dirname(os.path.abspath(SPEC)))
+print("Path to spec file:", specpath.as_posix())
+path_to_repo_main = specpath.parent.parent
+print("Path to repo main folder:", path_to_repo_main.as_posix())
+
+path_to_src_wisdam = path_to_repo_main / "src"
+path_to_wisdam = path_to_repo_main / "src" / "WISDAM"
+sys.path.append(path_to_src_wisdam.as_posix())
+sys.path.append(path_to_wisdam.as_posix())
+
+try:
+	from WISDAM import software_version
+	print(software_version)
+except (ModuleNotFoundError, ImportError):
+		print("\nThe package WISDAM can not be found.\nEXIT")
+		raise SystemExit
+
+try:
+	import WISDAMcore
+	from WISDAMcore import ArrayNx2
+	print("import")
+except (ModuleNotFoundError, ImportError):
+	path_to_WISDAMcore = path_to_repo_main.parent / "WISDAMcore_oldCore"
+	if path_to_WISDAMcore.exists():
+		path_to_WISDAMcore_src = path_to_WISDAMcore / "src" / "WISDAMcore_oldCore"
+		sys.path.append(path_to_WISDAMcore_src.as_posix())
+		print(path_to_WISDAMcore_src)
+		import WISDAMcore
+		from WISDAMcore import ArrayNx2
+		print("import")
+	else:
+		print("\nThe package WISDAMcore can not be found.\nEXIT")
+		raise SystemExit
 
 
-src = Path(r"src\WISDAMapp")
-
-pyproject_toml_file = Path("pyproject.toml")
+pyproject_toml_file = path_to_repo_main / "pyproject.toml"
 if pyproject_toml_file.exists() and pyproject_toml_file.is_file():
     toml_file = toml.load(pyproject_toml_file)
     __package_version = toml_file["project"]["version"]
 
-name_app = 'DugongDetector_to_Wisdamapp' + __package_version.replace('.','_')
+name_app = 'DD_to_Wisdam_' + __package_version.replace('.','_')
 
 block_cipher = None
 
@@ -35,12 +64,12 @@ rasterio_imports = ['rasterio._shim',
 
 
 added_files = [
-		 ( (src / 'bin').as_posix(), 'bin'),
-         ( (src / 'db/conversion/project_config_dugongdetector_wisdamv1.json').as_posix(), 'bin'),
+		 ( (path_to_repo_main / 'bin').as_posix(), 'bin'),
+         ( (specpath / 'project_config_dugongdetector.json').as_posix(), 'bin'),
          ]
 
 a = Analysis(
-    [(src / 'db\conversion\dugongdetector_to_v1.py').as_posix()],
+    [(specpath / "dugongdetector_to_v1.py").as_posix()],
     pathex=['.'],
     binaries=[],
     datas=added_files,

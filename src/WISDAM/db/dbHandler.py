@@ -882,10 +882,10 @@ class DBHandler:
             return None
 
     def load_image_id_path_parts(self, path: str) -> list | None:
-        query = r"""SELECT id from images where path LIKE :path"""
+        query = r"""SELECT id, path from images where path LIKE :path"""
         data = self.con.execute(query, {'path': path}).fetchall()
         if data:
-            return [x['id'] for x in data]
+            return data
         else:
             return None
 

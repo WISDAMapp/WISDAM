@@ -95,6 +95,9 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
         if logfile_path.is_file():
             log_data = input_data_class.extract_logfile(log_file=logfile_path)
 
+            if log_data is not None:
+                success_dict['log_success'] += 1
+
         else:
 
             log_suffix = input_data_class.logfile_suffix()

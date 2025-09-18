@@ -158,7 +158,7 @@ class WINGRAOmegaPhiKappa(ImageBaseLoader):
                 orientation = Rotation(rot_cam)
 
             else:
-                # NEd to ENU
+
                 roll = row.roll * np.pi / 180
                 yaw = row.yaw * np.pi / 180
                 pitch = row.pitch * np.pi / 180

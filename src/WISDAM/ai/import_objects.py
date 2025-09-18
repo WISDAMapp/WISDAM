@@ -93,7 +93,36 @@ def process_detections_to_ai_detections(db_path: Path, user: str, ai_process_nam
             path_image_no_suffix = path_image.with_suffix('').as_posix()
 
             image_db = image_existing_list.get(path_image_no_suffix, None)
-            if not image_db or not path_image.exists():
+
+            if not image_db:
+
+                # if not found check for relative paths first before dismissing image
+                path_image_no_suffix = path_image.with_suffix('')
+                path_test = path_image_no_suffix.parent
+
+                # Test severely path-splits to find unique filename
+                while 1:
+                    rel_path = path_image_no_suffix.relative_to(path_test)
+                    image_list_found = db.load_image_id_path_parts('%' + rel_path.as_posix() + '%')
+
+                    # Here we either should get one or more hits on similar images
+                    # If not we should not search further
+                    if image_list_found is not None:
+
+                        # If only one hit was found that must be our image
+                        if len(image_list_found) == 1:
+                            path_image_no_suffix = Path(image_list_found[0]['path']).with_suffix('').as_posix()
+                            # set now the variable image_db to continue
+                            image_db = image_existing_list.get(path_image_no_suffix, None)
+                            break
+                    path_test = path_test.parent
+
+                    # Paths can not be further split so we have found the end and we did not find anything
+                    if len(path_test.parents) == 0:
+
+                        break
+
+            if not image_db:
                 # Number of detections in that file
                 failed += len(detections_image)
 
@@ -118,6 +147,15 @@ def process_detections_to_ai_detections(db_path: Path, user: str, ai_process_nam
 
             current_image_qimage = None
             if cropped_images_missing:
+
+                if not path_image.exists():
+                    failed += len(detections_image)
+
+                    # Number of detections in that file
+                    if img_path not in image_not_found:
+                        image_not_found.append(img_path)
+
+                    continue
 
                 if image_db['importer'] == 'Orthoimagery using Rasterio':
                     current_image_qimage = image_loader_rasterio_standard(path_image)
@@ -159,6 +197,16 @@ def process_detections_to_ai_detections(db_path: Path, user: str, ai_process_nam
                 if cropped_image is None:
 
                     if current_image_qimage is None:
+
+                        if not path_image.exists():
+
+                            # Number of detections in that file
+                            failed += 1
+
+                            if img_path not in image_not_found:
+                                image_not_found.append(img_path)
+
+                            continue
 
                         if image_db['importer'] == 'Orthoimagery using Rasterio':
                             current_image_qimage = image_loader_rasterio_standard(path_image)

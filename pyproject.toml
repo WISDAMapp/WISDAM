@@ -24,7 +24,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "WISDAM"
-version = "1.0.11"
+version = "1.0.12"
 authors = [
   { name="Martin Wieser"},
 ]

@@ -19,9 +19,9 @@ try:
 	from WISDAMcore import ArrayNx2
 	print("import")
 except (ModuleNotFoundError, ImportError):
-	path_to_WISDAMcore = path_to_repo_main.parent / "WISDAMcore"
+	path_to_WISDAMcore = path_to_repo_main.parent / "WISDAMcore_oldCore"
 	if path_to_WISDAMcore.exists():
-		path_to_WISDAMcore_src = path_to_WISDAMcore / "src" / "WISDAMcore"
+		path_to_WISDAMcore_src = path_to_WISDAMcore / "src" / "WISDAMcore_oldCore"
 		sys.path.append(path_to_WISDAMcore_src.as_posix())
 		print(path_to_WISDAMcore_src)
 		import WISDAMcore

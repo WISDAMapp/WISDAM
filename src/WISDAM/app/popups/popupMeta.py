@@ -402,6 +402,8 @@ class POPUPMeta(QWidget):
             self.ui.duo_meta_1.setValue(self.config['slider_duo1']['start_value'])
         if self.config.get('slider_duo2', ''):
             self.ui.duo_meta_2.setValue(self.config['slider_duo2']['start_value'])
+        if self.config.get('slider_duo3', ''):
+            self.ui.duo_meta_3.setValue(self.config['slider_duo3']['start_value'])
 
     def clear_all(self):
 
@@ -724,19 +726,19 @@ class POPUPMeta(QWidget):
                     self.ui.triple_meta_4.setValue(value)
 
             if self.config.get('slider_duo1', ''):
-                if data_meta.get(self.mapping_table.get('slider_duo1', ''), 0):
+                if data_meta.get(self.mapping_table.get('duo_1', ''), 0):
                     value = map_text_to_slider(data_meta.get(self.mapping_table.get('duo_1', ''), 0),
                                                self.config['slider_duo1'])
                     self.ui.duo_meta_1.setValue(value)
 
             if self.config.get('slider_duo2', ''):
-                if data_meta.get(self.mapping_table.get('slider_duo2', ''), 0):
+                if data_meta.get(self.mapping_table.get('duo_2', ''), 0):
                     value = map_text_to_slider(data_meta.get(self.mapping_table.get('duo_2', ''), 0),
                                                self.config['slider_duo2'])
                     self.ui.duo_meta_2.setValue(value)
 
             if self.config.get('slider_duo3', ''):
-                if data_meta.get(self.mapping_table.get('slider_duo3', ''), 0):
+                if data_meta.get(self.mapping_table.get('duo_3', ''), 0):
                     value = map_text_to_slider(data_meta.get(self.mapping_table.get('duo_3', ''), 0),
                                                self.config['slider_duo3'])
                     self.ui.duo_meta_3.setValue(value)

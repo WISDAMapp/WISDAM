@@ -56,7 +56,7 @@ def read_file_detections(path_file: Path) -> list | None:
             if not row:
                 continue
 
-            elif len(row) >= 8:
+            if len(row) >= 8:
                 # We should now have a line of the version 2
 
                 # We start from end because it could be theoretically that there is a , in the path
@@ -74,22 +74,28 @@ def read_file_detections(path_file: Path) -> list | None:
                 ai_detections.append(detection)
                 continue
 
-            # Now we treat old version of the detections files
-            elif ".jpg" in row[-1].lower():
-                image = ','.join(row)
-
-            elif len(row) >= 4:
-
-                ai_values = ','.join(row).split(' ')
-                object_type = ai_values[0]
-                probability = float(ai_values[2].replace('%', '')) / 100.0
-                rectangle = [float(x) for x in ai_values[3].split(',')]
-                detection = [image, ai_detection_image, object_type, probability, rectangle[1], rectangle[0], rectangle[3], rectangle[2]]
-                ai_detections.append(detection)
-
-            # dum = f.readline()
             else:
-                ai_detection_image = path_file.parent / (','.join(row) + '.jpg')
+                # Now we treat old version of the detections files
+
+                if len(row) < 4:
+                    joined_row = ','.join(row)
+                    if Path(joined_row).parent == Path():
+
+                        ai_detection_image = path_file.parent / joined_row
+                        if not ai_detection_image.suffix:
+                            ai_detection_image = path_file.parent / (joined_row + '.jpg')
+
+                    else:
+                        image = joined_row
+
+                else:  # len(row) >= 4:
+
+                    ai_values = ','.join(row).split(' ')
+                    object_type = ai_values[0]
+                    probability = float(ai_values[2].replace('%', '')) / 100.0
+                    rectangle = [float(x) for x in ai_values[3].split(',')]
+                    detection = [image, ai_detection_image, object_type, probability, rectangle[1], rectangle[0], rectangle[3], rectangle[2]]
+                    ai_detections.append(detection)
 
     return ai_detections
 
@@ -132,8 +138,8 @@ def convert_ai_results(db_path: Path, path_images_input: Path, path_images_input
                 path_image, extension = os.path.splitext(path_search.as_posix())
                 path_image = path_image.lower() + '%'
 
-            image_id = db.load_image_id_path_parts(path_image)
-            if image_id is not None:
+            images_found = db.load_image_id_path_parts(path_image)
+            if images_found is not None:
                 path_image_detection = path_results / (detection[1] + '.jpg')
 
                 try:
@@ -145,15 +151,15 @@ def convert_ai_results(db_path: Path, path_images_input: Path, path_images_input
                 coo = [int(v) for v in detection[4].split(',')]
                 outline = {'xmin': coo[0], 'ymin': coo[1], 'xmax': coo[2], 'ymax': coo[3]}
 
-                new_id = db.store_ai_detection(image_id[0], object_type=detection[2], ai_run=ai_run, object_data='',
+                new_id = db.store_ai_detection(images_found[0]['id'], object_type=detection[2], ai_run=ai_run, object_data='',
                                                outline=outline, probability=detection[3],
                                                image_detection=image_detection)
                 if new_id:
                     success += 1
                 else:
                     duplicate += 1
-                if image_id[0] not in image_id_list:
-                    image_id_list.append(image_id[0])
+                if images_found[0]['id'] not in image_id_list:
+                    image_id_list.append(images_found[0]['id'])
             else:
                 logger.warning('\tImage of AI result not found in Database: ' + path_image)
 
@@ -266,66 +272,3 @@ class MADSeafrog(BaseAIClass):
             return ai_detections
         else:
             return None
-
-
-def dummpy():
-    # First search for all folders of images if they are found in the database
-    folder_dict = {}
-    images_looked_up = []
-    for detection in detections:
-
-        if detection[0] in images_looked_up:
-            continue
-        images_looked_up.append(detection[0])
-        path_for_image: None | Path = None
-        path_image = Path(detection[0]).with_suffix('')
-        path_test = path_image.parent
-
-        if path_test.as_posix() not in folder_dict.keys():
-
-            # we need to get the image folder from first detection.
-            # Test severely path-splits to find unique filename
-            while 1:
-                rel_path = path_image.relative_to(path_test)
-                image_ids = db.load_image_id_path_parts('%' + rel_path.as_posix() + '%')
-
-                if image_ids is not None:
-                    if len(image_ids) == 1:
-                        image_sqlite_row = db.load_image(image_ids[0])
-                        path_for_image = Path(image_sqlite_row['path']).parent
-                        folder_dict[path_image.parent.as_posix()] = path_for_image
-                        break
-                path_test = path_test.parent
-                if len(path_test.parents) == 0:
-                    break
-
-            if path_for_image is None:
-                logger.info('\tCould not resolve image folder for: %s' % path_image.as_posix())
-                continue
-
-    if folder_dict:
-
-        for detection in detections:
-
-            path_image = Path(detection[0]).with_suffix('')
-            path_test = path_image.parent
-
-            if not folder_dict.get(path_test.as_posix(), ''):
-                if path_image not in image_not_found:
-                    image_not_found.append(path_image.as_posix())
-                continue
-
-            path_for_image = Path(folder_dict[path_test.as_posix()])
-            path_image = path_for_image / Path(detection[0]).name
-            path_image = path_image.with_suffix('').as_posix()
-            image_ids = db.load_image_id_path_parts(path_image + '%')
-
-            if image_ids is not None:
-                # TODO it could be that there are more images at this stage
-                # I think this is not possible anymore
-                image_id = image_ids[0]
-
-            else:
-                    # Several detections can have images in common
-                    if path_image not in image_not_found:
-                        image_not_found.append(path_image)

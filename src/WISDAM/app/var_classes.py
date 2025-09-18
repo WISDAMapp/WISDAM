@@ -44,7 +44,7 @@ text_margin = 8
 zoomin_factor = 0.8
 point_size = 10
 
-point_size_gis_standard = 0.0002
+point_size_gis_standard = 0.0001
 
 object_name_file_header = "# First entry is object main name (e.g. TAXA); followed by object sub names (e.g. Species)\n"
 object_name_file_header += "# If you want to have standard empty as first sub item add ;; (empty sub name)\n"
