@@ -47,26 +47,38 @@ class POPUPImageMeta(QDialog):  # Inheritance of the QDialog class
         self.ui.txt_transect.setText(transect)
         self.ui.txt_surveyblock.setText(block)
 
-        self.ui.txt_operator.setText(meta_user['operator'])
-        self.ui.txt_camera.setText(meta_user['camera_ref'])
-        self.ui.txt_conditions.setText(meta_user['conditions'])
-        self.ui.txt_comment.setPlainText(meta_user['comments'])
+        self.ui.txt_operator.setText(meta_user["operator"])
+        self.ui.txt_camera.setText(meta_user["camera_ref"])
+        self.ui.txt_conditions.setText(meta_user["conditions"])
+        self.ui.txt_comment.setPlainText(meta_user["comments"])
 
     def get_data(self):
         # Get user input data
 
-        flight_ref = self.ui.txt_fligt_ref.text()
-        transect = self.ui.txt_transect.text()
-        block = self.ui.txt_surveyblock.text()
+        def _normalize_user_text(value: str) -> str:
+            # Trim leading/trailing whitespace; whitespace-only becomes "".
+            return value.strip() if isinstance(value, str) else value
 
-        operator = self.ui.txt_operator.text()
-        camera_ref = self.ui.txt_camera.text()
-        conditions = self.ui.txt_conditions.text()
-        comments = self.ui.txt_comment.toPlainText()
+        def _normalize_optional_text(value: str) -> str | None:
+            value = _normalize_user_text(value)
+            return value if value else None
+
+        flight_ref = _normalize_optional_text(self.ui.txt_fligt_ref.text())
+        transect = _normalize_optional_text(self.ui.txt_transect.text())
+        block = _normalize_optional_text(self.ui.txt_surveyblock.text())
+
+        operator = _normalize_user_text(self.ui.txt_operator.text())
+        camera_ref = _normalize_user_text(self.ui.txt_camera.text())
+        conditions = _normalize_user_text(self.ui.txt_conditions.text())
+        comments = _normalize_user_text(self.ui.txt_comment.toPlainText())
 
         meta_user = {}
         if operator or camera_ref or conditions or comments:
-            meta_user = {'operator': operator, 'camera_ref': camera_ref, 'conditions': conditions,
-                         'comments': comments}
+            meta_user = {
+                "operator": operator,
+                "camera_ref": camera_ref,
+                "conditions": conditions,
+                "comments": comments,
+            }
 
         return flight_ref, transect, block, meta_user

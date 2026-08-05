@@ -28,7 +28,6 @@ from PIL import ImageQt
 from PIL import Image
 from PIL import UnidentifiedImageError
 import rasterio
-from rasterio.plot import reshape_as_raster, reshape_as_image
 
 
 from PySide6.QtGui import QPixmap, QImage, QImageReader
@@ -41,7 +40,7 @@ QImageReader.setAllocationLimit(0)
 
 image_formats_direct_load = []
 for x in QImageReader.supportedImageFormats():
-    image_formats_direct_load.append('.' + x.data().decode())
+    image_formats_direct_load.append("." + x.data().decode())
 
 
 def image_loader_standard(filename: Path | str) -> QImage | None:
@@ -79,27 +78,25 @@ def image_loader_rasterio_standard(filename: Path | str) -> QImage | None:
             ii = xx.read()
         ii = numpy.ma.transpose(ii, [1, 2, 0])[:, :, :3]
 
-        if (ii.dtype != 'uint8' or ii.max() < 2) and ii.max() != 0:
+        if (ii.dtype != "uint8" or ii.max() < 2) and ii.max() != 0:
             data_8bit = (ii - numpy.min(ii)) / (numpy.max(ii) - numpy.min(ii)) * 255
         else:
             data_8bit = ii
         if data_8bit.shape[2] > 2:
-            pi = Image.fromarray(data_8bit.astype('uint8'), 'RGB')
+            pi = Image.fromarray(data_8bit.astype("uint8"), "RGB")
         else:
-            pi = Image.fromarray(data_8bit[:, :, 0].astype('uint8'), 'L')
+            pi = Image.fromarray(data_8bit[:, :, 0].astype("uint8"), "L")
 
-        #ii4 = xx.read([1,2,3],out_dtype='uint8')
-        #ii5 = reshape_as_image(ii4)
-        #pi = Image.fromarray(ii5, 'RGB')
+        # ii4 = xx.read([1,2,3],out_dtype='uint8')
+        # ii5 = reshape_as_image(ii4)
+        # pi = Image.fromarray(ii5, 'RGB')
         q_image = pi.toqimage()
 
     except:
-
-        #logger.error("Image Loading failed")
+        # logger.error("Image Loading failed")
         return None
 
     return q_image
-
 
 
 def image_loader_rasterio(filename: Path | str) -> QPixmap | None:
@@ -109,18 +106,18 @@ def image_loader_rasterio(filename: Path | str) -> QPixmap | None:
             ii = xx.read()
         ii = numpy.ma.transpose(ii, [1, 2, 0])[:, :, :3]
 
-        if (ii.dtype != 'uint8' or ii.max() < 2) and ii.max() != 0:
+        if (ii.dtype != "uint8" or ii.max() < 2) and ii.max() != 0:
             data_8bit = (ii - numpy.min(ii)) / (numpy.max(ii) - numpy.min(ii)) * 255
         else:
             data_8bit = ii
         if data_8bit.shape[2] > 2:
-            pi = Image.fromarray(data_8bit.astype('uint8'), 'RGB')
+            pi = Image.fromarray(data_8bit.astype("uint8"), "RGB")
         else:
-            pi = Image.fromarray(data_8bit[:, :, 0].astype('uint8'), 'L')
+            pi = Image.fromarray(data_8bit[:, :, 0].astype("uint8"), "L")
 
-        #ii4 = xx.read([1,2,3],out_dtype='uint8')
-        #ii5 = reshape_as_image(ii4)
-        #pi = Image.fromarray(ii5, 'RGB')
+        # ii4 = xx.read([1,2,3],out_dtype='uint8')
+        # ii5 = reshape_as_image(ii4)
+        # pi = Image.fromarray(ii5, 'RGB')
         q_pix = pi.toqpixmap()
     except:
         logger.error("Image Loading failed")
@@ -147,7 +144,9 @@ def image_loader(filename: Path | str) -> QPixmap | None:
         proc.join()
         if q_image:
             buf, w, h, bytes_per_line = q_image
-            q_pix = QPixmap.fromImage(QImage(buf, w, h, bytes_per_line, QImage.Format_RGB888))
+            q_pix = QPixmap.fromImage(
+                QImage(buf, w, h, bytes_per_line, QImage.Format_RGB888)
+            )
 
     except (rawpy.LibRawError, rawpy.NotSupportedError):
         try:
@@ -178,7 +177,9 @@ def image_loader_slower(filename: Path | str) -> QPixmap | None:
             q_pix = QPixmap.fromImage(ImageQt.ImageQt(q_image))
         elif isinstance(q_image, tuple):
             buf, w, h, bytes_per_line = q_image
-            q_pix = QPixmap.fromImage(QImage(buf, w, h, bytes_per_line, QImage.Format_RGB888))
+            q_pix = QPixmap.fromImage(
+                QImage(buf, w, h, bytes_per_line, QImage.Format_RGB888)
+            )
 
     return q_pix
 

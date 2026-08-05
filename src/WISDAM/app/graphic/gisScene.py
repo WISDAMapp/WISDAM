@@ -22,11 +22,20 @@ from PySide6.QtWidgets import QGraphicsScene, QApplication, QMenu
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QPainterPath
 
-from app.graphic.itemsGrahpicScene import (PointAnnotation, PolygonAnnotation, RectangleAnnotation,
-                                           PolygonFootprint, PathAnnotation, PointCenterpoint, SelectionPolygon)
+from app.graphic.itemsGrahpicScene import (
+    PointAnnotation,
+    PolygonAnnotation,
+    RectangleAnnotation,
+    PolygonFootprint,
+    PathAnnotation,
+    PointCenterpoint,
+    SelectionPolygon,
+)
+
 # from app.utils_qt import change_tooltip_html
 from app.graphic.items_coloring import color_objects_attribute
-from app.var_classes import Selection
+from app.popups.popupConfirm import POPUPConfirm
+from app.var_classes import Selection, ObjectSourceList
 from app.utils_qt import create_tooltip_cropped_image, create_tooltip_objects
 from db.dbHandler import DBHandler
 
@@ -42,12 +51,13 @@ class GISScene(QGraphicsScene):
     change_image_meta_list = Signal(list)
     change_image_transect_list = Signal(list)
     change_image_block_list = Signal(list)
+    object_delete = Signal(int, int)
 
     def __init__(self, parent=None):
         super(GISScene, self).__init__(parent)
 
-        self.hide_images_flag = True
-        self.show_footprints_on_hover_flag = True
+        self.show_images_flag = False
+        self.hide_footprints_on_hover_flag = False
 
         self.db: DBHandler | None = None
 
@@ -62,20 +72,26 @@ class GISScene(QGraphicsScene):
         current_item = self.items(event.scenePos())
 
         if current_item:
-            if hasattr(current_item[0], 'object_id'):
-
+            if hasattr(current_item[0], "object_id"):
                 cropped_image = self.db.get_cropped_image(current_item[0].object_id)
                 if cropped_image:
-                    if cropped_image['cropped_image']:
-                        tooltip = create_tooltip_cropped_image(cropped_image['cropped_image'], current_item[0].image_id,
-                                                               current_item[0].object_type,
-                                                               current_item[0].resight_set, current_item[0].source,
-                                                               current_item[0].reviewed)
+                    if cropped_image["cropped_image"]:
+                        tooltip = create_tooltip_cropped_image(
+                            cropped_image["cropped_image"],
+                            current_item[0].image_id,
+                            current_item[0].object_type,
+                            current_item[0].resight_set,
+                            current_item[0].source,
+                            current_item[0].reviewed,
+                        )
                     else:
-                        tooltip = create_tooltip_objects(current_item[0].image_id,
-                                                         current_item[0].object_type,
-                                                         current_item[0].resight_set, current_item[0].source,
-                                                         current_item[0].reviewed)
+                        tooltip = create_tooltip_objects(
+                            current_item[0].image_id,
+                            current_item[0].object_type,
+                            current_item[0].resight_set,
+                            current_item[0].source,
+                            current_item[0].reviewed,
+                        )
 
                     current_item[0].setToolTip(tooltip)
 
@@ -83,7 +99,7 @@ class GISScene(QGraphicsScene):
 
     def clear_objects(self):
         for item in self.items():
-            if hasattr(item, 'object_id'):
+            if hasattr(item, "object_id"):
                 self.removeItem(item)
 
     def set_selection_mode(self, selection_mode: Selection):
@@ -91,20 +107,20 @@ class GISScene(QGraphicsScene):
 
     def delete_object(self, item_id):
         for item in self.items():
-            if hasattr(item, 'object_id'):
+            if hasattr(item, "object_id"):
                 if item.object_id == item_id:
                     self.removeItem(item)
 
-    def show_footprints_on_hover(self, is_checked):
-        self.show_footprints_on_hover_flag = is_checked
+    def hide_footprints_on_hover(self, is_checked):
+        self.hide_footprints_on_hover_flag = is_checked
 
-    def hide_images(self, is_checked):
+    def show_images(self, is_checked):
         scene_items = self.items()
-        self.hide_images_flag = is_checked
+        self.show_images_flag = is_checked
         if scene_items:
             for obj in scene_items:
                 if obj.__class__ in [PolygonFootprint]:
-                    obj.setVisible(not is_checked)
+                    obj.setVisible(is_checked)
 
     def hide_centerpoints(self, hide_centerpoints):
         scene_items = self.items()
@@ -113,12 +129,31 @@ class GISScene(QGraphicsScene):
                 if obj.__class__ in [PointCenterpoint]:
                     obj.setVisible(not hide_centerpoints)
 
-    def hide_objects(self, button_checked: bool):
+    def hide_man_objects(self, button_checked: bool):
         scene_items = self.items()
         if scene_items:
             for obj in scene_items:
-                if obj.__class__ in [PolygonAnnotation, PointAnnotation, RectangleAnnotation, PathAnnotation]:
-                    obj.setVisible(not button_checked)
+                if obj.__class__ in [
+                    PolygonAnnotation,
+                    PointAnnotation,
+                    RectangleAnnotation,
+                    PathAnnotation,
+                ]:
+                    if obj.source == ObjectSourceList.manual:
+                        obj.setVisible(not button_checked)
+
+    def hide_ai_objects(self, button_checked: bool):
+        scene_items = self.items()
+        if scene_items:
+            for obj in scene_items:
+                if obj.__class__ in [
+                    PolygonAnnotation,
+                    PointAnnotation,
+                    RectangleAnnotation,
+                    PathAnnotation,
+                ]:
+                    if obj.source == ObjectSourceList.ai:
+                        obj.setVisible(not button_checked)
 
     # def change_tooltip(self, item_ids, object_type: str = None, resight_set: int = None, reviewed=None):
     #    scene_items = self.items()
@@ -129,46 +164,74 @@ class GISScene(QGraphicsScene):
     #                    new_html = change_tooltip_html(item.toolTip(), object_type, resight_set, reviewed)
     #                    item.setToolTip(new_html)
 
-    def color_objects(self, attribute: str = None, color_dict: dict | None = None,
-                      default_value=None, default_dict: dict | None = None):
+    def color_objects(
+        self,
+        attribute: str = None,
+        color_dict: dict | None = None,
+        default_value=None,
+        default_dict: dict | None = None,
+    ):
 
-        scene_items = [x for x in self.items() if x.__class__ in [PolygonAnnotation,
-                                                                  PointAnnotation, RectangleAnnotation, PathAnnotation]]
+        scene_items = [
+            x
+            for x in self.items()
+            if x.__class__
+            in [PolygonAnnotation, PointAnnotation, RectangleAnnotation, PathAnnotation]
+        ]
         color_dict_new = None
         if scene_items:
-            color_dict_new = color_objects_attribute(scene_items, attribute, color_dict=color_dict,
-                                                     default_value=default_value, default_dict=default_dict)
+            color_dict_new = color_objects_attribute(
+                scene_items,
+                attribute,
+                color_dict=color_dict,
+                default_value=default_value,
+                default_dict=default_dict,
+            )
 
         return color_dict_new
 
-    #def color_single_images(self,image_id: list | int, attribute: str = None, value:object = '',
+    # def color_single_images(self,image_id: list | int, attribute: str = None, value:object = '',
     #                       color_dict: dict |None=None ):
     #    if not color_dict:
     #      return self.color_images(attribute= attribute, default_value, default_dict)
-#
- #       if color_dict.get('attribute')
-#
- #       scene_items = [x for x in self.items() if x.__class__ in [PolygonFootprint, PointCenterpoint]]
-#
- #       color_dict = None
-  #      if scene_items:
-   #         color_dict = color_objects_attribute(scene_items, attribute,
+    #
+    #       if color_dict.get('attribute')
+    #
+    #       scene_items = [x for x in self.items() if x.__class__ in [PolygonFootprint, PointCenterpoint]]
+    #
+    #       color_dict = None
+    #      if scene_items:
+    #         color_dict = color_objects_attribute(scene_items, attribute,
     #                                             default_value=default_value, default_dict=default_dict)
-#
- #       return color_dict
+    #
+    #       return color_dict
 
-    def color_images(self, attribute: str = None, default_value=None,
-                     default_dict: dict | None = None):
-        scene_items = [x for x in self.items() if x.__class__ in [PolygonFootprint, PointCenterpoint]]
+    def color_images(
+        self,
+        attribute: str = None,
+        default_value=None,
+        default_dict: dict | None = None,
+    ):
+        scene_items = [
+            x
+            for x in self.items()
+            if x.__class__ in [PolygonFootprint, PointCenterpoint]
+        ]
 
         color_dict = None
         if scene_items:
-            color_dict = color_objects_attribute(scene_items, attribute,
-                                                 default_value=default_value, default_dict=default_dict)
+            color_dict = color_objects_attribute(
+                scene_items,
+                attribute,
+                default_value=default_value,
+                default_dict=default_dict,
+            )
 
         return color_dict
 
-    def change_survey_data(self, item_list, transect='', flight_ref='', block='', update_all=False):
+    def change_survey_data(
+        self, item_list, transect="", flight_ref="", block="", update_all=False
+    ):
         scene_items = self.items()
         if scene_items:
             for obj in scene_items:
@@ -185,7 +248,7 @@ class GISScene(QGraphicsScene):
         scene_items = self.items()
         if scene_items:
             for obj in scene_items:
-                if hasattr(obj, 'object_id'):
+                if hasattr(obj, "object_id"):
                     if obj.object_id in item_list:
                         obj.object_type = object_type
                         # Set reviewed to one as change_object_type is the only way to review objects
@@ -195,7 +258,7 @@ class GISScene(QGraphicsScene):
         scene_items = self.items()
         if scene_items:
             for obj in scene_items:
-                if hasattr(obj, 'object_id'):
+                if hasattr(obj, "object_id"):
                     if obj.object_id in item_list:
                         obj.resight_set = group_index
 
@@ -203,7 +266,7 @@ class GISScene(QGraphicsScene):
         scene_items = self.items()
         if scene_items:
             for obj in scene_items:
-                if hasattr(obj, 'object_id'):
+                if hasattr(obj, "object_id"):
                     if obj.object_id in item_list:
                         obj.reviewed = 1
 
@@ -212,7 +275,6 @@ class GISScene(QGraphicsScene):
         if scene_items:
             for obj in scene_items:
                 if obj.__class__ in [PolygonFootprint, PointCenterpoint]:
-
                     if obj.image_id in item_list:
                         obj.inspected = 1
 
@@ -221,7 +283,6 @@ class GISScene(QGraphicsScene):
         if scene_items:
             for obj in scene_items:
                 if obj.__class__ in [PolygonFootprint, PointCenterpoint]:
-
                     if obj.image_id in item_list:
                         obj.group_image = group_index
 
@@ -229,10 +290,18 @@ class GISScene(QGraphicsScene):
 
         if event.modifiers() != Qt.KeyboardModifier.ControlModifier:
             if event.button() == Qt.MouseButton.LeftButton:
-
                 current_item = self.items(event.scenePos())
-                current_item = [x for x in current_item if x.__class__ in [RectangleAnnotation, PointAnnotation,
-                                                                           PolygonAnnotation, PathAnnotation]]
+                current_item = [
+                    x
+                    for x in current_item
+                    if x.__class__
+                    in [
+                        RectangleAnnotation,
+                        PointAnnotation,
+                        PolygonAnnotation,
+                        PathAnnotation,
+                    ]
+                ]
 
                 if current_item:
                     self.show_popup.emit(current_item[0].object_id)
@@ -254,56 +323,100 @@ class GISScene(QGraphicsScene):
 
         current_item = self.items(event.scenePos())
 
-        current_item = [x for x in current_item if x.__class__ in [RectangleAnnotation, PointAnnotation,
-                                                                   PolygonAnnotation, PathAnnotation, PointCenterpoint]]
+        current_item = [
+            x
+            for x in current_item
+            if x.__class__
+            in [
+                RectangleAnnotation,
+                PointAnnotation,
+                PolygonAnnotation,
+                PathAnnotation,
+                PointCenterpoint,
+            ]
+        ]
         if len(current_item) >= 1:
-
             # STACK CHANGE
             if event.button() == Qt.MouseButton.MiddleButton:
                 current_item[0].hoover_active = False
                 current_item[0].stackBefore(current_item[-1])
 
-            if (not current_item[0].isSelected()) and (event.button() == Qt.RightButton):
+            if (not current_item[0].isSelected()) and (
+                event.button() == Qt.RightButton
+            ):
                 self.goto_image.emit(current_item[0].image_id)
 
         modifiers = QApplication.queryKeyboardModifiers()
         # Resight Set
-        if self.selectedItems() and modifiers == Qt.KeyboardModifier.ControlModifier \
-                and event.button() == Qt.MouseButton.RightButton:
+        if (
+            self.selectedItems()
+            and modifiers == Qt.KeyboardModifier.ControlModifier
+            and event.button() == Qt.MouseButton.RightButton
+        ):
             if len(self.selectedItems()) >= 1:
-
-                current_item_objects = [x.object_id for x in self.selectedItems() if
-                                        x.__class__ in [RectangleAnnotation, PointAnnotation,
-                                                        PolygonAnnotation, PathAnnotation]]
-                current_item_footprint = [x.image_id for x in self.selectedItems() if
-                                          x.__class__ in [PointCenterpoint]]
+                current_item_objects = [
+                    x.object_id
+                    for x in self.selectedItems()
+                    if x.__class__
+                    in [
+                        RectangleAnnotation,
+                        PointAnnotation,
+                        PolygonAnnotation,
+                        PathAnnotation,
+                    ]
+                ]
+                current_item_footprint = [
+                    x.image_id
+                    for x in self.selectedItems()
+                    if x.__class__ in [PointCenterpoint]
+                ]
                 self.context_menu = QMenu()
 
                 if len(current_item_objects) > 1:
                     text = "Resight Set"
                     resight_set = self.context_menu.addAction(text)
-                    resight_set.triggered.connect(lambda: self.resight_set.emit(current_item_objects, False))
+                    resight_set.triggered.connect(
+                        lambda: self.resight_set.emit(current_item_objects, False)
+                    )
 
                 if len(current_item_objects) == 1:
                     text = "Clear Resight Set"
                     group_clear_resight = self.context_menu.addAction(text)
-                    group_clear_resight.triggered.connect(lambda: self.resight_set.emit(current_item_objects, True))
+                    group_clear_resight.triggered.connect(
+                        lambda: self.resight_set.emit(current_item_objects, True)
+                    )
+
+                if len(current_item_objects) > 0:
+                    delete_objects = self.context_menu.addAction("Delete Selection")
+                    delete_objects.triggered.connect(self.delete_selected_objects)
 
                 if len(current_item_footprint) > 1:
                     text = "Group Image"
                     group_image = self.context_menu.addAction(text)
-                    group_image.triggered.connect(lambda: self.group_images.emit(current_item_footprint))
+                    group_image.triggered.connect(
+                        lambda: self.group_images.emit(current_item_footprint)
+                    )
 
                 if len(current_item_footprint) >= 1:
                     text = "Change Image Meta Data"
                     change_meta = self.context_menu.addAction(text)
-                    change_meta.triggered.connect(lambda: self.change_image_meta_list.emit(current_item_footprint))
+                    change_meta.triggered.connect(
+                        lambda: self.change_image_meta_list.emit(current_item_footprint)
+                    )
                     text = "Change Block"
                     change_meta = self.context_menu.addAction(text)
-                    change_meta.triggered.connect(lambda: self.change_image_block_list.emit(current_item_footprint))
+                    change_meta.triggered.connect(
+                        lambda: self.change_image_block_list.emit(
+                            current_item_footprint
+                        )
+                    )
                     text = "Change Transect"
                     change_meta = self.context_menu.addAction(text)
-                    change_meta.triggered.connect(lambda: self.change_image_transect_list.emit(current_item_footprint))
+                    change_meta.triggered.connect(
+                        lambda: self.change_image_transect_list.emit(
+                            current_item_footprint
+                        )
+                    )
 
                 if len(current_item_footprint) >= 1 or len(current_item_objects) > 0:
                     # self.clearSelection()
@@ -311,6 +424,32 @@ class GISScene(QGraphicsScene):
                     self.context_menu.popup(global_pos)
 
         super(GISScene, self).mousePressEvent(event)
+
+    def delete_selected_objects(self) -> None:
+
+        v = POPUPConfirm("Are you sure about that operation?")
+        if v.exec():
+            objects_to_delete = []
+            seen_object_ids = set()
+            for item in self.selectedItems():
+                if item.__class__ not in [
+                    RectangleAnnotation,
+                    PointAnnotation,
+                    PolygonAnnotation,
+                    PathAnnotation,
+                ]:
+                    continue
+                if item.object_id in seen_object_ids:
+                    continue
+
+                objects_to_delete.append((item.object_id, item.image_id))
+                seen_object_ids.add(item.object_id)
+
+            if not objects_to_delete:
+                return
+
+            for obj_id, image_id in objects_to_delete:
+                self.object_delete.emit(obj_id, image_id)
 
     def delete_selection_polygon(self):
         if self.selection_polygon is not None:
@@ -346,7 +485,6 @@ class GISScene(QGraphicsScene):
     def mouseMoveEvent(self, event):
 
         if self.mouse_lef_pressed:
-
             if self.selection_polygon is not None:
                 if self.selection_mode == Selection.Lasso:
                     poly = self.selection_polygon.polygon()
@@ -355,6 +493,8 @@ class GISScene(QGraphicsScene):
                     v = QPainterPath()
                     v.addPolygon(poly)
                     united = self.selection_path.united(v)
-                    self.setSelectionArea(united, Qt.ItemSelectionOperation.ReplaceSelection)
+                    self.setSelectionArea(
+                        united, Qt.ItemSelectionOperation.ReplaceSelection
+                    )
 
         super(GISScene, self).mouseMoveEvent(event)

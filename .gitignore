@@ -7,6 +7,7 @@ build/
 dist/
 .idea
 *.pickle
+.vscode
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -24,3 +25,5 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+/proj_dir_2/
+/proj_dir/

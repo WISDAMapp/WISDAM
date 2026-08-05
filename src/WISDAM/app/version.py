@@ -44,7 +44,9 @@ def __get_package_version() -> str:
         # This works in a development environment where the
         # package has not been installed from a distribution.
 
-        pyproject_toml_file = Path(__file__).parent.parent.parent.parent / "pyproject.toml"
+        pyproject_toml_file = (
+            Path(__file__).parent.parent.parent.parent / "pyproject.toml"
+        )
         if pyproject_toml_file.exists() and pyproject_toml_file.is_file():
             toml_file = toml.load(pyproject_toml_file)
             # Indicate it might be locally modified or unreleased.
@@ -60,6 +62,3 @@ def __get_package_version() -> str:
             # Indicate it might be locally modified or unreleased.
 
     return __package_version
-
-
-

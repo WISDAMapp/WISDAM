@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2025 Martin Wieser.
+# Copyright (C) 2026 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,14 +19,19 @@
 
 
 import logging
+import multiprocessing as mp
+import queue as queue_module
+import traceback
 
 import pandas
 from exiftool import ExifToolHelper
 from pathlib import Path
+import pyproj
 import rawpy
 from PIL import Image as PILImage, ImageFile as PILImageFile
 from PIL import UnidentifiedImageError as PILUnidentifiedImageError
 from pyproj import CRS
+from pyproj import datadir as pyproj_datadir
 from datetime import datetime
 
 from natsort import os_sorted
@@ -34,18 +39,41 @@ from natsort import os_sorted
 from importer.importerWisdam import IMAGEImporter
 from importer.loaderImageBase import LoaderType
 from core_interface.update_image_object_geometry import update_mapped_geom_multi
-from core_interface.meta_reader import meta_image_time
+from core_interface.meta_reader import meta_image_metadata, meta_image_time
 from core_interface.wisdamIMAGE import WISDAMImage
 from db.dbHandler import DBHandler
 
 # WISDAM core
-from WISDAMcore.mapping.base_class import MappingBase
+import weitsicht
+from weitsicht.mapping.base_class import MappingBase
+from weitsicht.mapping.mapping_dict_selector import get_mapper_from_dict
+from weitsicht.geometry.coo_geojson import get_geojson
 
 
 logger = logging.getLogger(__name__)
 
 PILImage.MAX_IMAGE_PIXELS = None
 PILImageFile.LOAD_TRUNCATED_IMAGES = True
+
+
+class ProcessProgress:
+    def __init__(self, result_queue):
+        self.result_queue = result_queue
+
+    def emit(self, value):
+        self.result_queue.put(("progress", value))
+
+
+class ProcessLogHandler(logging.Handler):
+    def __init__(self, result_queue):
+        super().__init__()
+        self.result_queue = result_queue
+
+    def emit(self, record):
+        try:
+            self.result_queue.put(("log", record.levelno, self.format(record)))
+        except Exception:
+            self.handleError(record)
 
 
 def img_readable(file: str) -> bool:
@@ -60,17 +88,27 @@ def img_readable(file: str) -> bool:
     return True
 
 
-def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: MappingBase,
-                   input_data_class: IMAGEImporter,
-                   logfile_path: Path, meta_user: dict, flight_ref: str = '', survey_block: str = '',
-                   transect: str = '',
-                   crs_manual: CRS | None = None, georef_input: list | None = None,
-                   flag_recursive_image: bool = False,
-                   flag_recursive_log: bool = False,
-                   flag_log_fom_image_folder: bool = False,
-                   vertical_ref: str = '', height_rel: float=0.0,
-                   path_to_exiftool: Path | None = None,
-                   progress_callback=None) -> dict | None:
+def process_folder(
+    input_path: Path | None,
+    db_path: Path,
+    user: str,
+    mapper: MappingBase,
+    input_data_class: IMAGEImporter,
+    logfile_path: Path,
+    meta_user: dict,
+    flight_ref: str = "",
+    survey_block: str = "",
+    transect: str = "",
+    crs_manual: CRS | None = None,
+    georef_input: list | None = None,
+    flag_recursive_image: bool = False,
+    flag_recursive_log: bool = False,
+    flag_log_fom_image_folder: bool = False,
+    vertical_ref: str = "",
+    height_rel: float = 0.0,
+    path_to_exiftool: Path | None = None,
+    progress_callback=None,
+) -> dict | None:
     # Get IMAGES of folder and get Exif meta data
     # GET LIST OF ALLOWED IMAGE FORMATS in FOLDER
 
@@ -81,11 +119,16 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
 
     log_data: pandas.DataFrame | None = None
 
-    success_dict = {'log_fail': False, 'img_nr': 0, 'geo_nr': 0, 'fail_nr': 0, 'exist_nr': 0}
+    success_dict = {
+        "log_fail": False,
+        "img_nr": 0,
+        "geo_nr": 0,
+        "fail_nr": 0,
+        "exist_nr": 0,
+    }
 
     if input_data_class.input_type_current.loader_type == LoaderType.Logfile_Loader:
-
-        success_dict['log_success'] = 0
+        success_dict["log_success"] = 0
 
         if flag_log_fom_image_folder:
             logfile_path = input_path
@@ -96,15 +139,16 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
             log_data = input_data_class.extract_logfile(log_file=logfile_path)
 
             if log_data is not None:
-                success_dict['log_success'] += 1
+                success_dict["log_success"] += 1
 
         else:
-
             log_suffix = input_data_class.logfile_suffix()
 
             all_log_files = []
             for ext in log_suffix:
-                if flag_recursive_log or (flag_log_fom_image_folder and flag_recursive_image):
+                if flag_recursive_log or (
+                    flag_log_fom_image_folder and flag_recursive_image
+                ):
                     all_log_files.extend(logfile_path.rglob(ext))
                 else:
                     all_log_files.extend(logfile_path.glob(ext))
@@ -121,22 +165,25 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
 
                 if data_log_file is not None:
                     log_data = pandas.concat([log_data, data_log_file])
-                    success_dict['log_success'] += 1
+                    success_dict["log_success"] += 1
 
         if log_data is None or log_data.empty:
             logger.error("None of the found files worked as logfiles")
             progress_callback.emit((1, 0))
 
-            success_dict['log_fail'] = True
+            success_dict["log_fail"] = True
 
             return success_dict
 
     # If we have a log file loader where the absolute image paths are specified
     # we do not actually need to iterate over images, we just check if images exist
-    if input_data_class.input_type_current.loader_type is LoaderType.Logfile_Loader and \
-            input_data_class.input_type_current.log_file_contains_image_path:
-
-        folder_image_list = os_sorted(set([x for x in log_data['path'] if Path(x).exists()]))
+    if (
+        input_data_class.input_type_current.loader_type is LoaderType.Logfile_Loader
+        and input_data_class.input_type_current.log_file_contains_image_path
+    ):
+        folder_image_list = os_sorted(
+            set([x for x in log_data["path"] if Path(x).exists()])
+        )
 
         if len(folder_image_list) < 1:
             logger.warning("None of the images specified in logfile exist.")
@@ -145,17 +192,16 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
     else:
         # PATH handling images
         if flag_recursive_image:
-            image_list = os_sorted(list(input_path.rglob('*')))
+            image_list = os_sorted(list(input_path.rglob("*")))
         else:
-            image_list = os_sorted(list(input_path.glob('*')))
+            image_list = os_sorted(list(input_path.glob("*")))
 
         for f in image_list:
             if f.is_file():
-
                 if img_readable(f.as_posix()):
                     folder_image_list.append(f.as_posix())
 
-    success_dict['img_nr'] = len(folder_image_list)
+    success_dict["img_nr"] = len(folder_image_list)
 
     image_create_dict = {}
     image_update_dict = {}
@@ -164,22 +210,23 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
     image_existing_objects_dict = {}
 
     if folder_image_list:
-
         db = DBHandler.from_path(db_path, user)
-
-        existing_image_data = db.load_images_list()
-        image_existing_list = {item['path']: item for item in existing_image_data}
-
+        et = None
         try:
+            existing_image_data = db.load_images_list()
+            image_existing_list = {item["path"]: item for item in existing_image_data}
             et = ExifToolHelper(executable=path_to_exiftool.as_posix())
         except (RuntimeError, TypeError, NameError):
-            logger.error('Exiftool fails')
-            db.close()
+            logger.error("Exiftool fails")
+            if db is not None:
+                db.close()
             return None
+        except Exception:
+            if db is not None:
+                db.close()
+            raise
         try:
-
             for idx, file in enumerate(folder_image_list):
-
                 # plus 1 because 0,0 would make the progress bar always running if there is an error
                 progress_callback.emit((len(folder_image_list), idx + 1))
 
@@ -188,7 +235,7 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                     # If the image is in the database it will be loaded
                     # and new import will overwrite existing information
                     image = WISDAMImage.from_db(image_data, mapper=mapper)
-                    success_dict['exist_nr'] += 1
+                    success_dict["exist_nr"] += 1
 
                 else:
                     image = WISDAMImage(path=Path(file))
@@ -198,7 +245,10 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                 date_time = None
 
                 # Standard for perspective images or non ortho-imagery
-                if input_data_class.input_type_current.loader_type is not LoaderType.Ortho_Loader:
+                if (
+                    input_data_class.input_type_current.loader_type
+                    is not LoaderType.Ortho_Loader
+                ):
                     meta_data = et.get_tags(file, tags=None)[0]
 
                     # Get datetime of image from metadata, as fallback the datetime
@@ -209,22 +259,7 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                     # Thus, all images if not sub-second is present will get the sub-second 0.01
                     date_time = meta_image_time(meta_data)
 
-                    # ADDITIONAL metadata no must have
-                    make = str(meta_data.get("EXIF:Make", ''))
-                    model = str(meta_data.get("EXIF:Model", ''))
-                    try:
-                        f_number = float(meta_data.get("EXIF:FNumber", 0.0))
-                    except ValueError:
-                        f_number = 0.0
-
-                    # There is a problem with the exporter of geopandas that all same properties have to be the same
-                    try:
-                        iso = int(meta_data.get("EXIF:ISO", 0))
-                    except ValueError:
-                        iso = 0
-                    lens_info = str(meta_data.get("EXIF:LensInfo", ''))
-                    meta_image = {'make': make, 'model': model, 'f_number': f_number,
-                                  'iso': iso, 'lens_info': lens_info}
+                    meta_image = meta_image_metadata(meta_data)
 
                 if date_time is None:
                     date_time = datetime.fromtimestamp(image.path.stat().st_mtime)
@@ -232,17 +267,19 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                 if date_time.microsecond == 0:
                     date_time = date_time.replace(microsecond=1000)
 
-                result = input_data_class.run_importer(image_path=image.path,
-                                                       crs=crs_manual,
-                                                       georef_input=georef_input,
-                                                       log_data=log_data,
-                                                       image_meta_data=meta_data,
-                                                       vertical_ref=vertical_ref,
-                                                       height_rel=height_rel)
+                result = input_data_class.run_importer(
+                    image_path=image.path,
+                    crs=crs_manual,
+                    georef_input=georef_input,
+                    log_data=log_data,
+                    image_meta_data=meta_data,
+                    vertical_ref=vertical_ref,
+                    height_rel=height_rel,
+                )
 
                 # result is only None if it completely fails to open the image aka not width and height can be read.
                 if result is None:
-                    success_dict['fail_nr'] += 1
+                    success_dict["fail_nr"] += 1
                     continue
 
                 image_model, width, height = result
@@ -291,30 +328,40 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
                     result = image.map_footprint_to_epsg4979()
                     if result is not None:
                         coo_wgs84, gsd, area = result
-                        footprint = coo_wgs84.geojson(geom_type='Polygon')
+                        footprint = get_geojson(coo_wgs84, geom_type="Polygon")
 
                     result = image.map_center_to_epsg4979()
                     if result is not None:
                         coo_wgs84, gsd_center = result
-                        center = coo_wgs84.geojson(geom_type='Point')
+                        center = get_geojson(coo_wgs84, geom_type="Point")
 
                     if footprint is not None and center is not None:
-                        success_dict['geo_nr'] += 1
+                        success_dict["geo_nr"] += 1
 
                 # Later we recalculate only for these images which are reloaded an object mapping
                 # no matter if geo-reference or not, because if not geo-referenced the objects 3d mapping is deleted.
 
                 if image_data:
-                    if image_data['s_count'] > 0:
-                        image_existing_objects_dict[image_data['id']] = image
+                    if image_data["s_count"] > 0:
+                        image_existing_objects_dict[image_data["id"]] = image
 
                 # if image.id is 0 it is a new image
                 if image.id == 0:
-                    image_create_dict[image.path] = {'image': image, 'gsd': gsd, 'area': area,
-                                                     'center_json': center, 'footprint_json': footprint}
+                    image_create_dict[image.path] = {
+                        "image": image,
+                        "gsd": gsd,
+                        "area": area,
+                        "center_json": center,
+                        "footprint_json": footprint,
+                    }
                 else:
-                    image_update_dict[image.path] = {'image': image, 'gsd': gsd, 'area': area,
-                                                     'center_json': center, 'footprint_json': footprint}
+                    image_update_dict[image.path] = {
+                        "image": image,
+                        "gsd": gsd,
+                        "area": area,
+                        "center_json": center,
+                        "footprint_json": footprint,
+                    }
 
                 # Old Version saving each image at iteration
                 # We always will overwrite mapped attributes even if they are None will override existing geometry
@@ -336,18 +383,201 @@ def process_folder(input_path: Path | None, db_path: Path, user: str, mapper: Ma
 
             if image_existing_objects_dict:
                 update_mapped_geom_multi(db, image_existing_objects_dict)
-            db.close()
-            et.terminate()
+            if et is not None:
+                et.terminate()
 
             return success_dict
 
         except Exception as e:
-            et.terminate()
-            db.close()
+            if et is not None:
+                et.terminate()
             # progress_callback.emit((1, 1))
             raise e
+        finally:
+            if db is not None:
+                db.close()
 
     else:
         # logger.warning("No images found which can be imported")
         progress_callback.emit((1, 1))
         return success_dict
+
+
+def configure_weitsicht_transformations(allow_ballpark: bool, only_best: bool):
+    weitsicht.allow_ballpark_transformations(allow_ballpark)
+
+    # weitsicht function is inverse wording:
+    # allow_non_best=True means cfg._only_best_transformation = False
+    weitsicht.allow_non_best_transformations(not only_best)
+
+
+def _process_folder_process_target(
+    result_queue,
+    input_path: Path | None,
+    db_path: Path,
+    user: str,
+    mapper_config: dict | None,
+    input_data_name: str,
+    logfile_path: Path | None,
+    meta_user: dict,
+    flight_ref: str = "",
+    survey_block: str = "",
+    transect: str = "",
+    crs_text: str | None = None,
+    georef_input: list | None = None,
+    flag_recursive_image: bool = False,
+    flag_recursive_log: bool = False,
+    flag_log_fom_image_folder: bool = False,
+    vertical_ref: str = "",
+    height_rel: float = 0.0,
+    path_to_exiftool: Path | None = None,
+    proj_data_dir: Path | None = None,
+) -> None:
+    log_handler = ProcessLogHandler(result_queue)
+    log_handler.setFormatter(logging.Formatter("%(message)s"))
+    root_logger = logging.getLogger()
+    root_logger.addHandler(log_handler)
+    root_logger.setLevel(logging.INFO)
+
+    try:
+        if proj_data_dir is not None:
+            pyproj.network.set_network_enabled(True)
+            pyproj_datadir.append_data_dir(Path(proj_data_dir).as_posix())
+
+        # configure_weitsicht_transformations(
+        #    allow_ballpark=False,
+        #    only_best=True,
+        # )
+
+        mapper = (
+            get_mapper_from_dict(mapper_config) if mapper_config is not None else None
+        )
+        input_data_class = IMAGEImporter()
+        input_data_class.set_input_class(input_data_name)
+        crs_manual = CRS(crs_text) if crs_text else None
+
+        result = process_folder(
+            input_path=input_path,
+            db_path=db_path,
+            user=user,
+            mapper=mapper,
+            input_data_class=input_data_class,
+            logfile_path=logfile_path,
+            meta_user=meta_user,
+            flight_ref=flight_ref,
+            survey_block=survey_block,
+            transect=transect,
+            crs_manual=crs_manual,
+            georef_input=georef_input,
+            flag_recursive_image=flag_recursive_image,
+            flag_recursive_log=flag_recursive_log,
+            flag_log_fom_image_folder=flag_log_fom_image_folder,
+            vertical_ref=vertical_ref,
+            height_rel=height_rel,
+            path_to_exiftool=path_to_exiftool,
+            progress_callback=ProcessProgress(result_queue),
+        )
+    except Exception as exc:
+        result_queue.put(
+            ("error", type(exc).__name__, str(exc), traceback.format_exc())
+        )
+    else:
+        result_queue.put(("ok", result))
+    finally:
+        root_logger.removeHandler(log_handler)
+
+
+def process_folder_in_process(
+    input_path: Path | None,
+    db_path: Path,
+    user: str,
+    mapper_config: dict | None,
+    input_data_name: str,
+    logfile_path: Path | None,
+    meta_user: dict,
+    flight_ref: str = "",
+    survey_block: str = "",
+    transect: str = "",
+    crs_text: str | None = None,
+    georef_input: list | None = None,
+    flag_recursive_image: bool = False,
+    flag_recursive_log: bool = False,
+    flag_log_fom_image_folder: bool = False,
+    vertical_ref: str = "",
+    height_rel: float = 0.0,
+    path_to_exiftool: Path | None = None,
+    proj_data_dir: Path | None = None,
+    progress_callback=None,
+) -> dict | None:
+    ctx = mp.get_context("spawn")
+    result_queue = ctx.Queue()
+    process = ctx.Process(
+        target=_process_folder_process_target,
+        args=(
+            result_queue,
+            input_path,
+            db_path,
+            user,
+            mapper_config,
+            input_data_name,
+            logfile_path,
+            meta_user,
+            flight_ref,
+            survey_block,
+            transect,
+            crs_text,
+            georef_input,
+            flag_recursive_image,
+            flag_recursive_log,
+            flag_log_fom_image_folder,
+            vertical_ref,
+            height_rel,
+            path_to_exiftool,
+            proj_data_dir,
+        ),
+    )
+
+    process.start()
+    result = None
+
+    while process.is_alive() or result is None:
+        try:
+            message = result_queue.get(timeout=0.1)
+        except queue_module.Empty:
+            if not process.is_alive():
+                break
+            continue
+
+        status = message[0]
+        if status == "progress":
+            if progress_callback is not None:
+                progress_callback.emit(message[1])
+        elif status == "log":
+            _, levelno, log_message = message
+            logger.log(levelno, log_message)
+        else:
+            result = message
+            break
+
+    process.join()
+
+    if result is None:
+        try:
+            result = result_queue.get(timeout=1)
+        except queue_module.Empty:
+            if process.exitcode == 0:
+                raise RuntimeError(
+                    "Image import process finished without returning a result"
+                )
+            raise RuntimeError(
+                f"Image import process crashed with exit code {process.exitcode}"
+            )
+
+    status = result[0]
+    if status == "ok":
+        return result[1]
+
+    _, exc_type, message, traceback_text = result
+    raise RuntimeError(
+        f"Image import process failed with {exc_type}: {message}\n{traceback_text}"
+    )

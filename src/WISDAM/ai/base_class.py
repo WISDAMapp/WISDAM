@@ -26,9 +26,15 @@ from PySide6.QtCore import SignalInstance
 
 
 class AIDetectionImport:
-
-    def __init__(self, image_path: str, object_type: str = '', probability: float = 0.0,
-                 geometry: Geometry | None = None, object_data: dict | None = None, cropped_image: str = ''):
+    def __init__(
+        self,
+        image_path: str,
+        object_type: str = "",
+        probability: float = 0.0,
+        geometry: Geometry | None = None,
+        object_data: dict | None = None,
+        cropped_image: str = "",
+    ):
 
         self.image_path = image_path
 
@@ -57,7 +63,7 @@ class BaseAIClass:
     """
 
     def __init__(self):
-        self.name = 'baseAI'
+        self.name = "baseAI"
         self.loader = AILoaderType.Folder
 
     @property
@@ -71,9 +77,16 @@ class BaseAIClass:
         pass
 
     @abstractmethod
-    def run(self, db_path: Path, image_folder: Path, output_folder: Path,
-            user: str, path_images_input_original: Path | None = None,
-            progress_callback: SignalInstance | None = None, **kwargs) -> dict[str, list[AIDetectionImport]] | None:
+    def run(
+        self,
+        db_path: Path,
+        image_folder: Path,
+        output_folder: Path,
+        user: str,
+        path_images_input_original: Path | None = None,
+        progress_callback: SignalInstance | None = None,
+        **kwargs,
+    ) -> dict[str, list[AIDetectionImport]] | None:
         """Function to start and run AI. Can as well be a wrapper for your Docker image
 
         :param db_path: Path to database
@@ -87,11 +100,13 @@ class BaseAIClass:
         pass
 
     @abstractmethod
-    def parse_from_path(self, path_to_data: Path, **kwargs) -> dict[str, list[AIDetectionImport]] | None:
+    def parse_from_path(
+        self, path_to_data: Path, **kwargs
+    ) -> dict[str, list[AIDetectionImport]] | None:
         """Function which is used to parse results from AI processes into AIDetectionImport class.
             The AI wrapper will then store the results into the database and check if images existing.
 
         :param path_to_data: Path to folder of file containing the AI results, depends on AILoaderType
         :returns: A dictionary with all detections sorted by images (key) and a list for each detection of the image
-                  or None if failed due to no possible. """
+                  or None if failed due to no possible."""
         pass

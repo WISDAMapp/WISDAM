@@ -37,10 +37,10 @@ def image_gsd_union_area_calculate(images: list) -> tuple[float, float]:
     gsd = []
 
     for data in images:
-        if data['geom']:
-            poly = geometry.shape(json.loads(data['geom']))
+        if data["geom"]:
+            poly = geometry.shape(json.loads(data["geom"]))
             multi_poly.append(poly)
-        gsd.append(data['gsd'])
+        gsd.append(data["gsd"])
 
     if len(multi_poly) > 0:
         union = unary_union(multi_poly)
@@ -53,7 +53,6 @@ def image_gsd_union_area_calculate(images: list) -> tuple[float, float]:
         # and the later gsd_array[gsd_array>0.0] did fail
         # so to prevent that we will check if there are enough non 0 gsd values
         if len(gsd_array[gsd_array > 0.0]) > 0:
-            gsd_median = np.mean(gsd_array[gsd_array>0.0])
+            gsd_median = np.mean(gsd_array[gsd_array > 0.0])
 
     return area_union, gsd_median
-

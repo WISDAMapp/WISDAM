@@ -30,29 +30,36 @@ from app.var_classes import ColorGui
 #                      "reviewed": {"attribute": "reviewed", "colors": {0: "#fa6000", 1: "#53fa00"}},
 #                      "inspected": {"attribute": "inspected", "colors": {0: "#fa6000", 1: "#53fa00"}}}
 
+
 def check_update_color_config(color_scheme: dict) -> dict:
     color_config_default = ColorGui.color_scheme_start
 
     color_scheme_checked = {}
-    if color_scheme.get('projection', None):
-        color_scheme_checked['projection'] = color_scheme['projection']
-        color_scheme_checked['projection']['colors'] = {0: color_scheme['projection']['colors']['0'],
-                                                        1: color_scheme['projection']['colors']['1']}
+    if color_scheme.get("projection", None):
+        color_scheme_checked["projection"] = color_scheme["projection"]
+        color_scheme_checked["projection"]["colors"] = {
+            0: color_scheme["projection"]["colors"]["0"],
+            1: color_scheme["projection"]["colors"]["1"],
+        }
     else:
-        color_scheme_checked['projection'] = color_config_default['projection']
+        color_scheme_checked["projection"] = color_config_default["projection"]
 
-    if color_scheme.get('reviewed', None):
-        color_scheme_checked['reviewed'] = color_scheme['reviewed']
-        color_scheme_checked['reviewed']['colors'] = {0: color_scheme['reviewed']['colors']['0'],
-                                                      1: color_scheme['reviewed']['colors']['1']}
+    if color_scheme.get("reviewed", None):
+        color_scheme_checked["reviewed"] = color_scheme["reviewed"]
+        color_scheme_checked["reviewed"]["colors"] = {
+            0: color_scheme["reviewed"]["colors"]["0"],
+            1: color_scheme["reviewed"]["colors"]["1"],
+        }
     else:
-        color_scheme_checked['reviewed'] = color_config_default['reviewed']
+        color_scheme_checked["reviewed"] = color_config_default["reviewed"]
 
-    if color_scheme.get('inspected', None):
-        color_scheme_checked['inspected'] = color_scheme['inspected']
-        color_scheme_checked['inspected']['colors'] = {0: color_scheme['inspected']['colors']['0'],
-                                                       1: color_scheme['inspected']['colors']['1']}
+    if color_scheme.get("inspected", None):
+        color_scheme_checked["inspected"] = color_scheme["inspected"]
+        color_scheme_checked["inspected"]["colors"] = {
+            0: color_scheme["inspected"]["colors"]["0"],
+            1: color_scheme["inspected"]["colors"]["1"],
+        }
     else:
-        color_scheme_checked['inspected'] = color_config_default['inspected']
+        color_scheme_checked["inspected"] = color_config_default["inspected"]
 
     return color_scheme_checked

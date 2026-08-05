@@ -39,7 +39,7 @@ class CustomNode(object):
         self._data = data
         if type(data) is tuple:
             self._data = list(data)
-        if type(data) is str or not hasattr(data, '__getitem__'):
+        if type(data) is str or not hasattr(data, "__getitem__"):
             self._data = [data]
 
         self._column_count = len(self._data)
@@ -127,7 +127,6 @@ class CustomModel(QtCore.QAbstractItemModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return node.data(index.column())
         if role == Qt.ItemDataRole.BackgroundRole:
-
             if index.parent().data():
                 path_test = Path(index.parent().data()) / Path(index.data())
             else:
@@ -148,7 +147,9 @@ class POPUPPathChange(QWidget):
         self.ui = Ui_popup_path()
         self.ui.setupUi(self)
         self.db: DBHandler | None = None
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         shadow = QGraphicsDropShadowEffect(self)
@@ -170,7 +171,11 @@ class POPUPPathChange(QWidget):
         # MOVE WINDOW / MAXIMIZE / RESTORE
         def move_window(event):
             if event.buttons() == Qt.MouseButton.LeftButton and not self.isMaximized():
-                self.move(self.pos() + event.globalPosition().toPoint() - self.dragPos.toPoint())
+                self.move(
+                    self.pos()
+                    + event.globalPosition().toPoint()
+                    - self.dragPos.toPoint()
+                )
                 self.dragPos = event.globalPosition()
                 event.accept()
 
@@ -200,7 +205,7 @@ class POPUPPathChange(QWidget):
         self.roots = []
 
         for rows in images:
-            file = Path(rows['path'])
+            file = Path(rows["path"])
 
             if file.parent in self.roots:
                 root_index = self.roots.index(file.parent)
@@ -220,9 +225,13 @@ class POPUPPathChange(QWidget):
         # georef_flag_previous = index.model().index(self.current_index_image_view, 3).data()
 
         if index.parent().data():
-            ext_data_img_folder = QFileDialog.getExistingDirectory(self, caption="Choose Folder of images")
+            ext_data_img_folder = QFileDialog.getExistingDirectory(
+                self, caption="Choose Folder of images"
+            )
             if ext_data_img_folder:
                 ext_data_img_folder = Path(ext_data_img_folder)
-                self.db.update_path(index.parent().data(), ext_data_img_folder.as_posix())
+                self.db.update_path(
+                    index.parent().data(), ext_data_img_folder.as_posix()
+                )
                 self.get_values()
                 self.changed = True

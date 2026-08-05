@@ -1,5 +1,16 @@
 <RCC>
   <qresource prefix="/icons">
+    <file>icons/add_node.svg</file>
+    <file>icons/add_node_active.svg</file>
+    <file>icons/move.svg</file>
+    <file>icons/move_active.svg</file>
+    <file>icons/remove_node.svg</file>
+    <file>icons/remove_node_active.svg</file>
+    <file>icons/resize.svg</file>
+    <file>icons/resize_active.svg</file>
+    <file>icons/ruler_inactive.svg</file>
+    <file>icons/ruler_active.svg</file>
+    <file>icons/ruler.svg</file>
     <file>icons/ico-arrow-bottom.png</file>
     <file>icons/lasso.svg</file>
     <file>icons/lasso_active_selection.svg</file>

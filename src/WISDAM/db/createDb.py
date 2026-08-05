@@ -25,9 +25,9 @@ from sqlite3 import dbapi2
 
 def uri4sqlite(fn: str) -> str:
     uri = Path(fn).resolve().as_uri()
-    if len(uri) > 7 and uri[7] != '/':
+    if len(uri) > 7 and uri[7] != "/":
         # a network path. Insert 2 more slashes after the scheme.
-        uri = '{}//{}'.format(uri[:7], uri[7:])
+        uri = "{}//{}".format(uri[:7], uri[7:])
     return uri
 
 
@@ -45,31 +45,38 @@ def init(db):
     # mod_spatialite.dll must be on PATH
     db.execute("SELECT load_extension('mod_spatialite','sqlite3_modspatialite_init')")
 
-    meta, = db.execute("SELECT CheckSpatialMetaData()").fetchone()
+    (meta,) = db.execute("SELECT CheckSpatialMetaData()").fetchone()
 
     if meta == 0:  # geometry_columns and spatial_ref_sys tables do not exist
-        db.execute('SELECT InitSpatialMetadata(1)')
-        assert db.execute("SELECT CheckSpatialMetaData()").fetchone()[0], \
-            'Spatial metadata could not be inserted. Probably the SQLite db-connection was opened as read-only'
+        db.execute("SELECT InitSpatialMetadata(1)")
+        assert db.execute("SELECT CheckSpatialMetaData()").fetchone()[0], (
+            "Spatial metadata could not be inserted. Probably the SQLite db-connection was opened as read-only"
+        )
     elif meta == 1:
         # https://www.gaia-gis.it/fossil/libspatialite/wiki?name=switching-to-4.0
-        raise Exception('Spatialite metadata tables follow a legacy layout. update, e.g. using spatialite_convert')
+        raise Exception(
+            "Spatialite metadata tables follow a legacy layout. update, e.g. using spatialite_convert"
+        )
     elif meta == 2:  # both tables exist, and their layout is the one used by FDO/OGR
-        db.execute('SELECT AutoFDOStart()')
-    elif meta == 3:  # both tables exist, and their layout is the one currently used by SpatiaLite
+        db.execute("SELECT AutoFDOStart()")
+    elif (
+        meta == 3
+    ):  # both tables exist, and their layout is the one currently used by SpatiaLite
         # (4.0.0 or any subsequent version)
         pass
     elif meta == 4:
-        db.execute('SELECT AutoGPKGStart()')
+        db.execute("SELECT AutoGPKGStart()")
     else:
-        raise Exception('CheckSpatialMetaData() returned an unknown value: {}'.format(meta))
+        raise Exception(
+            "CheckSpatialMetaData() returned an unknown value: {}".format(meta)
+        )
 
 
 def create(db_fn: str):
     with dbapi2.connect(db_fn) as db:
         init(db)
 
-        db.executescript('''
+        db.executescript("""
             CREATE TABLE images ( 
                 id INTEGER NOT NULL PRIMARY KEY,
                 user TEXT,
@@ -152,7 +159,7 @@ def create(db_fn: str):
                 image_detection BLOB
             ); 
                     
-            ''')
+            """)
 
         db.execute("""
             SELECT AddGeometryColumn(
@@ -204,21 +211,20 @@ def create(db_fn: str):
                 0            -- Can be empty        
             )""")
 
-        db.executescript('''
+        db.executescript("""
             CREATE INDEX idx_image_objects ON objects(image);
-        ''')
+        """)
 
 
 def insert_example_date(db_fn):
 
-    with dbapi2.connect(uri4sqlite(db_fn) + '?mode=rw', uri=True) as db:
-
+    with dbapi2.connect(uri4sqlite(db_fn) + "?mode=rw", uri=True) as db:
         # ... insert data
 
         db.execute("ANALYZE")
         # update indices
 
 
-if __name__ == '__main__':
-    dbFn = 'test_debug.sqlite'
+if __name__ == "__main__":
+    dbFn = "test_debug.sqlite"
     create(dbFn)

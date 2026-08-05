@@ -24,33 +24,59 @@ import sys
 from datetime import datetime
 
 
-def generate_generic_ai_random_dataset(path_base_images: str, path_output: str, width: int, height: int):
+def generate_generic_ai_random_dataset(
+    path_base_images: str, path_output: str, width: int, height: int
+):
     """With this function you can generate random huge AI dataset for testing AI page
     First argument is path to images where ".jpg" images are present, second path to output folder
     Third and Fourth argument are image-width and -height which should be used."""
 
     path_base_images = Path(path_base_images)
     path_output = Path(path_output)
-    fid = open(path_output / ("output_" + datetime.now().strftime("%Y%m%d_%H%M%S") + '.txt'), 'w')
+    fid = open(
+        path_output / ("output_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".txt"),
+        "w",
+    )
     fid.write("image_path,type,probability,xmin,ymin,xmax,ymax\n")
 
-    object_types = ["dugong", "dolpgin", "bird", "turtle", "fox", "cat", "dog", "human", "shark", "elephant"]
+    object_types = [
+        "dugong",
+        "dolpgin",
+        "bird",
+        "turtle",
+        "fox",
+        "cat",
+        "dog",
+        "human",
+        "shark",
+        "elephant",
+    ]
 
-    images = list(path_base_images.glob('*.jpg'))
+    images = list(path_base_images.glob("*.jpg"))
 
     for x in range(150000):
-        image_nr = random.randint(1, len(images)-1)
+        image_nr = random.randint(1, len(images) - 1)
         probability = random.random()
 
         object_type = object_types[random.randint(0, len(object_types) - 1)]
 
-        x_min = random.randint(20, width-300)
-        y_min = random.randint(20, height-300)
+        x_min = random.randint(20, width - 300)
+        y_min = random.randint(20, height - 300)
 
         x_max = x_min + random.randint(20, 300)
         y_max = y_min + random.randint(20, 300)
-        fid.write("%s,%s,%1.2f,%i,%i,%i,%i\n" % (images[image_nr].as_posix(), object_type, probability,
-                                                 x_min, y_min, x_max, y_max))
+        fid.write(
+            "%s,%s,%1.2f,%i,%i,%i,%i\n"
+            % (
+                images[image_nr].as_posix(),
+                object_type,
+                probability,
+                x_min,
+                y_min,
+                x_max,
+                y_max,
+            )
+        )
 
 
 if __name__ == "__main__":
@@ -58,4 +84,6 @@ if __name__ == "__main__":
     path_to_output = sys.argv[2]
     width_input = int(sys.argv[3])
     height_input = int(sys.argv[4])
-    generate_generic_ai_random_dataset(path_to_images, path_to_output, width_input, height_input)
+    generate_generic_ai_random_dataset(
+        path_to_images, path_to_output, width_input, height_input
+    )

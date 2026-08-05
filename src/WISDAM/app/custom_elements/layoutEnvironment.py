@@ -18,9 +18,16 @@
 # ==============================================================================
 
 
-from PySide6.QtCore import (Signal, Qt)
-from PySide6.QtGui import (QFont)
-from PySide6.QtWidgets import (QComboBox, QLabel, QVBoxLayout, QWidget, QGridLayout, QSizePolicy)
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QComboBox,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+    QGridLayout,
+    QSizePolicy,
+)
 
 from app.var_classes import ColorGui
 
@@ -39,11 +46,11 @@ class _ComboItem(QWidget):
         self.name = name
 
         font = QFont()
-        font.setFamilies([u"Segoe UI"])
+        font.setFamilies(["Segoe UI"])
         font.setPointSize(10)
         font.setBold(True)
         font2 = QFont()
-        font2.setFamilies([u"Segoe UI"])
+        font2.setFamilies(["Segoe UI"])
         font2.setPointSize(12)
 
         self.label_name = QLabel()
@@ -58,10 +65,12 @@ class _ComboItem(QWidget):
         self.combo = QComboBox()
         self.combo.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         self.combo.setFont(font2)
-        self.combo.setStyleSheet(u"background-color: black;QComboBox { background-color: black;color: white;}\n"
-                                 "QComboBox QAbstractItemView {\n"
-                                 "  color: white\n"
-                                 "}")
+        self.combo.setStyleSheet(
+            "background-color: black;QComboBox { background-color: black;color: white;}\n"
+            "QComboBox QAbstractItemView {\n"
+            "  color: white\n"
+            "}"
+        )
         self.combo.setEditable(False)
         self.combo.activated.connect(lambda: self.value_change.emit())
 
@@ -97,6 +106,7 @@ class EnvironmentLayout(QWidget):
     """
     Custom Qt Widget for environment data. Up to 6 _ComboItem can be configurable be used
     """
+
     value_changed = Signal(object)
 
     def __init__(self, parent, *args, **kwargs):
@@ -113,7 +123,7 @@ class EnvironmentLayout(QWidget):
 
         row = 0
         for idx in range(6):
-            new_env_item = _ComboItem(self, ' ', [''])
+            new_env_item = _ComboItem(self, " ", [""])
             new_env_item.value_change.connect(self.value_send)
             new_env_item.hide()
             self.data_env_items.append(new_env_item)
@@ -130,7 +140,7 @@ class EnvironmentLayout(QWidget):
 
         for item in self.data_env_items:
             self.setStyleSheet(ColorGui.color_env_none)
-            item.set_data('', [])
+            item.set_data("", [])
             item.hide()
 
         if config is None:
@@ -147,11 +157,11 @@ class EnvironmentLayout(QWidget):
     @property
     def data(self):
 
-        data_collect = {'propagation': 0, 'data': {}}
+        data_collect = {"propagation": 0, "data": {}}
 
         for item in self.data_env_items:
             if item.value:
-                data_collect['data'][item.name] = item.value
+                data_collect["data"][item.name] = item.value
 
         return data_collect
 
@@ -167,16 +177,15 @@ class EnvironmentLayout(QWidget):
 
         # set the values stored at the combo items
         else:
-            if dict_data['propagation'] == 1:
+            if dict_data["propagation"] == 1:
                 self.setStyleSheet(ColorGui.color_env_propagate)
-            elif dict_data['propagation'] == 2:
+            elif dict_data["propagation"] == 2:
                 self.setStyleSheet(ColorGui.color_env_object)
-            elif dict_data['propagation'] == 3:
+            elif dict_data["propagation"] == 3:
                 self.setStyleSheet(ColorGui.color_env_object_propagate)
             else:
                 self.setStyleSheet(ColorGui.color_env_db)
-            for name, value in dict_data['data'].items():
-
+            for name, value in dict_data["data"].items():
                 for item in self.data_env_items:
                     if name == item.name:
                         item.value = value

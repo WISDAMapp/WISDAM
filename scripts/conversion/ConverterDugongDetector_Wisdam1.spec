@@ -25,21 +25,11 @@ except (ModuleNotFoundError, ImportError):
 		raise SystemExit
 
 try:
-	import WISDAMcore
-	from WISDAMcore import ArrayNx2
-	print("import")
+	import weitsicht
+	print("weitsicht import")
 except (ModuleNotFoundError, ImportError):
-	path_to_WISDAMcore = path_to_repo_main.parent / "WISDAMcore_oldCore"
-	if path_to_WISDAMcore.exists():
-		path_to_WISDAMcore_src = path_to_WISDAMcore / "src" / "WISDAMcore_oldCore"
-		sys.path.append(path_to_WISDAMcore_src.as_posix())
-		print(path_to_WISDAMcore_src)
-		import WISDAMcore
-		from WISDAMcore import ArrayNx2
-		print("import")
-	else:
-		print("\nThe package WISDAMcore can not be found.\nEXIT")
-		raise SystemExit
+	print("\nThe package weitsicht can not be found.\nEXIT")
+	raise SystemExit
 
 
 pyproject_toml_file = path_to_repo_main / "pyproject.toml"

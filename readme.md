@@ -18,7 +18,7 @@ With this geo-reference information, image footprints and geometries of objects 
 
 WISDAM also allows you to run an AI background process on images, to extract objects that my not have been detected through manual review process. WISDAM helps to visualise and enrich these objects with meta-data.
 
-WISDAM has been designed to optimise the workflow of environmental observation and is focused on the fast and easy handling of images and digitisation of objects. 
+WISDAM has been designed to optimize the workflow of environmental observation and is focused on the fast and easy handling of images and digitisation of objects. 
 
 > [!IMPORTANT]  
 > WISDAM is under development and did undergo a major refactoring. If you encounter any bugs (crashes, error, wrong calculations),
@@ -65,7 +65,7 @@ You can visualise, verify and manage the output from an automated (AI) detection
 ## Installing and using WISDAM
 
 > [!NOTE]  
-> **WISDAM does not require installation and is a standalone executable.**
+> **WISDAM does not require installation if used the provided zip. Its a standalone executable.**
 
 WISDAM is provided currently as archive in "zip" file format.
 And is available at the [release page](https://github.com/wisdamapp/wisdam/releases/latest).
@@ -75,11 +75,18 @@ WISDAM is currently only available and tested for Microsoft Windows.
 
 The [building guide](INSTALL.md) can be used to get started with building WISDAM from source.
 
+> WISDAM uses **weitsicht** for image georeferencing, mapping and projection.
+> You can get **weitsicht** from:
+> - **PyPI**: `pip install weitsicht`
+> - **GitHub**: https://github.com/MartinW-S2M/weitsicht
+> - **Docu**: https://weitsicht.readthedocs.io/en/latest/
+> 
+> The old geometric engine **WISDAMcore** is deprecated and no longer maintained, and no longer used by WISDAM.**
+
+
 ### Documentation
 Currently, for WISDAM a manual is available which is available within WISDAM or can be found in the 
 subdirectory of the distribution "_internal" called "wisdam_manual.pdf". 
-
-Also, the current documentation is available at http://wisdamapp.github.io/wisdam/
 
 As well, you will find video Tutorials at https://www.wisdamapp.org/resources/
 
@@ -110,7 +117,7 @@ Source codes used for libraries under the GPL can be found at [dependency source
 ## Licence
 WISDAM is licensed under the GPLv3.
 
-Copyright (C) 2025 Martin Wieser
+Copyright (C) 2026 Martin Wieser
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or(at your option) any later version.
 

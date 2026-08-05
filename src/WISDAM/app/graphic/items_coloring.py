@@ -56,8 +56,14 @@ def golden_colors(n, offset=0.3, saturation=0.85, value=0.99):
     # offset = 0.664  # random.random()
     color = []
     for i in range(n):
-        color.append([int(x * 255) for x in colorsys.hsv_to_rgb((offset +
-                                                                 (golden_ratio_conjugate * i)) % 1, saturation, value)])
+        color.append(
+            [
+                int(x * 255)
+                for x in colorsys.hsv_to_rgb(
+                    (offset + (golden_ratio_conjugate * i)) % 1, saturation, value
+                )
+            ]
+        )
     return color
 
 
@@ -66,8 +72,12 @@ def get_new_color_dict_objects(values_list: list[str | int]):
     color_dict = {}
     colors_sightings = golden_colors(len(values_list))
     for idx, value in enumerate(values_list):
-        color = QColor.fromRgb(colors_sightings[idx][0], colors_sightings[idx][1], colors_sightings[idx][2],
-                               200).name(QColor.HexArgb)
+        color = QColor.fromRgb(
+            colors_sightings[idx][0],
+            colors_sightings[idx][1],
+            colors_sightings[idx][2],
+            200,
+        ).name(QColor.HexArgb)
         color_dict[value] = color
     return color_dict
 
@@ -78,27 +88,31 @@ def update_color_dict_objects(color_dict: dict | None, value: str | int | None):
     if value is None:
         return color_dict, False
 
-    if value in color_dict['colors'].keys():
+    if value in color_dict["colors"].keys():
         return color_dict, False
 
-    values_old = list(color_dict['colors'].keys())
+    values_old = list(color_dict["colors"].keys())
 
     values_new = values_old + [value]
     values_new.sort()
-    color_dict['colors'] = get_new_color_dict_objects(values_new)
+    color_dict["colors"] = get_new_color_dict_objects(values_new)
 
     return color_dict, True
 
 
-def color_objects_attribute(scene_items: list, attribute: str, color_dict: dict | None = None,
-                            default_value: str | int | None = None, default_dict: dict | None = None):
+def color_objects_attribute(
+    scene_items: list,
+    attribute: str,
+    color_dict: dict | None = None,
+    default_value: str | int | None = None,
+    default_dict: dict | None = None,
+):
     color_dict_new = None
 
     if scene_items:
-
         if default_value is None:
             if attribute in look_up_attribute_db_column.keys():
-                default_value = look_up_attribute_db_column[attribute]['default']
+                default_value = look_up_attribute_db_column[attribute]["default"]
 
         if default_dict is not None:
             if attribute in default_dict.keys():
@@ -108,8 +122,7 @@ def color_objects_attribute(scene_items: list, attribute: str, color_dict: dict 
             color_dict_new = color_dict
 
         if color_dict_new is None:
-
-            color_dict_new = {'attribute': attribute, 'colors': {}}
+            color_dict_new = {"attribute": attribute, "colors": {}}
 
             values = []
             for item in scene_items:
@@ -129,14 +142,17 @@ def color_objects_attribute(scene_items: list, attribute: str, color_dict: dict 
                     values.insert(0, default_value)
 
             colors = get_new_color_dict_objects(values)
-            color_dict_new['colors'] = colors
+            color_dict_new["colors"] = colors
 
         for item in scene_items:
             value = getattr(item, attribute)
-            if value is not None and value in color_dict_new['colors'].keys():
-
+            if value is not None and value in color_dict_new["colors"].keys():
                 # It could be that default dict or passed color dict does not have this value
-                item.set_color(color_dict_new['colors'].get(value, ColorGui.color_invalid_attribute_scenes))
+                item.set_color(
+                    color_dict_new["colors"].get(
+                        value, ColorGui.color_invalid_attribute_scenes
+                    )
+                )
             else:
                 item.set_color(ColorGui.color_invalid_attribute_scenes)
 

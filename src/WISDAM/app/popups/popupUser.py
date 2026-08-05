@@ -25,7 +25,6 @@ from app.gui_design.ui_user import Ui_popup_user
 
 
 class POPUPUser(QWidget):
-
     got_user: SignalInstance = Signal(str)
 
     def __init__(self):
@@ -37,8 +36,8 @@ class POPUPUser(QWidget):
         self.ui.save_user.clicked.connect(self.save_user)
 
     def save_user(self):
-        if not self.ui.input_user.text().lower() == 'user':
+        if not self.ui.input_user.text().lower() == "user":
             self.got_user.emit(self.ui.input_user.text().lower())
             self.close()
         else:
-            self.ui.user_error.setText('Please enter User')
+            self.ui.user_error.setText("Please enter User")

@@ -30,7 +30,6 @@ from app.var_classes import group_area_header
 
 
 class GroupAreaTable(QAbstractTableModel):
-
     def __init__(self, data, header):
         super(GroupAreaTable, self).__init__()
         self._data = data
@@ -71,23 +70,25 @@ def loader_group_area(db: DBHandler):
     group_area_model = []
 
     for idx, row in enumerate(data):
-        grp_area = row['group_area']
+        grp_area = row["group_area"]
         if grp_area != 0:
             if grp_area not in dict_area.keys():
                 dict_area[grp_area] = []
 
-            if row['geo'] is not None:
-                geom = gm.shape(json.loads(row['geo']))
+            if row["geo"] is not None:
+                geom = gm.shape(json.loads(row["geo"]))
 
-                dict_area[grp_area].append([[geom.centroid.x,
-                                             geom.centroid.y], row['object_type']])
+                dict_area[grp_area].append(
+                    [[geom.centroid.x, geom.centroid.y], row["object_type"], row["id"]]
+                )
 
     for key, value in dict_area.items():
         list_coo = [x[0] for x in value]
-        str_types = ','.join(list(set([str(x[1]) for x in value])))
+        str_types = ",".join(list(set([str(x[1]) for x in value])))
         center = np.array(list_coo).mean(axis=0).tolist()
+        object_ids = [x[2] for x in value]
 
-        group_area_model.append([key, len(value), str_types, center])
+        group_area_model.append([key, len(value), str_types, center, object_ids])
 
     if group_area_model:
         model_table = GroupAreaTable(group_area_model, group_area_header)

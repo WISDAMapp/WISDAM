@@ -30,7 +30,7 @@ import numpy as np
 
 
 license_version = "GNU General Public License v3 or later (GPLv3+)"
-build_year = "2025"
+build_year = "2026"
 
 url_wisdam = "https://wisdamapp.org"
 
@@ -47,30 +47,45 @@ point_size = 10
 point_size_gis_standard = 0.0001
 
 object_name_file_header = "# First entry is object main name (e.g. TAXA); followed by object sub names (e.g. Species)\n"
-object_name_file_header += "# If you want to have standard empty as first sub item add ;; (empty sub name)\n"
+object_name_file_header += (
+    "# If you want to have standard empty as first sub item add ;; (empty sub name)\n"
+)
 
-look_up_attribute_db_column = {'source': {'db_name': 'source', 'default': 0},
-                               'projection': {'db_name': 'projection', 'default': 0},
-                               'object_type': {'db_name': 'object_type', 'default': None},
-                               'resight_set': {'db_name': 'resight_set', 'default': 0},
-                               'group_area': {'db_name': 'group_area', 'default': 0},
-                               'reviewed': {'db_name': 'reviewed', 'default': 0},
-                               'image_id': {'db_name': 'image_id', 'default': 0},
-                               'inspected': {'db_name': 'inspected', 'default': 0},
-                               'folder': {'db_name': 'folder', 'default': None},
-                               'flight_ref': {'db_name': 'flight_ref', 'default': None},
-                               'block': {'db_name': 'block', 'default': None},
-                               'transect': {'db_name': 'transect', 'default': None},
-                               'group_image': {'db_name': 'group_image', 'default': 0}}
+look_up_attribute_db_column = {
+    "source": {"db_name": "source", "default": 0},
+    "projection": {"db_name": "projection", "default": 0},
+    "object_type": {"db_name": "object_type", "default": None},
+    "resight_set": {"db_name": "resight_set", "default": 0},
+    "group_area": {"db_name": "group_area", "default": 0},
+    "reviewed": {"db_name": "reviewed", "default": 0},
+    "image_id": {"db_name": "image_id", "default": 0},
+    "inspected": {"db_name": "inspected", "default": 0},
+    "folder": {"db_name": "folder", "default": None},
+    "flight_ref": {"db_name": "flight_ref", "default": None},
+    "block": {"db_name": "block", "default": None},
+    "transect": {"db_name": "transect", "default": None},
+    "group_image": {"db_name": "group_image", "default": 0},
+}
+
+
+# Stored image metadata can contain many EXIF/XMP fields. Exporters use this
+# allow-list to keep CSV/GeoJSON properties compact and stable.
+meta_image_export_keys = [
+    "make",
+    "model",
+    "f_number",
+    "iso",
+    "lens_info",
+]
 
 
 # Color Definitions
 class ColorGui:
-    color_invalid_attribute_scenes = QColor('black')
+    color_invalid_attribute_scenes = QColor("black")
 
     brush_dark_red = QBrush(QColor(103, 40, 23))
     brush_dark_green = QBrush(QColor(0, 113, 77))
-    brush_light_green = QBrush(QColor('#476647'))
+    brush_light_green = QBrush(QColor("#476647"))
 
     color_dark_red = QColor(103, 40, 23)
     color_dark_green = QColor(0, 113, 77)
@@ -100,15 +115,22 @@ class ColorGui:
     color_active = QColor("#23e620")
     color_selection = QColor("#0ebee6")
     color_imported = QColor("#0ebee6")
-    color_scheme_start = {"projection": {"attribute": "projection", "colors": {0: "#96ffaa00", 1: "#96ff007f"}},
-                          "reviewed": {"attribute": "reviewed", "colors": {0: "#fa6000", 1: "#53fa00"}},
-                          "inspected": {"attribute": "inspected", "colors": {0: "#fa6000", 1: "#53fa00"}}}
+    color_scheme_start = {
+        "projection": {
+            "attribute": "projection",
+            "colors": {0: "#96ffaa00", 1: "#96ff007f"},
+        },
+        "reviewed": {"attribute": "reviewed", "colors": {0: "#fa6000", 1: "#53fa00"}},
+        "inspected": {"attribute": "inspected", "colors": {0: "#fa6000", 1: "#53fa00"}},
+    }
 
     # For Meta Popup and Main image it should be the same name
     color_env_none = "background-color: transparent;border-radius: 15px;"
     color_env_propagate = "background-color: rgba(127, 84, 0,122);border-radius: 15px;"
     color_env_object = "background-color: rgba(0, 50, 72,122);border-radius: 15px;"
-    color_env_object_propagate = "background-color: rgba(61, 46, 87,122);border-radius: 15px;"
+    color_env_object_propagate = (
+        "background-color: rgba(61, 46, 87,122);border-radius: 15px;"
+    )
     color_env_db = "background-color: rgba(72, 100, 92,122);border-radius: 15px;"
 
     color_gauge_img_inspected_progress = QColor(85, 170, 255)
@@ -129,24 +151,41 @@ class ColorGui:
 
 
 logging_style = {
-    logging.DEBUG: {'txt': 'white', 'frame': "background-color: rgba(34, 113, 150, 190);",
-                    'icon': u":/icons/icons/info-40.svg"},
-    logging.INFO: {'txt': 'white', 'frame': "background-color: rgba(34, 113, 150, 190);",
-                   'icon': u":/icons/icons/info-40.svg"},
-    logging.WARNING: {'txt': 'orange', 'frame': "background-color: rgb(150, 146, 34);",
-                      'icon': u":/icons/icons/warning-40.svg"},
-    logging.ERROR: {'txt': QColor('#f3523a'), 'frame': "background-color: rgba(130, 67, 34, 190);",
-                    'icon': u":/icons/icons/error-40.svg"},
-    logging.CRITICAL: {'txt': 'purple', 'frame': "background-color: rgba(128, 0, 128, 190);",
-                       'icon': u":/icons/icons/error-40.svg"},
-
+    logging.DEBUG: {
+        "txt": "white",
+        "frame": "background-color: rgba(34, 113, 150, 190);",
+        "icon": ":/icons/icons/info-40.svg",
+    },
+    logging.INFO: {
+        "txt": "white",
+        "frame": "background-color: rgba(34, 113, 150, 190);",
+        "icon": ":/icons/icons/info-40.svg",
+    },
+    logging.WARNING: {
+        "txt": "orange",
+        "frame": "background-color: rgb(150, 146, 34);",
+        "icon": ":/icons/icons/warning-40.svg",
+    },
+    logging.ERROR: {
+        "txt": QColor("#f3523a"),
+        "frame": "background-color: rgba(130, 67, 34, 190);",
+        "icon": ":/icons/icons/error-40.svg",
+    },
+    logging.CRITICAL: {
+        "txt": "purple",
+        "frame": "background-color: rgba(128, 0, 128, 190);",
+        "icon": ":/icons/icons/error-40.svg",
+    },
     # extra level by extra mapping of info
     # should not be used if error or critical is the current info displayed
-    "finished": {'txt': 'green', 'frame': "background-color: rgba(92, 150, 135, 190);",
-                 'icon': u":/icons/icons/flat_tick_icon.svg"}
+    "finished": {
+        "txt": "green",
+        "frame": "background-color: rgba(92, 150, 135, 190);",
+        "icon": ":/icons/icons/flat_tick_icon.svg",
+    },
 }
 
-gis_node_pixmap = u":/icons/icons/pin.svg"
+gis_node_pixmap = ":/icons/icons/pin.svg"
 
 
 def delimiter_switch(argument):
@@ -197,8 +236,20 @@ def review_switch(argument):
     return switcher.get(argument, "invalid")
 
 
-image_list_header = ['Name', 'id', 'Insp.', 'Objs.', 'Geo', 'Type', 'Imp.', 'GSD [cm]', 'Area [m²]', 'Path', 'active']
-image_list_folder_dummy = ['', '', 0, 0, '', '', '', 0.0, 0.0, 'Path', False]
+image_list_header = [
+    "Name",
+    "id",
+    "Insp.",
+    "Objs.",
+    "Geo",
+    "Type",
+    "Imp.",
+    "GSD [cm]",
+    "Area [m²]",
+    "Path",
+    "active",
+]
+image_list_folder_dummy = ["", "", 0, 0, "", "", "", 0.0, 0.0, "Path", False]
 
 
 class ImageList:
@@ -217,18 +268,18 @@ class ImageList:
     # active is only for visualization- means that this is the current image activated
     active = 10
     path_exists = 11
+    meta_image = 12
 
 
 class WISDAMObject:
-
     def __init__(self):
         self.id = 0
-        self.type = ''
-        self.geom_type = ''
+        self.type = ""
+        self.geom_type = ""
         self.meta = {}
 
 
-group_area_header = ['Id', 'Nr. Sightings', 'Types', 'position']
+group_area_header = ["Id", "Nr. Sightings", "Types", "position", "object_ids"]
 
 
 class GroupAreaList:
@@ -236,6 +287,7 @@ class GroupAreaList:
     nr_sightings = 1
     object_type = 2
     position = 3
+    object_ids = 4
 
 
 class GalleryData:
@@ -245,8 +297,8 @@ class GalleryData:
         self.active = 0
         self.image_type = 0
         self.source = 0
-        self.extension = 'JPG'
-        self.object_type = 'none'
+        self.extension = "JPG"
+        self.object_type = "none"
         self.group_area = 0
         self.resight_set = 0
         self.thumbnail = None
@@ -280,7 +332,7 @@ class GalleryRoles(IntEnum):
 
 class AIData:
     id = 0
-    object_type = 'none'
+    object_type = "none"
     active = 0
     probability = 0
     ai_run = 0
@@ -306,6 +358,11 @@ class Instructions(IntEnum):
     LineString_Instruction = 2
     Rectangle_Instruction = 3
     Polygon_Instruction = 4
+    Measure_Instruction = 5
+    Move_Instruction = 6
+    Change_Instruction = 7
+    Add_Vertex = 8
+    Remove_Vertex = 9
 
 
 class Selection(IntEnum):
@@ -316,13 +373,13 @@ class Selection(IntEnum):
 
 
 class ExternalSighting:
-    name = ''
-    img = ''
-    geometry = ''
-    geom_type = ''
-    object_type = ''
-    meta_data = ''
-    env_data = ''
+    name = ""
+    img = ""
+    geometry = ""
+    geom_type = ""
+    object_type = ""
+    meta_data = ""
+    env_data = ""
 
 
 def is_number(s):
@@ -344,33 +401,36 @@ def external_surety(argument):
 
 def geometry_to_np_array(geom: Geometry | Polygon | Point | LineString) -> np.ndarray:
 
-    if geom.geom_type == 'Point':
-
+    if geom.geom_type == "Point":
         return np.array(geom.coords)
 
-    elif geom.geom_type == 'LineString':
+    elif geom.geom_type == "LineString":
         return np.array(geom.coords)
 
-    elif geom.geom_type == 'Polygon':
-
+    elif geom.geom_type == "Polygon":
         return np.array(geom.exterior.coords)
 
 
-def np_array_to_geom(points: np.ndarray, geom_type: str) -> Point | Polygon | LineString:
+def np_array_to_geom(
+    points: np.ndarray, geom_type: str
+) -> Point | Polygon | LineString:
 
-    if geom_type not in ['Point', 'LineString', 'Polygon']:
-        raise ValueError(r"Geometry is not supported. Only 'Point', 'LineString', 'Polygon'")
+    if geom_type not in ["Point", "LineString", "Polygon"]:
+        raise ValueError(
+            r"Geometry is not supported. Only 'Point', 'LineString', 'Polygon'"
+        )
 
     try:
-
-        if geom_type == 'Point':
+        if geom_type == "Point":
             geom = geometry.Point(points)
-        elif geom_type == 'LineString':
+        elif geom_type == "LineString":
             geom = geometry.LineString(points)
-        elif geom_type == 'Polygon':
+        elif geom_type == "Polygon":
             geom = geometry.Polygon(points)
         else:
-            raise ValueError(r"Geometry is not supported. Only 'Point', 'LineString', 'Polygon'")
+            raise ValueError(
+                r"Geometry is not supported. Only 'Point', 'LineString', 'Polygon'"
+            )
 
         return geom
     except shapely.errors.GEOSException | ValueError as e:

@@ -40,8 +40,7 @@ def inside_dist(p01, p02, max_distance):
 
 def group_area_multiprocess_start(db_path: Path, distance: float = 20.0):
     q = Queue()
-    proc = Process(target=spatial_cluster_processing,
-                   args=(db_path, distance, q))
+    proc = Process(target=spatial_cluster_processing, args=(db_path, distance, q))
 
     proc.daemon = True
     proc.start()
@@ -49,10 +48,15 @@ def group_area_multiprocess_start(db_path: Path, distance: float = 20.0):
     result = q.get()
 
     if result:
-        logger.info('Spatial Cluster processed. Found %i clusters' % result, extra={"finished": True})
+        logger.info(
+            "Spatial Cluster processed. Found %i clusters" % result,
+            extra={"finished": True},
+        )
         return True
 
-    logger.warning('No Objects with geo-reference available for spatial cluster calculation')
+    logger.warning(
+        "No Objects with geo-reference available for spatial cluster calculation"
+    )
     return False
 
 
@@ -68,21 +72,19 @@ def spatial_cluster_processing(db_path: Path, distance: float = 20.0, queue=None
     data = db.obj_load_all()
 
     if data:
-
         # Transform ellipsoid to geocentric for calculation with cartesian coordinates
         transformer = Transformer.from_crs(4979, 4978, always_xy=True)
         object_list = []
 
         for idx, row in enumerate(data):
-            if row['geo']:
-                geom = gm.shape(json.loads(row['geo']))
+            if row["geo"]:
+                geom = gm.shape(json.loads(row["geo"]))
                 pos_prj = transformer.transform(geom.centroid.x, geom.centroid.y, 0)
-                object_list.append([row['id'], [pos_prj[0], pos_prj[1], pos_prj[2]]])
+                object_list.append([row["id"], [pos_prj[0], pos_prj[1], pos_prj[2]]])
 
         all_groups = []
         # iterate as long as still objects are not assigned to any area group
         while len(object_list) > 0:
-
             groups_outer = []
             current_cluster = [object_list[0][1], object_list[0][1]]
             len_cluster = 0
@@ -126,4 +128,4 @@ def spatial_cluster_processing(db_path: Path, distance: float = 20.0, queue=None
             return
 
     if queue is not None:
-        queue.put('')
+        queue.put("")

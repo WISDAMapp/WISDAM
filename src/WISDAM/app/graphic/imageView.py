@@ -20,9 +20,9 @@
 import numpy as np
 import math
 
-from PySide6.QtCore import (QPoint, Qt, Slot, Signal)
-from PySide6.QtGui import (QKeySequence, QPainter, QShortcut, QTransform)
-from PySide6.QtWidgets import (QGraphicsView, QApplication)
+from PySide6.QtCore import QPoint, Qt, Slot, Signal
+from PySide6.QtGui import QKeySequence, QPainter, QShortcut, QTransform
+from PySide6.QtWidgets import QGraphicsView, QApplication
 
 
 class ImageView(QGraphicsView):
@@ -42,8 +42,8 @@ class ImageView(QGraphicsView):
 
         # self.scene(): ImageScene() = None
 
-        #self.rightPressed = False
-        #self.middlePressed = False
+        # self.rightPressed = False
+        # self.middlePressed = False
         self.grid_navigation = False
 
         self._dragPos = QPoint()
@@ -87,8 +87,12 @@ class ImageView(QGraphicsView):
             if event.buttons() == Qt.MiddleButton:
                 diff = new_pos - self._dragPos
                 self._dragPos = new_pos
-                self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - diff.x())
-                self.verticalScrollBar().setValue(self.verticalScrollBar().value() - diff.y())
+                self.horizontalScrollBar().setValue(
+                    self.horizontalScrollBar().value() - diff.x()
+                )
+                self.verticalScrollBar().setValue(
+                    self.verticalScrollBar().value() - diff.y()
+                )
                 event.accept()
         super(ImageView, self).mouseMoveEvent(event)
 
@@ -100,9 +104,13 @@ class ImageView(QGraphicsView):
             # event.scenePos
             # self.centerOn(self.mapToScene(event.pos()))
             old_mouse_img_coo = self.mapToScene(event.position().toPoint())
-            diff_vec = event.position() - QPoint(int(self.width() / 2), int(self.height() / 2))
+            diff_vec = event.position() - QPoint(
+                int(self.width() / 2), int(self.height() / 2)
+            )
             self.zoom(pow(0.8, num_steps))
-            new_middle_map_pos = self.mapFromScene(old_mouse_img_coo).toPointF() - diff_vec
+            new_middle_map_pos = (
+                self.mapFromScene(old_mouse_img_coo).toPointF() - diff_vec
+            )
             self.centerOn(self.mapToScene(new_middle_map_pos.toPoint()))
 
     @Slot()
@@ -149,9 +157,11 @@ class ImageView(QGraphicsView):
         self.nav_walk = walk_mode
 
         if self.grid_width is not None:
-
             if self.nav_walk:
-                self.centerOn(self.grid_width[self.grid_width_index], self.grid_height[self.grid_height_index])
+                self.centerOn(
+                    self.grid_width[self.grid_width_index],
+                    self.grid_height[self.grid_height_index],
+                )
         return self.nav_walk
 
     def nav_scale(self, scale_input: float):
@@ -159,66 +169,112 @@ class ImageView(QGraphicsView):
         self.nav_current_scale = scale_input
         if self.grid_navigation:
             if self.scene().items():
-
                 if not scale_input == 1:
                     full_image_scale = self.height() / self.scene().height()
 
                     # Get the old center of view
-                    view_center = self.mapToScene(QPoint(int(self.width() / 2.0), int(self.height() / 2.0)))
+                    view_center = self.mapToScene(
+                        QPoint(int(self.width() / 2.0), int(self.height() / 2.0))
+                    )
 
                     scale = scale_input * full_image_scale
-                    self.setTransform(QTransform(scale, 0.0, 0.0, 0.0, scale, 0.0, 0.0, 0.0, 1.0))
+                    self.setTransform(
+                        QTransform(scale, 0.0, 0.0, 0.0, scale, 0.0, 0.0, 0.0, 1.0)
+                    )
                     # self.nav_top_left()
 
-                    grid_height_single = self.mapToScene(QPoint(self.width(), self.height())) - self.mapToScene(
-                        QPoint(0, 0))
+                    grid_height_single = self.mapToScene(
+                        QPoint(self.width(), self.height())
+                    ) - self.mapToScene(QPoint(0, 0))
                     grid_height_single = grid_height_single.y()
-                    self.grid_height_number = round(self.scene().height() * 1.0 / grid_height_single)
-                    grid_height_offset = self.scene().height() * 1.0 / self.grid_height_number
-                    self.grid_height = np.array(
-                        list(range(0, self.grid_height_number))) * grid_height_offset + grid_height_offset / 2.0
+                    self.grid_height_number = round(
+                        self.scene().height() * 1.0 / grid_height_single
+                    )
+                    grid_height_offset = (
+                        self.scene().height() * 1.0 / self.grid_height_number
+                    )
+                    self.grid_height = (
+                        np.array(list(range(0, self.grid_height_number)))
+                        * grid_height_offset
+                        + grid_height_offset / 2.0
+                    )
 
                     scale = scale_input * full_image_scale * 0.98
-                    self.setTransform(QTransform(scale, 0.0, 0.0, 0.0, scale, 0.0, 0.0, 0.0, 1.0))
+                    self.setTransform(
+                        QTransform(scale, 0.0, 0.0, 0.0, scale, 0.0, 0.0, 0.0, 1.0)
+                    )
 
-                    grid_width_single = self.mapToScene(QPoint(self.width(),
-                                                               self.height())) - self.mapToScene(QPoint(0, 0))
+                    grid_width_single = self.mapToScene(
+                        QPoint(self.width(), self.height())
+                    ) - self.mapToScene(QPoint(0, 0))
                     grid_width_single = grid_width_single.x()
 
-                    self.grid_width_number = math.ceil(self.scene().width() * 1.0 / grid_width_single)
+                    self.grid_width_number = math.ceil(
+                        self.scene().width() * 1.0 / grid_width_single
+                    )
 
                     grid_scale = round(self.scene().width() * 1.0 / grid_width_single)
-                    missing_pixel = self.scene().width() - grid_width_single * grid_scale
+                    missing_pixel = (
+                        self.scene().width() - grid_width_single * grid_scale
+                    )
 
                     # 1/100 th of the width of the image is allowed to miss
                     if 0 < missing_pixel < (self.scene().width() / 100.0):
-                        self.grid_width_number = round(self.scene().width() * 1.0 / grid_width_single)
+                        self.grid_width_number = round(
+                            self.scene().width() * 1.0 / grid_width_single
+                        )
 
-                    grid_width_offset = self.scene().width() * 1.0 / self.grid_width_number
+                    grid_width_offset = (
+                        self.scene().width() * 1.0 / self.grid_width_number
+                    )
 
-                    self.grid_width = np.array(
-                        list(range(0, self.grid_width_number))) * grid_width_offset + grid_width_offset / 2
+                    self.grid_width = (
+                        np.array(list(range(0, self.grid_width_number)))
+                        * grid_width_offset
+                        + grid_width_offset / 2
+                    )
 
-                    self.grid_width_index, \
-                        self.grid_height_index = self.closest_grid_point(view_center, self.grid_width, self.grid_height)
-                    self.centerOn(self.grid_width[self.grid_width_index],
-                                  self.grid_height[self.grid_height_index])
+                    self.grid_width_index, self.grid_height_index = (
+                        self.closest_grid_point(
+                            view_center, self.grid_width, self.grid_height
+                        )
+                    )
+                    self.centerOn(
+                        self.grid_width[self.grid_width_index],
+                        self.grid_height[self.grid_height_index],
+                    )
 
                     # Prepare vector which is used for walking through image
 
-                    walk_grid = np.meshgrid(range(0, len(self.grid_width)), range(0, len(self.grid_height)))
+                    walk_grid = np.meshgrid(
+                        range(0, len(self.grid_width)), range(0, len(self.grid_height))
+                    )
                     for i, row in enumerate(walk_grid[0]):
                         if not i % 2 == 0:
                             walk_grid[0][i] = np.flip(walk_grid[0][i])
 
                     walk_grid = np.array(walk_grid)
                     self.walk_grid_vector = np.hstack(
-                        (np.reshape(walk_grid[0], (walk_grid[0].shape[0] * walk_grid[0].shape[1], 1)),
-                         np.reshape(walk_grid[1], (walk_grid[0].shape[0] * walk_grid[0].shape[1], 1))))
+                        (
+                            np.reshape(
+                                walk_grid[0],
+                                (walk_grid[0].shape[0] * walk_grid[0].shape[1], 1),
+                            ),
+                            np.reshape(
+                                walk_grid[1],
+                                (walk_grid[0].shape[0] * walk_grid[0].shape[1], 1),
+                            ),
+                        )
+                    )
 
                     # find row which should be used
-                    row = np.where(np.all(self.walk_grid_vector == [self.grid_width_index,
-                                                                    self.grid_height_index], axis=1))[0]
+                    row = np.where(
+                        np.all(
+                            self.walk_grid_vector
+                            == [self.grid_width_index, self.grid_height_index],
+                            axis=1,
+                        )
+                    )[0]
                     self.grid_walk_index = row[0]
 
                 else:
@@ -248,9 +304,16 @@ class ImageView(QGraphicsView):
             current_point = self.mapToScene(self.viewport().rect().center())
             rect = self.mapToScene(self.viewport().rect())
 
-            self.place_nav_rect.emit((self.scene().width(), self.scene().height(),
-                                      rect.boundingRect().width(), rect.boundingRect().height(),
-                                      current_point.x(), current_point.y()))
+            self.place_nav_rect.emit(
+                (
+                    self.scene().width(),
+                    self.scene().height(),
+                    rect.boundingRect().width(),
+                    rect.boundingRect().height(),
+                    current_point.x(),
+                    current_point.y(),
+                )
+            )
 
     def nav_top_left(self):
         if self.scene().items():
@@ -269,30 +332,33 @@ class ImageView(QGraphicsView):
         if self.walk_grid_vector is not None:
             if self.grid_walk_index < self.walk_grid_vector.shape[0] - 1:
                 self.grid_walk_index += 1
-                self.centerOn(self.grid_width[self.walk_grid_vector[self.grid_walk_index, 0]],
-                              self.grid_height[self.walk_grid_vector[self.grid_walk_index, 1]])
+                self.centerOn(
+                    self.grid_width[self.walk_grid_vector[self.grid_walk_index, 0]],
+                    self.grid_height[self.walk_grid_vector[self.grid_walk_index, 1]],
+                )
                 self.grid_width_index = self.walk_grid_vector[self.grid_walk_index, 0]
                 self.grid_height_index = self.walk_grid_vector[self.grid_walk_index, 1]
 
             if self.grid_walk_index == self.walk_grid_vector.shape[0] - 1:
-
-                self.send_text_label_walk_modus.emit('END OF IMAGE')
+                self.send_text_label_walk_modus.emit("END OF IMAGE")
             else:
-                self.send_text_label_walk_modus.emit('WALK MODE ON')
+                self.send_text_label_walk_modus.emit("WALK MODE ON")
 
     def nav_walk_backward(self):
         if self.walk_grid_vector is not None:
             if self.grid_walk_index > 0:
                 self.grid_walk_index -= 1
-                self.centerOn(self.grid_width[self.walk_grid_vector[self.grid_walk_index, 0]],
-                              self.grid_height[self.walk_grid_vector[self.grid_walk_index, 1]])
+                self.centerOn(
+                    self.grid_width[self.walk_grid_vector[self.grid_walk_index, 0]],
+                    self.grid_height[self.walk_grid_vector[self.grid_walk_index, 1]],
+                )
                 self.grid_width_index = self.walk_grid_vector[self.grid_walk_index, 0]
                 self.grid_height_index = self.walk_grid_vector[self.grid_walk_index, 1]
 
             if self.grid_walk_index == 0:
-                self.send_text_label_walk_modus.emit('END OF IMAGE')
+                self.send_text_label_walk_modus.emit("END OF IMAGE")
             else:
-                self.send_text_label_walk_modus.emit('WALK MODE ON')
+                self.send_text_label_walk_modus.emit("WALK MODE ON")
 
     def nav_right(self):
         if self.nav_walk:
@@ -300,7 +366,10 @@ class ImageView(QGraphicsView):
         else:
             if self.grid_width_index < self.grid_width_number - 1:
                 self.grid_width_index += 1
-                self.centerOn(self.grid_width[self.grid_width_index], self.grid_height[self.grid_height_index])
+                self.centerOn(
+                    self.grid_width[self.grid_width_index],
+                    self.grid_height[self.grid_height_index],
+                )
 
         self.nav_place_rect_overview()
 
@@ -310,21 +379,30 @@ class ImageView(QGraphicsView):
         else:
             if self.grid_width_index > 0:
                 self.grid_width_index += -1
-                self.centerOn(self.grid_width[self.grid_width_index], self.grid_height[self.grid_height_index])
+                self.centerOn(
+                    self.grid_width[self.grid_width_index],
+                    self.grid_height[self.grid_height_index],
+                )
 
         self.nav_place_rect_overview()
 
     def nav_up(self):
         if self.grid_height_index > 0:
             self.grid_height_index += -1
-            self.centerOn(self.grid_width[self.grid_width_index], self.grid_height[self.grid_height_index])
+            self.centerOn(
+                self.grid_width[self.grid_width_index],
+                self.grid_height[self.grid_height_index],
+            )
 
         self.nav_place_rect_overview()
 
     def nav_down(self):
         if self.grid_height_index < self.grid_height_number - 1:
             self.grid_height_index += 1
-            self.centerOn(self.grid_width[self.grid_width_index], self.grid_height[self.grid_height_index])
+            self.centerOn(
+                self.grid_width[self.grid_width_index],
+                self.grid_height[self.grid_height_index],
+            )
 
         self.nav_place_rect_overview()
 

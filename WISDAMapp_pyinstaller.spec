@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+import shutil
 import sys
 import importlib.metadata
 import toml
@@ -10,25 +11,34 @@ specpath = os.path.dirname(os.path.abspath(SPEC))
 path_to_repo_main = Path(specpath)
 print("Path to repo main folder:", path_to_repo_main.as_posix())
 
+proj_grid_file = path_to_repo_main / "proj_dir" / "us_nga_egm08_25.tif"
+if not proj_grid_file.is_file():
+	raise SystemExit(
+		"\nRequired PROJ grid file is missing:\n"
+		f"  {proj_grid_file}\n"
+		"Download us_nga_egm08_25.tif from https://cdn.proj.org/ "
+		"and place it in the proj_dir folder.\n"
+	)
+
 path_to_wisdam = path_to_repo_main / "src" / "WISDAM"
 sys.path.append(path_to_wisdam.as_posix())
 
 
 try:
-	import WISDAMcore
-	from WISDAMcore import ArrayNx2
+	import weitsicht
+	from weitsicht import ArrayNx2
 	print("import")
 except (ModuleNotFoundError, ImportError):
-	path_to_WISDAMcore = path_to_repo_main.parent / "WISDAMcore_oldCore"
-	if path_to_WISDAMcore.exists():
-		path_to_WISDAMcore_src = path_to_WISDAMcore / "src" / "WISDAMcore_oldCore"
-		sys.path.append(path_to_WISDAMcore_src.as_posix())
-		print(path_to_WISDAMcore_src)
-		import WISDAMcore
-		from WISDAMcore import ArrayNx2
+	path_to_weitsicht = path_to_repo_main.parent / "weitsicht"
+	if path_to_weitsicht.exists():
+		path_to_weitsicht_src = path_to_weitsicht / "src" / "weitsicht"
+		sys.path.append(path_to_weitsicht_src.as_posix())
+		print(path_to_weitsicht_src)
+		import weitsicht
+		from weitsicht import ArrayNx2
 		print("import")
 	else:
-		print("\nThe package WISDAMcore can not be found.\nEXIT")
+		print("\nThe package weitsicht can not be found.\nEXIT")
 		raise SystemExit
 
 icon = path_to_wisdam / "app" / "gui_design" / "icons" / "WISDAMapp_black.ico"
@@ -51,7 +61,8 @@ rasterio_imports = ['rasterio._shim',
 					'rasterio.vrt',
 					'rasterio._features',
 					'rasterio._base',
-					'rasterio.rpc']
+					'rasterio.rpc',
+					'rasterio.serde']
 
 
 
@@ -111,3 +122,10 @@ coll = COLLECT(
     upx_exclude=[],
     name=name_app,
 )
+
+dist_app_path = Path(DISTPATH) / name_app
+for folder_name in ('config', 'proj_dir'):
+    source_folder = path_to_repo_main / folder_name
+    target_folder = dist_app_path / folder_name
+    if source_folder.exists():
+        shutil.copytree(source_folder, target_folder, dirs_exist_ok=True)

@@ -20,8 +20,7 @@
 
 import json
 
-from PySide6.QtCore import (
-    QAbstractTableModel)
+from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import (
     QModelIndex,
     QSizeF,
@@ -29,30 +28,48 @@ from PySide6.QtCore import (
     QRect,
     QRectF,
     QPointF,
-    Qt, QAbstractListModel, Signal, SignalInstance
+    Qt,
+    QAbstractListModel,
+    Signal,
+    SignalInstance,
 )
 from PySide6.QtGui import (
     QPainter,
     QFontMetricsF,
     QFont,
     QIcon,
-    QPixmap, QPen, QPainterPath)
+    QPixmap,
+    QPen,
+    QPainterPath,
+)
 from PySide6.QtWidgets import (
     QListView,
     QStyledItemDelegate,
-    QStyleOptionViewItem, QFrame, QStyle)
+    QStyleOptionViewItem,
+    QFrame,
+    QStyle,
+)
 
-from app.var_classes import (GalleryIconSize, ColorGui, source_switch,
-                             icon_footer_padding, spacing_grid,
-                             icon_margin, text_margin)
+from app.var_classes import (
+    GalleryIconSize,
+    ColorGui,
+    source_switch,
+    icon_footer_padding,
+    spacing_grid,
+    icon_margin,
+    text_margin,
+)
 
 from db.dbHandler import DBHandler
 
-from compare.utils import CompareIconRole, CompareList, CompareIconData, RolesComparePane
+from compare.utils import (
+    CompareIconRole,
+    CompareList,
+    CompareIconData,
+    RolesComparePane,
+)
 
 from pathlib import Path
-
-from PySide6.QtCore import Qt
 
 
 # List View for Items
@@ -71,10 +88,7 @@ class CompareIconDelegate(QStyledItemDelegate):
 
         # self.shadow_size = 2.0
         self.width = self.image_width + self.horizontal_margin * 2
-        self.height = (
-                self.image_height
-                + self.vertical_margin * 2
-        )
+        self.height = self.image_height + self.vertical_margin * 2
 
         self.emblemFont = QFont()
         self.emblemFont.setPointSize(self.emblemFont.pointSize())
@@ -90,7 +104,9 @@ class CompareIconDelegate(QStyledItemDelegate):
         # Size is always fixed, so calculate it here
         self.fixedSizeHint = QSizeF(self.width, self.height).toSize()
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+    def paint(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ) -> None:
         if index is None:
             return
 
@@ -112,8 +128,8 @@ class CompareIconDelegate(QStyledItemDelegate):
 
         painter.setRenderHint(QPainter.Antialiasing, True)
 
-        thumbnail_x = (self.horizontal_margin + x)
-        thumbnail_y = (self.vertical_margin + y)
+        thumbnail_x = self.horizontal_margin + x
+        thumbnail_y = self.vertical_margin + y
 
         # Draw rectangle in which the individual items will be placed
         box_rect = QRectF(x + 1.5, y + 1.5, self.width - 3, self.height - 3)
@@ -133,10 +149,18 @@ class CompareIconDelegate(QStyledItemDelegate):
 
         # If mouse is over the item than show item and few texts
         if not (option.state & QStyle.StateFlag.State_MouseOver):
-            target = QRectF(thumbnail_x, thumbnail_y, self.width - self.horizontal_margin * 2,
-                            self.height - self.vertical_margin * 2)
-            size = thumbnail.size().scaled(target.width(), target.height(), Qt.KeepAspectRatio)
-            painter.drawPixmap(target.x(), target.y(), size.width(), size.height(), thumbnail)
+            target = QRectF(
+                thumbnail_x,
+                thumbnail_y,
+                self.width - self.horizontal_margin * 2,
+                self.height - self.vertical_margin * 2,
+            )
+            size = thumbnail.size().scaled(
+                target.width(), target.height(), Qt.KeepAspectRatio
+            )
+            painter.drawPixmap(
+                target.x(), target.y(), size.width(), size.height(), thumbnail
+            )
 
             painter.setPen("white")
             tbr = self.metrics.tightBoundingRect(object_type)  # type QRectF
@@ -156,16 +180,22 @@ class CompareIconDelegate(QStyledItemDelegate):
                 tbr = self.metrics.tightBoundingRect(text)  # type QRectF
                 sec_width = tbr.width() + text_margin * 2
                 emblem_rect_x_top = x + self.horizontal_margin
-                sec_rect = QRectF(emblem_rect_x_top, emblem_rect_y, sec_width, self.emblem_height)
+                sec_rect = QRectF(
+                    emblem_rect_x_top, emblem_rect_y, sec_width, self.emblem_height
+                )
                 path = QPainterPath()
                 path.addRoundedRect(sec_rect, 5, 5)
                 painter.fillPath(path, color)
                 painter.drawText(sec_rect, Qt.AlignCenter, text)
 
         else:
-            emblem_rect = QRectF(thumbnail_x, thumbnail_y,
-                                 self.width - self.horizontal_margin * 2, self.height - self.vertical_margin * 2)
-            painter.setPen('white')
+            emblem_rect = QRectF(
+                thumbnail_x,
+                thumbnail_y,
+                self.width - self.horizontal_margin * 2,
+                self.height - self.vertical_margin * 2,
+            )
+            painter.setPen("white")
             painter.drawText(emblem_rect, Qt.AlignLeft, text)
 
         painter.restore()
@@ -276,9 +306,7 @@ class CompareListView(QListView):
     def mousePressEvent(self, event):
 
         if self.model() is not None:
-
             if self.indexAt(event.pos()).isValid():
-
                 index = self.indexAt(event.pos())
 
                 index_model = index.model()
@@ -296,11 +324,12 @@ class CompareListView(QListView):
                     else:
                         valid = 1
                         index_model.set_valid(index, valid)
-                        self.change_valid.emit(persistent_index_cmp_table, id_obj, valid)
+                        self.change_valid.emit(
+                            persistent_index_cmp_table, id_obj, valid
+                        )
 
                 # With the right button the splitting is set for that object
                 if event.button() == Qt.RightButton:
-
                     if valid >= 0:
                         valid = -1
                     else:
@@ -319,7 +348,7 @@ class CompareListView(QListView):
 
 
 def compare_image_loader(db_path: Path, index, ids, valids, table_ai=False):
-    db = DBHandler.from_path(db_path, '')
+    db = DBHandler.from_path(db_path, "")
 
     if table_ai:
         data = db.load_ai_detections_ids(ids)
@@ -329,46 +358,45 @@ def compare_image_loader(db_path: Path, index, ids, valids, table_ai=False):
     entries = []
 
     for idx, x in enumerate(data):
-
         pixmap = QPixmap()
-        pixmap.loadFromData(x['cropped_image'], "JPG")
+        pixmap.loadFromData(x["cropped_image"], "JPG")
 
         # The item text will later be displayed if the user hovers over the icon
         # Will be stored in the UserRole Text
-        if 'source' in x.keys():
-            item_text = 'Source: ' + source_switch(x['source'])
+        if "source" in x.keys():
+            item_text = "Source: " + source_switch(x["source"])
         else:
-            item_text = 'Source: AI'
-        item_text += '\t\t\t\t\tImage: ' + str(x['image'])
-        item_text += '\nUser: ' + str(x['user'])
+            item_text = "Source: AI"
+        item_text += "\t\t\t\t\tImage: " + str(x["image"])
+        item_text += "\nUser: " + str(x["user"])
 
         if not table_ai:
-            item_text += '\nGroup: ' + str(x['resight_set'])
-        item_text += '\t\t\t\t\tTaxa: ' + x['object_type']
+            item_text += "\nGroup: " + str(x["resight_set"])
+        item_text += "\t\t\t\t\tTaxa: " + x["object_type"]
         if table_ai:
-            item_text += '\t\t\t\t\tTaxa AI: ' + x['object_type_orig']
-        item_text += '\n'
-        if x['data']:
-            meta_data = json.loads(x['data'])
+            item_text += "\t\t\t\t\tTaxa AI: " + x["object_type_orig"]
+        item_text += "\n"
+        if x["data"]:
+            meta_data = json.loads(x["data"])
             data_number = 0
             for key, value in meta_data.items():
-                new_row = '\t\t\t\t\t'
+                new_row = "\t\t\t\t\t"
                 if data_number % 2 == 0:
-                    new_row = '\n'
-                item_text += new_row + str(key) + ': ' + str(value)
+                    new_row = "\n"
+                item_text += new_row + str(key) + ": " + str(value)
                 data_number += 1
 
         data_icon = CompareIconData()
         data_icon.thumbnail = pixmap
         data_icon.index = index
-        data_icon.id = x['id']
-        data_icon.valid = valids[ids.index(x['id'])]
+        data_icon.id = x["id"]
+        data_icon.valid = valids[ids.index(x["id"])]
         data_icon.text = item_text
-        data_icon.object_type = x['object_type']
+        data_icon.object_type = x["object_type"]
 
         data_icon.group_ident = 0
-        if 'resight_set' in x.keys():
-            data_icon.group_ident = x['resight_set']
+        if "resight_set" in x.keys():
+            data_icon.group_ident = x["resight_set"]
 
         entries.append(data_icon)
 
@@ -384,8 +412,8 @@ class CompareIconCenterDelegate(QStyledItemDelegate):
     def initStyleOption(self, option, index):
         super(CompareIconCenterDelegate, self).initStyleOption(option, index)
         option.decorationPosition = QStyleOptionViewItem.Right
-        option.decorationAlignment = (Qt.AlignVCenter | Qt.AlignCenter)
-        option.displayAlignment = (Qt.AlignVCenter | Qt.AlignCenter)
+        option.decorationAlignment = Qt.AlignVCenter | Qt.AlignCenter
+        option.displayAlignment = Qt.AlignVCenter | Qt.AlignCenter
 
 
 class CompareListModel(QAbstractTableModel):
@@ -401,11 +429,15 @@ class CompareListModel(QAbstractTableModel):
     def data(self, index, role):
 
         if role == Qt.TextAlignmentRole:
-            if index.column() in [CompareList.db, CompareList.seen, CompareList.groups_involved, CompareList.nrs_db1]:
+            if index.column() in [
+                CompareList.db,
+                CompareList.seen,
+                CompareList.groups_involved,
+                CompareList.nrs_db1,
+            ]:
                 return Qt.AlignCenter
 
         if role == Qt.BackgroundRole:
-
             if index.column() == CompareList.nrs_db1:
                 if self._data[index.row()][CompareList.nrs_db1] > 1:
                     return ColorGui.color_mid_yellow
@@ -419,13 +451,15 @@ class CompareListModel(QAbstractTableModel):
                 list1.sort()
                 list2.sort()
 
-                if len(list1) > 1 or len(list2) > 1 or (len(list1) > 1 and len(list2) > 1 and list1 != list2):
+                if len(list1) > 1 or len(list2) > 1:
+                    return ColorGui.brush_dark_red
+                if len(list1) == 1 and len(list2) == 1 and list1 != list2:
                     return ColorGui.brush_dark_red
                 else:
                     return ColorGui.brush_light_green
 
             if index.column() == CompareList.groups_involved:
-                if self._data[index.row()][CompareList.groups_involved] == 'yes':
+                if self._data[index.row()][CompareList.groups_involved] == "yes":
                     return ColorGui.color_mid_blue
 
             if index.column() == CompareList.id:
@@ -457,8 +491,13 @@ class CompareListModel(QAbstractTableModel):
             return self._data[index.row()][CompareList.c2_valid]
 
         if role == Qt.DisplayRole:
-            if index.column() in [CompareList.id, CompareList.groups_involved, CompareList.db,
-                                  CompareList.nrs_db1, CompareList.nrs_db2]:
+            if index.column() in [
+                CompareList.id,
+                CompareList.groups_involved,
+                CompareList.db,
+                CompareList.nrs_db1,
+                CompareList.nrs_db2,
+            ]:
                 return self._data[index.row()][index.column()]
             if index.column() == CompareList.type:
                 if self._data[index.row()][index.column()]:
@@ -473,17 +512,16 @@ class CompareListModel(QAbstractTableModel):
             nr1 = self._data[index.row()][CompareList.nrs_db1]
 
             if index.column() == CompareList.nrs_db1:
-
                 if not nr2 or not nr1:
-                    return QIcon(u":icons/icons/flat_cross_icon.svg")
+                    return QIcon(":icons/icons/flat_cross_icon.svg")
                 else:
-                    return QIcon(u":icons/icons/flat_tick_icon.svg")
+                    return QIcon(":icons/icons/flat_tick_icon.svg")
 
             # was revisited
             if index.column() == CompareList.seen:
                 # if isinstance(value, bool):
                 if value:
-                    return QIcon(u":icons/icons/flat_tick_icon_yellow.svg")
+                    return QIcon(":icons/icons/flat_tick_icon_yellow.svg")
 
     def change_value(self, index, value):
         self._data[index.row()][index.column()] = value
@@ -540,14 +578,10 @@ class CompareListModel(QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         self.beginRemoveRows(model_index, position, position + rows - 1)
         for i in range(rows):
-            del (self._data[position])
+            del self._data[position]
         self.endRemoveRows()
         self.layoutChanged.emit()
         return True
 
     def get_data(self) -> list:
         return self._data
-
-
-
-
