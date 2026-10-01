@@ -3352,10 +3352,8 @@ class MainWindow(QMainWindow):
 
             try:
                 model_data = stored_data[0]
-                self.compare1.db = Path(stored_data[1])
-                self.compare1.ai = stored_data[2]
-                self.compare2.db = Path(stored_data[3])
-                self.compare2.ai = stored_data[4]
+                self.compare1 = CompareType(ai=stored_data[2], path=Path(stored_data[1]))
+                self.compare2 = CompareType(ai=stored_data[4], path=Path(stored_data[3]))
             except IndexError:
                 self.ui.compare_label_info.setText("File seems not working")
                 return

@@ -72,6 +72,12 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
     if "certainty" in header_object_data_db2:
         header_object_data_db2.remove("certainty")
 
+    if "firstcertain" in header_object_data_db1:
+        header_object_data_db1.remove("firstcertain")
+    if "firstcertain" in header_object_data_db2:
+        header_object_data_db2.remove("firstcertain")
+
+
     header_match_data = ["match_" + s for s in header_object_data_db1]
     header_match_env_data = ["match_env_" + s for s in header_env_data_db1]
 
@@ -94,6 +100,7 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
         "db1_valid",
         "db1_id_image",
         "db1_object_type",
+        "db1_firstcertain",
         "db1_certainty",
         "db1_id_resightset",
     ]
@@ -104,12 +111,13 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
         "db2_valid",
         "db2_id_image",
         "db2_object_type",
+        "db2_firstcertain",
         "db2_certainty",
         "db2_id_resightset",
     ]
     fieldnames += header_object_data_db2
     fieldnames += header_env_data_db2
-    fieldnames += ["match_objectType", "match_certainty"]
+    fieldnames += ["match_objectType","match_firstcertain", "match_certainty"]
     fieldnames += header_match_data
     fieldnames += header_match_env_data
 
@@ -159,6 +167,8 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
 
             certainty_c1 = 0
             certainty_c2 = 0
+            firstcertain_c1 = "no"
+            firstcertain_c2 = "yes"
 
             c1_valids = [i for i, j in enumerate(item[CompareList.c1_valid]) if j == 1]
             c2_valids = [i for i, j in enumerate(item[CompareList.c2_valid]) if j == 1]
@@ -171,6 +181,15 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
                 if dum_data:
                     if json.loads(dum_data).get("certainty", "no") == "yes":
                         certainty_c2 = 1
+
+            for dum_data in [item[CompareList.c1_data][x] for x in c1_valids]:
+                if dum_data:
+                    if json.loads(dum_data).get("firstcertain", "no") == "yes":
+                        firstcertain_c1 = "yes"
+            for dum_data in [item[CompareList.c2_data][x] for x in c2_valids]:
+                if dum_data:
+                    if json.loads(dum_data).get("firstcertain", "no") == "yes":
+                        firstcertain_c2 = "yes"
 
             if 1 in item[CompareList.c1_valid]:
                 valid = 1
@@ -224,6 +243,8 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
             row_dict["db1_object_type"] = obj_type
 
             row_dict["db1_id_resightset"] = group
+            row_dict["db1_certainty"] = certainty_c1
+            row_dict["db1_firstcertain"] = firstcertain_c1
             # data_c1, data_env_c1
             for key, value in data_c1.items():
                 row_dict["db1_" + key] = value
@@ -231,6 +252,7 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
             # This will overwrite the certainty of the single objects data
             # with one of the members has certainty yes.
             row_dict["db1_certainty"] = certainty_c1
+            row_dict["db1_firstcertain"] = firstcertain_c1
 
             for key, value in data_env_c1.items():
                 row_dict["db1_" + key] = value
@@ -243,6 +265,8 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
             row_dict["db2_object_type"] = obj_type2
 
             row_dict["db2_id_resightset"] = group2
+            row_dict["db2_certainty"] = certainty_c2
+            row_dict["db2_firstcertain"] = firstcertain_c2
             # data_c2, data_env_c2
             for key, value in data_c2.items():
                 row_dict["db2_" + key] = value
@@ -250,6 +274,7 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
             # This will overwrite the certainty of the single objects data
             # with one of the members has certainty yes.
             row_dict["db2_certainty"] = certainty_c2
+            row_dict["db2_firstcertain"] = firstcertain_c2
 
             for key, value in data_env_c2.items():
                 row_dict["db2_" + key] = value
@@ -257,6 +282,7 @@ def compare_export(export_path: Path, db1_path_string, db2_path_string, data):
             # Matching of data
             row_dict["match_objectType"] = 1 if obj_type2 == obj_type else 0
             row_dict["match_certainty"] = 1 if certainty_c2 == certainty_c1 else 0
+            row_dict["match_firstcertain"] = 1 if firstcertain_c2 == firstcertain_c1 else 0
 
             # Set everything first as no Match
             for value in header_match_data:
