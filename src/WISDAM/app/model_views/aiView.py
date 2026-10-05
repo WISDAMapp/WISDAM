@@ -29,28 +29,38 @@ from PySide6.QtCore import (
     Slot,
     QSortFilterProxyModel,
     QPersistentModelIndex,
-    QPointF, Qt
+    QPointF,
+    Qt,
 )
 from PySide6.QtWidgets import (
     QListView,
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QMenu,
-    QFrame
-
+    QFrame,
 )
 from PySide6.QtGui import (
     QPainter,
     QFontMetricsF,
     QFont,
     QPainterPath,
-    QPixmap, QColor, QPen
+    QPixmap,
+    QColor,
+    QPen,
 )
 
 # Classes and Modules
 from db.dbHandler import DBHandler
-from app.var_classes import (AiRoles, AIData, AISize, ColorGui, icon_margin,
-                             icon_footer_padding, text_margin, spacing_grid)
+from app.var_classes import (
+    AiRoles,
+    AIData,
+    AISize,
+    ColorGui,
+    icon_margin,
+    icon_footer_padding,
+    text_margin,
+    spacing_grid,
+)
 from app.popups.popupTextInput import POPUPTextInput
 
 
@@ -182,7 +192,7 @@ class AIListModel(QAbstractListModel):
 
         if position is not None:
             self.beginRemoveRows(model_index, position, position)
-            del (self._data[position])
+            del self._data[position]
             self.endRemoveRows()
         self.layoutChanged.emit()
         return True
@@ -196,7 +206,7 @@ class AIListModel(QAbstractListModel):
         self.layoutAboutToBeChanged.emit()
         self.beginRemoveRows(model_index, position, position + rows - 1)
         for i in range(rows):
-            del (self._data[position])
+            del self._data[position]
         self.endRemoveRows()
         self.layoutChanged.emit()
         return True
@@ -250,7 +260,9 @@ class AIView(QListView):
                 if index.isValid():
                     self.contextMenu = QMenu()
 
-                    if self.clickedIndex.isValid() and not self.clickedIndex.data(AiRoles.imported):
+                    if self.clickedIndex.isValid() and not self.clickedIndex.data(
+                        AiRoles.imported
+                    ):
                         text = "Change Metadata"
                         change_meta_data_act = self.contextMenu.addAction(text)
                         change_meta_data_act.triggered.connect(self.change_meta_data)
@@ -268,9 +280,10 @@ class AIView(QListView):
             if not index_model.data(AiRoles.imported):
                 active = 0 if index_model.data(AiRoles.active) else 1
                 self.update(index)
-                index.model().sourceModel().set_active(index_model, 0 if index_model.data(AiRoles.active) else 1)
+                index.model().sourceModel().set_active(
+                    index_model, 0 if index_model.data(AiRoles.active) else 1
+                )
                 self._db.set_active_ai(active, index_model.data(AiRoles.id))
-
 
     @Slot()
     def change_meta_data(self) -> None:
@@ -279,7 +292,6 @@ class AIView(QListView):
             pass
             index_model = index.model().mapToSource(index)
             if not index_model.data(AiRoles.imported):
-
                 v = POPUPTextInput()
                 if v.exec_():  # Execution method becomes a modal dialog box.After the user clicks OK, he returns  to 1.
                     name = v.get_data()
@@ -329,7 +341,9 @@ class AIDelegate(QStyledItemDelegate):
     def toggle_labels(self):
         self.labels_visible = not self.labels_visible
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+    def paint(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ) -> None:
         # super().paint(painter, option, index)
         if index is None:
             return
@@ -357,10 +371,8 @@ class AIDelegate(QStyledItemDelegate):
         box_rect = QRectF(x, y, self.width, self.height)
         painter.setRenderHint(QPainter.Antialiasing, True)
         if active and not imported:
-
             painter.setPen(QPen(ColorGui.color_active, 3))
         elif imported:
-
             painter.setPen(QPen(ColorGui.color_imported, 3))
             # painter.fillRect(box_rect, ColorGui.color_imported)
         else:
@@ -368,22 +380,30 @@ class AIDelegate(QStyledItemDelegate):
 
         painter.drawRect(box_rect)
 
-        thumbnail_x = (self.horizontal_margin + x)
-        thumbnail_y = (self.vertical_margin + y)
+        thumbnail_x = self.horizontal_margin + x
+        thumbnail_y = self.vertical_margin + y
 
-        target = QRectF(thumbnail_x, thumbnail_y, self.width - self.horizontal_margin * 2,
-                        self.height - self.vertical_margin * 2)
+        target = QRectF(
+            thumbnail_x,
+            thumbnail_y,
+            self.width - self.horizontal_margin * 2,
+            self.height - self.vertical_margin * 2,
+        )
         # painter.drawPixmap(target.toRect(), thumbnail)
 
         if self.db is not None:
             thumbnail_db = self.db.get_cropped_image_ai(ai_detection_id)
             if thumbnail_db:
                 thumbnail = QPixmap()
-                thumbnail.loadFromData(thumbnail_db['image_detection'], "JPG")
+                thumbnail.loadFromData(thumbnail_db["image_detection"], "JPG")
 
         if thumbnail is not None:
-            size = thumbnail.size().scaled(target.width(), target.height(), Qt.KeepAspectRatio)
-            painter.drawPixmap(target.x(), target.y(), size.width(), size.height(), thumbnail)
+            size = thumbnail.size().scaled(
+                target.width(), target.height(), Qt.KeepAspectRatio
+            )
+            painter.drawPixmap(
+                target.x(), target.y(), size.width(), size.height(), thumbnail
+            )
 
         if self.labels_visible:
             # Draw a small coloured box containing the file extension in the
@@ -398,7 +418,9 @@ class AIDelegate(QStyledItemDelegate):
             emblem_rect_x = self.width - self.horizontal_margin - emblem_width + x
             emblem_rect_y = y + self.image_height - icon_footer_padding
 
-            emblem_rect = QRectF(emblem_rect_x, emblem_rect_y, emblem_width, self.emblem_height)
+            emblem_rect = QRectF(
+                emblem_rect_x, emblem_rect_y, emblem_width, self.emblem_height
+            )
             color = ColorGui.color_extension
             path = QPainterPath()
             path.addRoundedRect(emblem_rect, 5, 5)
@@ -423,14 +445,16 @@ class AIDelegate(QStyledItemDelegate):
             emblem_rect_x_top = x + self.horizontal_margin
             emblem_rect_y = y + self.image_height - icon_footer_padding
             color = ColorGui.brush_dark_green
-            sec_rect = QRectF(emblem_rect_x_top, emblem_rect_y, sec_width, self.emblem_height)
+            sec_rect = QRectF(
+                emblem_rect_x_top, emblem_rect_y, sec_width, self.emblem_height
+            )
             path = QPainterPath()
             path.addRoundedRect(sec_rect, 5, 5)
             painter.fillPath(path, color)
             painter.drawText(sec_rect, Qt.AlignCenter, str(image_id))
 
             # Object Info on the top - Probability
-            text = '%i' % int(probability * 100) + '%'
+            text = "%i" % int(probability * 100) + "%"
             tbr = metrics.tightBoundingRect(text)  # type: QRectF
             sec_width = tbr.width() + text_margin * 2
             emblem_rect_x = self.width - self.horizontal_margin - sec_width + x
@@ -487,7 +511,7 @@ class AICustomSortFilterProxyModel(QSortFilterProxyModel):
             # self.sourceModel().dataChanged.connect(self.sourceDataChanged),
             self.sourceModel().rowsRemoved.connect(self.reload_model),
             self.sourceModel().modelReset.connect(self.reload_model),
-            self.sourceModel().rowsInserted.connect(self.reload_model)
+            self.sourceModel().rowsInserted.connect(self.reload_model),
         ]
         self.reload_model()
 
@@ -559,7 +583,7 @@ class AICustomSortFilterProxyModel(QSortFilterProxyModel):
                 if filter_in[key].lower() not in data[key].lower():
                     return False
             elif key == "probability":
-                if 'prob_lower' in filter_in.keys():
+                if "prob_lower" in filter_in.keys():
                     if data[key] > filter_in[key]:
                         return False
                 else:
@@ -582,16 +606,16 @@ def ai_loader(db: DBHandler):
             # We do not load anymore a pixmap
             # Now in the paint event we will directly access the database
             # Otherwise for very large datasets the programm would run out of memory and take long time to load
-            #pix_map = QPixmap()
+            # pix_map = QPixmap()
             # pix_map.loadFromData(x['image_detection'], "JPG")
-            #data.thumbnail = pix_map  # .scaledToWidth(pix_map.width()/2.0, mode=Qt.SmoothTransformation)
-            data.id = x['id']
-            data.ai_run = x['ai_run']
-            data.active = x['active']
-            data.object_type = x['object_type']
-            data.probability = x['probability']
-            data.imported = x['imported']
-            data.image_id = x['image']
+            # data.thumbnail = pix_map  # .scaledToWidth(pix_map.width()/2.0, mode=Qt.SmoothTransformation)
+            data.id = x["id"]
+            data.ai_run = x["ai_run"]
+            data.active = x["active"]
+            data.object_type = x["object_type"]
+            data.probability = x["probability"]
+            data.imported = x["imported"]
+            data.image_id = x["image"]
 
             entries.append(data)
 

@@ -22,13 +22,12 @@ import json
 
 
 class WISDAMColorScheme:
-
     def __init__(self):
-        self.pick = '#32a852'
-        self.reproject = '#ffff0080'
+        self.pick = "#32a852"
+        self.reproject = "#ffff0080"
 
     def to_string(self):
-        return str({'pick': self.pick, 'projection': self.reproject})
+        return str({"pick": self.pick, "projection": self.reproject})
 
     def from_string(self, color_string):
         color = json.loads(color_string)

@@ -22,8 +22,7 @@ from abc import abstractmethod
 from pathlib import Path
 import pandas
 import logging
-import json
-from shapely import geometry, Polygon
+from shapely import Polygon
 
 from ai.base_class import BaseAIClass, AILoaderType, AIDetectionImport
 
@@ -36,7 +35,7 @@ class GenericCSV(BaseAIClass):
 
     def __init__(self):
         super().__init__()
-        self.name = 'Generic CSV'
+        self.name = "Generic CSV"
         self.loader = AILoaderType.LogFile
 
     @property
@@ -52,7 +51,9 @@ class GenericCSV(BaseAIClass):
         return False
 
     @abstractmethod
-    def parse_from_path(self, path_to_data: Path, **kwargs) -> dict[str, list[AIDetectionImport]] | None:
+    def parse_from_path(
+        self, path_to_data: Path, **kwargs
+    ) -> dict[str, list[AIDetectionImport]] | None:
         """Parse AI detections from generic CSV file in utf-8 into AIDetectionImport class
            ImagePath, Object Type, Probability, bbox(bounding box) x min, bbox y min, bbox x max, bbox y max
            x is along width of image
@@ -62,13 +63,31 @@ class GenericCSV(BaseAIClass):
         :arg path_to_data: Path to CSV file containing the data
         :return: Dict with detections. More info about the structure see the base class"""
 
-        detections = pandas.read_csv(path_to_data, sep=',', header=0,
-                                     dtype={"image_path": str, "type": str,
-                                            "probability": float,
-                                            "xmin": int, "ymin": int, "xmax": int, "ymax": int})
+        detections = pandas.read_csv(
+            path_to_data,
+            sep=",",
+            header=0,
+            dtype={
+                "image_path": str,
+                "type": str,
+                "probability": float,
+                "xmin": int,
+                "ymin": int,
+                "xmax": int,
+                "ymax": int,
+            },
+        )
 
         # Test if all columns present for minimum information
-        for column_to_test in ["image_path", "type", "probability", "xmin", "ymin", "xmax", "ymax"]:
+        for column_to_test in [
+            "image_path",
+            "type",
+            "probability",
+            "xmin",
+            "ymin",
+            "xmax",
+            "ymax",
+        ]:
             if column_to_test not in list(detections.columns):
                 logger.error(""""CSV file is missing header info\nHas to be "image_path,type,probability,xmin,ymin,
                 xmax,ymax" """)
@@ -78,29 +97,36 @@ class GenericCSV(BaseAIClass):
 
         result_dict = {}
         for idx_path, img_path in enumerate(unique_path):
-
             result_dict[img_path] = []
 
-            for idx_detection, item in detections[detections.image_path == img_path].iterrows():
+            for idx_detection, item in detections[
+                detections.image_path == img_path
+            ].iterrows():
                 x_max = item.xmax if item.xmax > item.xmin else item.xmin
                 x_min = item.xmin if item.xmax > item.xmin else item.xmax
                 y_max = item.ymax if item.ymax > item.ymin else item.ymin
                 y_min = item.ymin if item.ymax > item.ymin else item.ymax
 
-                points_image = [[x_min, y_min],
-                                [x_max, y_min],
-                                [x_max, y_max],
-                                [x_min, y_max],
-                                [x_min, y_min]]
+                points_image = [
+                    [x_min, y_min],
+                    [x_max, y_min],
+                    [x_max, y_max],
+                    [x_min, y_max],
+                    [x_min, y_min],
+                ]
 
                 geom = Polygon(points_image)
 
-                cropped_image = item.get("cropped_image", '')
+                cropped_image = item.get("cropped_image", "")
                 if pandas.isna(cropped_image):
-                    cropped_image = ''
-                detection = AIDetectionImport(image_path=img_path, object_type=item.type,
-                                              geometry=geom, probability=item.probability,
-                                              cropped_image=cropped_image)
+                    cropped_image = ""
+                detection = AIDetectionImport(
+                    image_path=img_path,
+                    object_type=item.type,
+                    geometry=geom,
+                    probability=item.probability,
+                    cropped_image=cropped_image,
+                )
 
                 result_dict[img_path].append(detection)
 

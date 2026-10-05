@@ -24,13 +24,17 @@ import json
 import numpy as np
 import csv
 
+from app.var_classes import meta_image_export_keys
 from db.dbHandler import DBHandler
+from statistic.object_geometry import minimum_bounding_box_dimensions
 
 logger = logging.getLogger(__name__)
 
 
-def row_list_json_extract(row: dict, header: list, json_keys_prefix: dict, geom_list: list | None = None) -> list:
-    data = [''] * len(header)
+def row_list_json_extract(
+    row: dict, header: list, json_keys_prefix: dict, geom_list: list | None = None
+) -> list:
+    data = [""] * len(header)
 
     if geom_list is None:
         geom_list = []
@@ -47,17 +51,16 @@ def row_list_json_extract(row: dict, header: list, json_keys_prefix: dict, geom_
 
     if len(geom_list) > 0:
         for epx_geom in geom_list:
-
             if row[epx_geom]:
                 geo3d = json.loads(row[epx_geom])
-                np_geo = np.array(geo3d['coordinates']).flatten()
-                data[header.index(epx_geom)] = ' '.join([str(x) for x in np_geo])
+                np_geo = np.array(geo3d["coordinates"]).flatten()
+                data[header.index(epx_geom)] = " ".join([str(x) for x in np_geo])
 
     return data
 
 
 def row_list_json_to_csv(row: dict, header: list) -> list:
-    data = [''] * len(header)
+    data = [""] * len(header)
 
     for key in row.keys():
         if key in header:
@@ -74,7 +77,9 @@ def sqlite_row_names(keys, exclude_list):
     return header_list
 
 
-def sqlite_row_names_json_extract(data, exclude_list, json_key_list, geom_key_list: list | None = None):
+def sqlite_row_names_json_extract(
+    data, exclude_list, json_key_list, geom_key_list: list | None = None
+):
     if geom_key_list is None:
         geom_key_list = []
 
@@ -82,7 +87,6 @@ def sqlite_row_names_json_extract(data, exclude_list, json_key_list, geom_key_li
 
     json_headers = []
     for row in data:
-
         for json_key in json_key_list:
             if row[json_key]:
                 json_data = json.loads(row[json_key])
@@ -106,39 +110,72 @@ def export_footprints_csv(db: DBHandler, path_csv: Path | str) -> int:
 
     data = db.load_image_export()
     if data:
-
         # Get header with PRAGMA table_info(objects);
-        header_standard = ["id", "user", "x", "y", "z", "flight_ref", "transect", "block", "group_image", "type",
-                           "importer", "inspected",
-                           "name", "path", "datetime", "width", "height", "math_model",
-                           "area", "gsd", "tags"]
+        header_standard = [
+            "id",
+            "user",
+            "x",
+            "y",
+            "z",
+            "flight_ref",
+            "transect",
+            "block",
+            "group_image",
+            "type",
+            "importer",
+            "inspected",
+            "name",
+            "path",
+            "datetime",
+            "width",
+            "height",
+            "math_model",
+            "area",
+            "gsd",
+            "tags",
+        ]
 
         meta_user = []
-        meta_image = []
+        meta_image_keys = set()
         for row in data:
             if row["meta_user"]:
-                meta_user += ["meta_user: " + x for x in json.loads(row["meta_user"]).keys()]
+                meta_user += [
+                    "meta_user: " + x for x in json.loads(row["meta_user"]).keys()
+                ]
             if row["meta_image"]:
-                meta_image += ["meta_image: " + x for x in json.loads(row["meta_image"]).keys()]
+                meta_image_keys.update(json.loads(row["meta_image"]).keys())
 
-        header = header_standard + list(set(meta_image))
+        meta_image = [
+            "meta_image: " + key
+            for key in meta_image_export_keys
+            if key in meta_image_keys
+        ]
+
+        header = header_standard + meta_image
         header += list(set(meta_user))
 
-        env_header = ['environment_image: propagation'] + \
-                     ['environment_image: ' + x for x in configuration['environment_data'].keys()]
+        env_header = ["environment_image: propagation"] + [
+            "environment_image: " + x for x in configuration["environment_data"].keys()
+        ]
 
         header += env_header
         header += ["geometry"]
 
         # CSV writer
-        with open(path_csv.parent / (path_csv.stem + ".csv"), 'w', newline='', encoding='utf-8') as fid:
-
-            csv_writer = csv.writer(fid, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        with open(
+            path_csv.parent / (path_csv.stem + ".csv"),
+            "w",
+            newline="",
+            encoding="utf-8",
+        ) as fid:
+            csv_writer = csv.writer(
+                fid, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+            )
 
             csv_writer.writerow(header)
 
             for row in data:
-                csv_row = [''] * len(header)
+                csv_row = [""] * len(header)
 
                 for element_single in header_standard:
                     if row[element_single] is not None:
@@ -150,15 +187,19 @@ def export_footprints_csv(db: DBHandler, path_csv: Path | str) -> int:
 
                 if row["meta_image"]:
                     for key, value in json.loads(row["meta_image"]).items():
-                        csv_row[header.index("meta_image: " + key)] = value
+                        header_key = "meta_image: " + key
+                        if header_key in header:
+                            csv_row[header.index(header_key)] = value
 
                 if row["data_env"]:
-                    csv_row[header.index('environment_image: propagation')] = json.loads(row['data_env'])['propagation']
-                    for key, value in json.loads(row['data_env'])['data'].items():
+                    csv_row[header.index("environment_image: propagation")] = (
+                        json.loads(row["data_env"])["propagation"]
+                    )
+                    for key, value in json.loads(row["data_env"])["data"].items():
                         csv_row[header.index("environment_image: " + key)] = value
 
-                if row['geom']:
-                    csv_row[header.index('geometry')] = row['geom']
+                if row["geom"]:
+                    csv_row[header.index("geometry")] = row["geom"]
 
                 csv_writer.writerow(csv_row)
 
@@ -167,7 +208,13 @@ def export_footprints_csv(db: DBHandler, path_csv: Path | str) -> int:
     return 0
 
 
-def export_objects_csv(db: DBHandler, path_csv: Path | str, flag_first_certain: bool = False) -> int:
+def export_objects_csv(
+    db: DBHandler,
+    path_csv: Path | str,
+    flag_first_certain: bool = False,
+    flag_include_ai: bool = False,
+    flag_only_ai: bool = False,
+) -> int:
     """Export objects as CSV File in utf-8
     :param db: DBHandler to use for export
     :param path_csv: The path to the csv to write. Will be replaced if exists
@@ -182,11 +229,29 @@ def export_objects_csv(db: DBHandler, path_csv: Path | str, flag_first_certain: 
     data = db.obj_load_all(flag_first_certain=flag_first_certain)
 
     if data:
-
         # Get header with PRAGMA table_info(objects) and look at db load_all for extra columns;
-        header_standard = ["id", "image", "image_name", "img_path", "group_image", "transect", "block", "datetime",
-                           "user", "active", "source", "reviewed", "area", "gsd", "resight_set", "resight_set",
-                           "object_type", "meta_type", "highlighted", "tags"]
+        header_standard = [
+            "id",
+            "image",
+            "image_name",
+            "img_path",
+            "group_image",
+            "transect",
+            "block",
+            "datetime",
+            "user",
+            "active",
+            "source",
+            "reviewed",
+            "area",
+            "gsd",
+            "resight_set",
+            "resight_set",
+            "object_type",
+            "meta_type",
+            "highlighted",
+            "tags",
+        ]
 
         meta_data = []
         for row in data:
@@ -195,28 +260,37 @@ def export_objects_csv(db: DBHandler, path_csv: Path | str, flag_first_certain: 
 
         header = header_standard + list(set(meta_data))
 
-        env_header = ['environment_image: propagation'] + \
-                     ['environment_image: ' + x for x in configuration['environment_data'].keys()]
+        env_header = ["environment_image: propagation"] + [
+            "environment_image: " + x for x in configuration["environment_data"].keys()
+        ]
 
         header += env_header
 
-        env_header = ['environment_object: propagation'] + \
-                     ['environment_object: ' + x for x in configuration['environment_data'].keys()]
+        env_header = ["environment_object: propagation"] + [
+            "environment_object: " + x for x in configuration["environment_data"].keys()
+        ]
 
         header += env_header
 
+        header += ["bbox_length_m", "bbox_width_m", "bbox_area_m2"]
         header += ["geometry2d"]
         header += ["geometry3d"]
 
         # CSV writer
-        with open(path_csv.parent / (path_csv.stem + ".csv"), 'w', newline='', encoding='utf-8') as fid:
-
-            csv_writer = csv.writer(fid, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        with open(
+            path_csv.parent / (path_csv.stem + ".csv"),
+            "w",
+            newline="",
+            encoding="utf-8",
+        ) as fid:
+            csv_writer = csv.writer(
+                fid, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+            )
 
             csv_writer.writerow(header)
 
             for row in data:
-                csv_row = [''] * len(header)
+                csv_row = [""] * len(header)
 
                 for element_single in header_standard:
                     if row[element_single] is not None:
@@ -227,27 +301,32 @@ def export_objects_csv(db: DBHandler, path_csv: Path | str, flag_first_certain: 
                         csv_row[header.index("meta_data: " + key)] = value
 
                 if row["image_data_env"]:
-                    csv_row[header.index('environment_image: propagation')] = \
-                        json.loads(row['image_data_env'])['propagation']
-                    for key, value in json.loads(row['image_data_env'])['data'].items():
+                    csv_row[header.index("environment_image: propagation")] = (
+                        json.loads(row["image_data_env"])["propagation"]
+                    )
+                    for key, value in json.loads(row["image_data_env"])["data"].items():
                         csv_row[header.index("environment_image: " + key)] = value
 
                 if row["data_env"]:
-                    csv_row[header.index('environment_object: propagation')] = \
-                        json.loads(row['data_env'])['propagation']
-                    for key, value in json.loads(row['data_env'])['data'].items():
+                    csv_row[header.index("environment_object: propagation")] = (
+                        json.loads(row["data_env"])["propagation"]
+                    )
+                    for key, value in json.loads(row["data_env"])["data"].items():
                         csv_row[header.index("environment_object: " + key)] = value
 
-                if row['geo2d']:
-                    csv_row[header.index('geometry2d')] = row['geo2d']
+                if row["geo2d"]:
+                    csv_row[header.index("geometry2d")] = row["geo2d"]
 
-                if row['geo']:
-                    csv_row[header.index('geometry3d')] = row['geo']
+                if row["geo"]:
+                    bbox_dimensions = minimum_bounding_box_dimensions(row["geo"])
+                    if bbox_dimensions:
+                        for key, value in bbox_dimensions.items():
+                            csv_row[header.index(key)] = value
+
+                    csv_row[header.index("geometry3d")] = row["geo"]
 
                 csv_writer.writerow(csv_row)
 
         return len(data)
 
     return 0
-
-

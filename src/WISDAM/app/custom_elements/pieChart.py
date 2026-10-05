@@ -18,14 +18,11 @@
 # ==============================================================================
 
 
-from collections import namedtuple
-
 from PySide6 import QtCore, QtGui
 from PySide6 import QtCharts
 
 
 class PieChartWisdam(QtCharts.QChart):
-
     def __init__(self, parent=None):
 
         super(PieChartWisdam, self).__init__(parent)
@@ -51,8 +48,7 @@ class PieChartWisdam(QtCharts.QChart):
         self.legend().setLabelColor(QtGui.QColor(190, 190, 190))
 
     def clear(self):
-        """Clear all slices in the pie chart
-        """
+        """Clear all slices in the pie chart"""
         for slice_ in self.slices.slices():
             self.slices.take(slice_)
 
@@ -66,7 +62,7 @@ class PieChartWisdam(QtCharts.QChart):
         slice_item.setPen(QtGui.QPen(QtCore.Qt.PenStyle.NoPen))
         slice_item.setLabelBrush(QtGui.QColor(190, 190, 190))
         slice_item.hovered.connect(slice_item.setExploded)
-        if value/values_max < 0.05:
+        if value / values_max < 0.05:
             slice_item.hovered.connect(slice_item.setLabelVisible)
         else:
             slice_item.setLabelVisible(True)

@@ -41,20 +41,24 @@ class POPUPAbout(QWidget):
         self.ui.setupUi(self)
         self.dragPos = QtCore.QPointF()
 
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self.ui.btn_close.clicked.connect(self.close)
 
-        self.ui.lbl_copyright.setText("Version: %s\nCopyright(c) %s - WISDAM and Martin Wieser\nLicense: %s"
-                                      % (software_version, build_year, license_version))
+        self.ui.lbl_copyright.setText(
+            "Version: %s\nCopyright(c) %s - WISDAM and Martin Wieser\nLicense: %s"
+            % (software_version, build_year, license_version)
+        )
 
         model_license = JsonModel()
         json_list = []
-        for file in licence_folder.glob('*.json'):
-            with open(file, 'r') as fe:
+        for file in licence_folder.glob("*.json"):
+            with open(file, "r") as fe:
                 json_list += json.load(fe)
         model_license.load(json_list)
 
@@ -62,11 +66,17 @@ class POPUPAbout(QWidget):
         self.ui.treeView_license.setModel(model_license)
         self.ui.treeView_license.setColumnWidth(0, 200)
         self.ui.treeView_license.setColumnWidth(1, 400)
-        self.ui.treeView_license.header().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        self.ui.treeView_license.header().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.ResizeToContents
+        )
 
         def move_window(event):
             if event.buttons() == Qt.MouseButton.LeftButton and not self.isMaximized():
-                self.move(self.pos() + event.globalPosition().toPoint() - self.dragPos.toPoint())
+                self.move(
+                    self.pos()
+                    + event.globalPosition().toPoint()
+                    - self.dragPos.toPoint()
+                )
                 self.dragPos = event.globalPosition()
                 event.accept()
 

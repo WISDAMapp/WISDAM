@@ -36,7 +36,6 @@ def propagate_env_data_next_image(env_data: dict):
 
     # If propagation is no, this means it is from a user input directly
     elif env_data["propagation"] == EnvSource.direct:
-
         env_data["propagation"] = EnvSource.from_image_propagation
 
     else:
@@ -45,4 +44,3 @@ def propagate_env_data_next_image(env_data: dict):
         pass
 
     return env_data
-

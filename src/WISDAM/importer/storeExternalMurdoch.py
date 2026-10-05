@@ -25,10 +25,10 @@ from pathlib import Path
 
 from PySide6.QtCore import QRect, QPoint
 from PySide6 import QtCore
-from PySide6.QtGui import (QPixmap)
+from PySide6.QtGui import QPixmap
 
 
-from app.var_classes import (ExternalSighting, external_surety)
+from app.var_classes import ExternalSighting, external_surety
 from core_interface.image_loader import image_loader
 
 # WISDAM core
@@ -48,66 +48,74 @@ def crop_image_external(picture: QPixmap, rectangle: QRect):
     return pixmap_bytes
 
 
-def no_yes_value(string: 'str'):
-    if string == 'yes':
+def no_yes_value(string: "str"):
+    if string == "yes":
         return 1
     return 0
 
 
-def mumandcalf_oldImageSightings(string: 'str', string2: 'str'):
-    if string == 'Single':
-        return 'Single'
-    if string2 == 'No':
-        return 'Mother'
+def mumandcalf_oldImageSightings(string: "str", string2: "str"):
+    if string == "Single":
+        return "Single"
+    if string2 == "No":
+        return "Mother"
     else:
-        return 'Calf'
+        return "Calf"
 
 
-def water_pos(string: 'str'):
-    if string == 'Surface':
+def water_pos(string: "str"):
+    if string == "Surface":
         return 0
-    elif string == 'Mid-water':
+    elif string == "Mid-water":
         return 1
     else:
         return 2
 
 
 class HeaderExcel:
-    SurveyName = ''
-    File = ''
-    X1 = ''
-    X2 = ''
-    Y1 = ''
-    Animal = ''
-    MumAndCalf = ''
-    Calf = ''
-    Certainty = ''
-    FirstCertainty = ''
-    WaterPosition = ''
-    Turbidity = ''
-    Glare = ''
-    SeaState = ''
-    Resight = ''
+    SurveyName = ""
+    File = ""
+    X1 = ""
+    X2 = ""
+    Y1 = ""
+    Animal = ""
+    MumAndCalf = ""
+    Calf = ""
+    Certainty = ""
+    FirstCertainty = ""
+    WaterPosition = ""
+    Turbidity = ""
+    Glare = ""
+    SeaState = ""
+    Resight = ""
 
 
 def check_header(header_strings_list, string_to_find):
 
     if any(string_to_find in s.lower() for s in header_strings_list):
         found = [s for s in header_strings_list if string_to_find in s.lower()]
-        if len(found)>1:
+        if len(found) > 1:
             for x in found:
                 if x == string_to_find:
-                    found_single=x
+                    found_single = x
         else:
             found_single = found
         return found_single
 
-    return ''
+    return ""
 
 
-def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path, user: 'str', height, type, delimiter,
-                          swap_xy=False,
-                          progress_callback=None):
+def process_external_data(
+    path_data: Path,
+    path_img_folder: Path,
+    db_path: Path,
+    user: "str",
+    height,
+    type,
+    delimiter,
+    swap_xy=False,
+    progress_callback=None,
+):
 
     external_sightings_list = []
 
@@ -116,14 +124,14 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
     success_csv = 0
     fail_csv = 0
 
-    if type=='Orthos_NT':
+    if type == "Orthos_NT":
         # Read Excel File and check content
         try:
             data_excel = pandas.read_excel(path_data)
         except:
             progress_callback.emit((1, 1))
             db.close()
-            return 'Can not parse data. Maybe wrong format'
+            return "Can not parse data. Maybe wrong format"
 
         data_excel_columns = data_excel.keys()
 
@@ -136,11 +144,16 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
             # print(row[header_excel_pos.Resight], row[header_excel_pos.X1])
             try:
                 sight = ExternalSighting()
-                name = row[1].split('.')[0]
-                shift_x = int(name.split('_')[-2].split('-')[1])
-                shift_y = int(name.split('_')[-1].split('-')[1])
+                name = row[1].split(".")[0]
+                shift_x = int(name.split("_")[-2].split("-")[1])
+                shift_y = int(name.split("_")[-1].split("-")[1])
 
-                rec = [int(row[2])+shift_x, int(row[3])+shift_y, int(row[4])+shift_x, int(row[5])+shift_y]
+                rec = [
+                    int(row[2]) + shift_x,
+                    int(row[3]) + shift_y,
+                    int(row[4]) + shift_x,
+                    int(row[5]) + shift_y,
+                ]
                 # rec = [int(float(x)) for x in row[2:6]]
                 if swap_xy:
                     rec = [rec[1], rec[0], rec[3], rec[2]]
@@ -154,27 +167,30 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
                     rec[3] = dum
                 sight.geometry = [rec[0:2], rec[2:]]
                 sight.name = row[0]
-                sight.img = Path('_'.join(row[1].split('_')[:-2]) + '.tif')
+                sight.img = Path("_".join(row[1].split("_")[:-2]) + ".tif")
 
-                sight.geom_type = 'Rectangle'
-                row = row.fillna(' ')
+                sight.geom_type = "Rectangle"
+                row = row.fillna(" ")
                 sight.object_type = row[6]
                 data_string = {
-                    'Species': row[17],
-                    'Resight': row[15].lower(),
-                    'Certainty': row[9].lower(),
-                    'FirstCertain': row[10].lower(),
-                    'WaterPosition': row[11],
-                    'MumCalf': mumandcalf_oldImageSightings(row[7], row[8]),
-                    'SpeciesSurety': external_surety(row[16]),
-                    'Notes': row[18],
-
+                    "Species": row[17],
+                    "Resight": row[15].lower(),
+                    "Certainty": row[9].lower(),
+                    "FirstCertain": row[10].lower(),
+                    "WaterPosition": row[11],
+                    "MumCalf": mumandcalf_oldImageSightings(row[7], row[8]),
+                    "SpeciesSurety": external_surety(row[16]),
+                    "Notes": row[18],
                 }
                 data_string = json.dumps(data_string)
 
-                sight.env_data = json.dumps({'Glare': str(row[13]),
-                                             'Turbidity': str(row[12]),
-                                             'SeaState': str(row[14])})
+                sight.env_data = json.dumps(
+                    {
+                        "Glare": str(row[13]),
+                        "Turbidity": str(row[12]),
+                        "SeaState": str(row[14]),
+                    }
+                )
 
                 sight.meta_data = data_string
                 success_csv += 1
@@ -182,9 +198,8 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
             except:
                 fail_csv += 1
                 continue
-    if type == 'Normal':
-
-        with open(path_data, 'r') as csvfile:
+    if type == "Normal":
+        with open(path_data, "r") as csvfile:
             # creating a csv reader object
             csvreader = csv.reader(csvfile, delimiter=delimiter)
             # extracting each data row one by one
@@ -194,7 +209,7 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
                         sight = ExternalSighting()
                         rec = [int(float(x)) for x in row[2:6]]
                         if swap_xy:
-                            rec = [rec[1],rec[0],rec[3],rec[2]]
+                            rec = [rec[1], rec[0], rec[3], rec[2]]
                         if rec[2] < rec[0]:
                             dum = rec[0] + 0.0
                             rec[0] = rec[2]
@@ -207,23 +222,29 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
                         sight.name = row[0]
                         sight.img = Path(row[1])
 
-                        sight.geom_type = 'Rectangle'
+                        sight.geom_type = "Rectangle"
                         sight.object_type = row[6]
-                        data_string = json.dumps({
-                            'Species': row[6],
-                            'Resight': row[15].lower(),
-                            'Certainty': row[9].lower(),
-                            'FirstCertain': row[10].lower(),
-                            'WaterPosition': row[11],
-                            'MumCalf': mumandcalf_oldImageSightings(row[7],row[8]),
-                            'SpeciesSurety': 0,
-                            'Notes': ''
-                        })
+                        data_string = json.dumps(
+                            {
+                                "Species": row[6],
+                                "Resight": row[15].lower(),
+                                "Certainty": row[9].lower(),
+                                "FirstCertain": row[10].lower(),
+                                "WaterPosition": row[11],
+                                "MumCalf": mumandcalf_oldImageSightings(row[7], row[8]),
+                                "SpeciesSurety": 0,
+                                "Notes": "",
+                            }
+                        )
 
                         sight.meta_data = data_string
-                        sight.env_data = json.dumps({'Glare': str(row[13]),
-                                                     'Turbidity': str(row[12]),
-                                                     'SeaState': str(row[14])})
+                        sight.env_data = json.dumps(
+                            {
+                                "Glare": str(row[13]),
+                                "Turbidity": str(row[12]),
+                                "SeaState": str(row[14]),
+                            }
+                        )
                         success_csv += 1
                         external_sightings_list.append(sight)
                     except:
@@ -232,30 +253,35 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
                 else:
                     fail_csv += 1
 
-    print('Found ' + str(success_csv) + ' valid data rows in file')
-    print('Import can take some while..calculating cropped Images')
+    print("Found " + str(success_csv) + " valid data rows in file")
+    print("Import can take some while..calculating cropped Images")
 
-
-        # load external data
+    # load external data
 
     if external_sightings_list:
         success = []
         fail = []
         image = WISDAMImage()
         duplicates = 0
-        image_old_path = ''
+        image_old_path = ""
         for idx, sighting in enumerate(external_sightings_list):
-
             image = db.load_image_by_path(path_img_folder / sighting.img)
             if image is not None:
-
                 try:
-                    points_image = [[sighting.geometry[0][0], sighting.geometry[0][1]],
-                                    [sighting.geometry[1][0], sighting.geometry[0][1]],
-                                    [sighting.geometry[1][0], sighting.geometry[1][1]],
-                                    [sighting.geometry[0][0], sighting.geometry[1][1]],
-                                    [sighting.geometry[0][0], sighting.geometry[0][1]]]
-                    geo = 'POLYGON((' + ', '.join([' '.join([str(int(x)) for x in t]) for t in points_image]) + '))'
+                    points_image = [
+                        [sighting.geometry[0][0], sighting.geometry[0][1]],
+                        [sighting.geometry[1][0], sighting.geometry[0][1]],
+                        [sighting.geometry[1][0], sighting.geometry[1][1]],
+                        [sighting.geometry[0][0], sighting.geometry[1][1]],
+                        [sighting.geometry[0][0], sighting.geometry[0][1]],
+                    ]
+                    geo = (
+                        "POLYGON(("
+                        + ", ".join(
+                            [" ".join([str(int(x)) for x in t]) for t in points_image]
+                        )
+                        + "))"
+                    )
                     query = r"""select * from sightings
                     join images
                     where 
@@ -264,16 +290,32 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
                     and images.path = :img
                     """
 
-                    data = db.con.execute(query, {
-                        'data': sighting.meta_data,
-                        'geo': geo, 'img': (path_img_folder / sighting.img).as_posix()}).fetchone()
+                    data = db.con.execute(
+                        query,
+                        {
+                            "data": sighting.meta_data,
+                            "geo": geo,
+                            "img": (path_img_folder / sighting.img).as_posix(),
+                        },
+                    ).fetchone()
                     if not data:
-                        rect = QRect(sighting.geometry[0][0], sighting.geometry[0][1],
-                                     sighting.geometry[1][0] - sighting.geometry[0][0],
-                                     sighting.geometry[1][1] - sighting.geometry[0][1])
+                        rect = QRect(
+                            sighting.geometry[0][0],
+                            sighting.geometry[0][1],
+                            sighting.geometry[1][0] - sighting.geometry[0][0],
+                            sighting.geometry[1][1] - sighting.geometry[0][1],
+                        )
 
-                        sight_id = store_geom(db, image, height, sighting.geom_type, [QPoint(x, y) for x, y in points_image])
-                        db.store_objects_meta(sight_id, sighting.object_type, sighting.meta_data, source=2)
+                        sight_id = store_geom(
+                            db,
+                            image,
+                            height,
+                            sighting.geom_type,
+                            [QPoint(x, y) for x, y in points_image],
+                        )
+                        db.store_objects_meta(
+                            sight_id, sighting.object_type, sighting.meta_data, source=2
+                        )
 
                         if image.path != image_old_path:
                             img = image_loader(image.path)
@@ -293,10 +335,16 @@ def process_external_data(path_data: Path, path_img_folder: Path, db_path: Path,
             progress_callback.emit((len(external_sightings_list) - 1, idx))
 
         db.close()
-        return 'Nr of success= ' + str(len(success)) + '; Failed imports:' + str(len(fail)) + '; Duplicates: ' +\
-               str(duplicates)
+        return (
+            "Nr of success= "
+            + str(len(success))
+            + "; Failed imports:"
+            + str(len(fail))
+            + "; Duplicates: "
+            + str(duplicates)
+        )
 
     else:
         progress_callback.emit((1, 1))
         db.close()
-        return 'Can not parse data'
+        return "Can not parse data"

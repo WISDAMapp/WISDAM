@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2026 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,17 +30,17 @@ from PySide6.QtCore import Qt, SignalInstance, Signal, QPointF
 from app.utils_qt import change_led_color
 from app.gui_design.ui_mapper import Ui_popup_mapper
 
-from WISDAMcore.mapping.type_selector import mapper_load_from_dict
-from WISDAMcore.mapping.base_class import MappingType, MappingBase
-from WISDAMcore.mapping.plane import MappingPlane
-from WISDAMcore.mapping.raster import MappingRaster
-from WISDAMcore.exceptions import FileNotSupportedError, MappingError
+# weitsicht
+from weitsicht.mapping.mapping_dict_selector import get_mapper_from_dict
+from weitsicht.mapping.base_class import MappingType, MappingBase
+from weitsicht.mapping.horizontal_plane import MappingHorizontalPlane
+from weitsicht.mapping.raster import MappingRaster
+from weitsicht.exceptions import WeitsichtError, MappingError
 
 logger = logging.getLogger(__name__)
 
 
 class POPUPMapper(QWidget):
-
     send_mapper_dict: SignalInstance = Signal(dict, bool)
 
     def __init__(self):
@@ -64,12 +64,16 @@ class POPUPMapper(QWidget):
         self.ui.btn_select_raster.clicked.connect(self.get_mapper_from_file)
         self.ui.btn_set_std_crs.clicked.connect(self.set_standard_crs)
 
-        self.mapper: MappingBase | MappingRaster | MappingPlane | None = None
+        self.mapper: MappingBase | MappingRaster | MappingHorizontalPlane | None = None
 
         # window drag mouse moving
         def move_window(event):
             if event.buttons() == Qt.LeftButton and not self.isMaximized():
-                self.move(self.pos() + event.globalPosition().toPoint() - self.dragPos.toPoint())
+                self.move(
+                    self.pos()
+                    + event.globalPosition().toPoint()
+                    - self.dragPos.toPoint()
+                )
                 self.dragPos = event.globalPosition()
                 event.accept()
 
@@ -110,8 +114,11 @@ class POPUPMapper(QWidget):
             return
 
         try:
-            self.mapper = mapper_load_from_dict(mapper_dict)
-        except (ValueError, NotImplementedError, MappingError):
+            self.mapper = get_mapper_from_dict(mapper_dict)
+        except FileNotFoundError:
+            logger.error("The specified file is not found")
+            return
+        except (WeitsichtError, ValueError, KeyError):
             logger.error("Stored Mapper is not possible to use")
             return
 
@@ -119,7 +126,6 @@ class POPUPMapper(QWidget):
             return
 
         if self.mapper.type.value == MappingType.HorizontalPlane.value:
-
             self.ui.rd_select_plane_mapper.setChecked(True)
             self.ui.frame_raster_mapper.setVisible(False)
             self.ui.frame_plane_mapper.setVisible(True)
@@ -137,11 +143,12 @@ class POPUPMapper(QWidget):
             self.ui.pltext_plane_crs.setPlainText(plane_crs)
 
         elif self.mapper.type.value == MappingType.Raster.value:
-
             self.ui.rd_select_raster_mapper.setChecked(True)
             self.ui.frame_raster_mapper.setVisible(True)
             self.ui.frame_plane_mapper.setVisible(False)
-            self.ui.pltext_raster_filepath.setPlainText(mapper_dict['type'])
+            self.ui.pltext_raster_filepath.setPlainText(
+                mapper_dict.get("raster_filepath", "")
+            )
             self.set_raster_mapper()
 
     def get_mapper_dict(self):
@@ -149,9 +156,8 @@ class POPUPMapper(QWidget):
         recalculate = self.ui.rd_recalculate.isChecked()
 
         crs = None
-        crs_text = ''
+        crs_text = ""
         if self.ui.rd_select_plane_mapper.isChecked():
-
             try:
                 plane_height = float(self.ui.le_plane_height.text())
                 crs_text = self.ui.pltext_plane_crs.toPlainText()
@@ -159,16 +165,22 @@ class POPUPMapper(QWidget):
                 logger.warning("Entered plane height is not a real number")
                 return
 
-            mapper = MappingPlane(None, plane_height)
+            mapper = MappingHorizontalPlane(plane_altitude=plane_height)
 
         elif self.ui.rd_select_raster_mapper.isChecked():
-
             try:
-                mapper = MappingRaster(Path(self.ui.pltext_raster_filepath.toPlainText()), None, allow_no_crs=True)
+                mapper = MappingRaster(
+                    Path(self.ui.pltext_raster_filepath.toPlainText()),
+                    crs=None,
+                    force_no_crs=True,
+                )
                 crs_text = self.ui.pltext_raster_crs.toPlainText()
 
-            except FileNotSupportedError:
-                logger.error("Specified file can not be opened with rasterio")
+            except FileNotFoundError:
+                logger.error("The specified file is not found")
+                return
+            except (MappingError, ValueError, TypeError):
+                logger.error("Specified raster mapper is not usable")
                 return
 
             if mapper.transform.is_identity:
@@ -180,7 +192,6 @@ class POPUPMapper(QWidget):
             return
 
         if self.ui.rd_crs_manual.isChecked():
-
             crs_text = self.ui.le_manual_crs.text()
 
         if not crs_text:
@@ -231,13 +242,19 @@ class POPUPMapper(QWidget):
         self.clear_raster_mapper_fields()
         self.mapper = None
 
-        raster_path, _ = QFileDialog.getOpenFileName(self, caption="Raster File for Mapping")
+        raster_path, _ = QFileDialog.getOpenFileName(
+            self, caption="Raster File for Mapping"
+        )
         if raster_path:
-
             try:
-                self.mapper = MappingRaster(Path(raster_path), crs=None, allow_no_crs=True)
-            except FileNotSupportedError:
-                logger.error("Specified file can not be opened with rasterio")
+                self.mapper = MappingRaster(
+                    Path(raster_path), crs=None, force_no_crs=True
+                )
+            except FileNotFoundError:
+                logger.error("The specified file is not found")
+                return
+            except (MappingError, ValueError, TypeError):
+                logger.error("Specified file can not be opened/used as mapper")
                 return
 
             self.set_raster_mapper()
@@ -256,7 +273,6 @@ class POPUPMapper(QWidget):
         change_led_color(self.ui.led_raster_geo_transform, on=gt_flag)
 
         if self.mapper.crs is not None:
-
             crs_has_z_axis = True if len(self.mapper.crs.axis_info) > 2 else False
             change_led_color(self.ui.led_raster_crs, on=True)
             change_led_color(self.ui.led_raster_is_vertical, on=crs_has_z_axis)
@@ -267,5 +283,3 @@ class POPUPMapper(QWidget):
                 rester_crs = self.mapper.crs_wkt
 
             self.ui.pltext_raster_crs.setPlainText(rester_crs)
-
-

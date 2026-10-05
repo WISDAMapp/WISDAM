@@ -4,12 +4,16 @@
 The latest binary and wheel can be found at https://github.com/wisdamapp/wisdam/releases/latest
 There you will find as well a wheel which could be used.
 
+## From Source
 > [!CAUTION]
-> WISDAM depends on a library called [WISDAMcore](https://github.com/wisdamapp/wisdamcore)
-> That library is up to date not available on PyPi
-> So first install that library in your environment. Otherwise WISDAM will not work!
+> WISDAM uses **weitsicht** for image georeferencing, mapping and projection.
+> You can get **weitsicht** from:
+> - **PyPI**: `pip install weitsicht`
+> - **GitHub**: https://github.com/MartinW-S2M/weitsicht
+> - **Docu**: https://weitsicht.readthedocs.io/en/latest/
+> **WISDAMcore is deprecated and no longer maintained, and WISDAM no longer uses it.**
 
-### From Source
+
 In the `WISDAM` directory (same one where you found this file after cloning the git repo), execute:
 ```
   pip install .

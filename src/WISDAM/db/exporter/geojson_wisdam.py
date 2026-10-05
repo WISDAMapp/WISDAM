@@ -23,7 +23,9 @@ from pathlib import Path
 import json
 from shapely import geometry
 
+from app.var_classes import meta_image_export_keys
 from db.dbHandler import DBHandler
+from statistic.object_geometry import minimum_bounding_box_dimensions
 
 logger = logging.getLogger(__name__)
 
@@ -52,22 +54,21 @@ def format_test(value):
     ret_value = is_numeric(value)
     if ret_value is not None:
         if ret_value.is_integer():
-            return 'int'
+            return "int"
         else:
-            return 'float'
+            return "float"
     else:
         # string, sub json and all other
-        return 'str'
+        return "str"
 
 
 def choose_format(values) -> str:
-
     if "str" in values:
         return "str"
     elif "int" in values:
         return "int"
     elif "float" in values:
-        return"float"
+        return "float"
     else:
         return "str"
 
@@ -81,22 +82,29 @@ def format_values(value, format_value: str):
         return str(value)
 
 
-def get_field_types(data, keys_wanted: list, env_obj: str | None = None, env_image: str | None = None) \
-        -> tuple[dict, dict, dict]:
+def export_json_meta_image_items(db_key: str, value_json: dict):
+    if db_key != "meta_image":
+        return value_json.items()
+
+    return (
+        (key, value_json[key]) for key in meta_image_export_keys if key in value_json
+    )
+
+
+def get_field_types(
+    data, keys_wanted: list, env_obj: str | None = None, env_image: str | None = None
+) -> tuple[dict, dict, dict]:
     """get field types for all rows and decide which one to use using a lookup"""
     field_types = defaultdict(set)
     env_obj_types = defaultdict(set)
     env_image_types = defaultdict(set)
     for rows in data:
-
         for db_key, db_value in rows.items():
             if db_key in keys_wanted:
                 if db_value is not None:
-
                     value_json = is_json(db_value)
                     if value_json is not None:
-                        for k, v in value_json.items():
-
+                        for k, v in export_json_meta_image_items(db_key, value_json):
                             # SUB json of json will be formatted as string
                             field_types[k].add(format_test(v))
 
@@ -106,18 +114,17 @@ def get_field_types(data, keys_wanted: list, env_obj: str | None = None, env_ima
         if env_obj is not None:
             if rows[env_obj]:
                 data_env = json.loads(rows[env_obj])
-                for k, v in data_env['data'].items():
+                for k, v in data_env["data"].items():
                     env_obj_types[k].add(format_test(v))
 
         if env_image is not None:
             if rows[env_image]:
                 data_env_image = json.loads(rows[env_image])
-                for k, v in data_env_image['data'].items():
+                for k, v in data_env_image["data"].items():
                     env_image_types[k].add(format_test(v))
 
     field_types_export = {}
     for key, formats_value in field_types.items():
-
         field_types_export[key] = choose_format(formats_value)
 
     env_obj_types_export = {}
@@ -131,9 +138,23 @@ def get_field_types(data, keys_wanted: list, env_obj: str | None = None, env_ima
     return field_types_export, env_obj_types_export, env_image_types_export
 
 
-def export_objects_json(db: DBHandler, path_json: Path | str,
-                        flag_first_certain: bool = False,
-                        dict_return_only=False) -> tuple[int, dict]:
+def add_bbox_dimensions(prop_dict: dict, geojson: str | dict | None):
+    if not geojson:
+        return
+
+    bbox_dimensions = minimum_bounding_box_dimensions(geojson)
+    if bbox_dimensions:
+        prop_dict.update(bbox_dimensions)
+
+
+def export_objects_json(
+    db: DBHandler,
+    path_json: Path | str,
+    flag_first_certain: bool = False,
+    flag_include_ai: bool = False,
+    flag_only_ai: bool = False,
+    dict_return_only=False,
+) -> tuple[int, dict]:
     """Export objects as JSON File in utf-8
     :param db: DBHandler to use for export
     :param path_json: The path to the json to write. Will be replaced if exists
@@ -148,64 +169,91 @@ def export_objects_json(db: DBHandler, path_json: Path | str,
     data = db.obj_load_all(flag_first_certain=flag_first_certain)
     json_dict = {}
     if data:
+        json_dict["type"] = "FeatureCollection"
+        json_dict["name"] = path_json.stem
+        json_dict["crs"] = {
+            "type": "name",
+            "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+        }
 
-        json_dict['type'] = 'FeatureCollection'
-        json_dict['name'] = path_json.stem
-        json_dict['crs'] = {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}}
-
-        exclude_list = ['image_path', 'geom3d', 'geom2d', 'geo', 'data_env', 'image_data_env',
-                        'geo2d', 'cropped_image']
+        exclude_list = [
+            "image_path",
+            "geom3d",
+            "geom2d",
+            "geo",
+            "data_env",
+            "image_data_env",
+            "geo2d",
+            "cropped_image",
+        ]
 
         keys_wanted = [val for val in data[0].keys() if val not in exclude_list]
 
         json_dict_features = []
 
-        field_types, env_obj_types, env_img_types = get_field_types(data,
-                                                                    keys_wanted=keys_wanted,
-                                                                    env_obj='data_env',
-                                                                    env_image='image_data_env')
+        field_types, env_obj_types, env_img_types = get_field_types(
+            data,
+            keys_wanted=keys_wanted,
+            env_obj="data_env",
+            env_image="image_data_env",
+        )
 
         for rows in data:
-
-            feature_dict = {'type': 'Feature'}
+            feature_dict = {"type": "Feature"}
             prop_dict = {}
 
             for db_key, db_value in rows.items():
                 if db_key in keys_wanted:
                     if db_value is not None:
-
                         # Test if the value is a dictionary itself
                         value_json = is_json(db_value)
                         if value_json is not None:
-                            for k, v in value_json.items():
+                            for k, v in export_json_meta_image_items(
+                                db_key, value_json
+                            ):
                                 prop_dict[k] = format_values(v, field_types[k])
                         else:
-                            prop_dict[db_key] = format_values(db_value, field_types[db_key])
+                            prop_dict[db_key] = format_values(
+                                db_value, field_types[db_key]
+                            )
 
-            if rows['data_env']:
-                data_env = json.loads(rows['data_env'])
-                prop_dict['environment_object_propagation'] = format_values(data_env['propagation'], 'int')
-                for k, v in data_env['data'].items():
-                    prop_dict['environment_object_' + k] = format_values(v, env_obj_types[k])
+            if rows["data_env"]:
+                data_env = json.loads(rows["data_env"])
+                prop_dict["environment_object_propagation"] = format_values(
+                    data_env["propagation"], "int"
+                )
+                for k, v in data_env["data"].items():
+                    prop_dict["environment_object_" + k] = format_values(
+                        v, env_obj_types[k]
+                    )
 
-            if rows['image_data_env']:
-                data_env = json.loads(rows['image_data_env'])
-                prop_dict['environment_image_propagation'] = format_values(data_env['propagation'], 'int')
-                for k, v in data_env['data'].items():
-                    prop_dict['environment_image_' + k] = format_values(v, env_img_types[k])
+            if rows["image_data_env"]:
+                data_env = json.loads(rows["image_data_env"])
+                prop_dict["environment_image_propagation"] = format_values(
+                    data_env["propagation"], "int"
+                )
+                for k, v in data_env["data"].items():
+                    prop_dict["environment_image_" + k] = format_values(
+                        v, env_img_types[k]
+                    )
 
-            feature_dict['properties'] = prop_dict
+            if rows["geo2d"]:
+                prop_dict["image_pixel_geometry"] = json.loads(rows["geo2d"])
 
-            feature_dict['geometry'] = {}
-            if rows['geo']:
-                feature_dict['geometry'] = json.loads(rows['geo'])
+            add_bbox_dimensions(prop_dict, rows["geo"])
+
+            feature_dict["properties"] = prop_dict
+
+            feature_dict["geometry"] = {}
+            if rows["geo"]:
+                feature_dict["geometry"] = json.loads(rows["geo"])
 
             json_dict_features.append(feature_dict)
 
-        json_dict['features'] = json_dict_features
+        json_dict["features"] = json_dict_features
 
         if not dict_return_only:
-            with open(path_json, 'w', encoding='utf8') as json_file:
+            with open(path_json, "w", encoding="utf8") as json_file:
                 json.dump(json_dict, json_file, ensure_ascii=False, indent=2)
 
             return len(data), {}
@@ -215,9 +263,14 @@ def export_objects_json(db: DBHandler, path_json: Path | str,
     return 0, {}
 
 
-def export_objects_as_point_json(db: DBHandler, path_json: Path | str,
-                                 flag_first_certain: bool = False,
-                                 dict_return_only=False) -> tuple[int, dict]:
+def export_objects_as_point_json(
+    db: DBHandler,
+    path_json: Path | str,
+    flag_first_certain: bool = False,
+    flag_include_ai: bool = False,
+    flag_only_ai: bool = False,
+    dict_return_only=False,
+) -> tuple[int, dict]:
     """Export objects as points(center point) as JSON File in utf-8
     :param db: DBHandler to use for export
     :param path_json: The path to the json to write. Will be replaced if exists
@@ -232,63 +285,91 @@ def export_objects_as_point_json(db: DBHandler, path_json: Path | str,
     data = db.obj_load_all(flag_first_certain=flag_first_certain)
     json_dict = {}
     if data:
+        json_dict["type"] = "FeatureCollection"
+        json_dict["name"] = path_json.stem
+        json_dict["crs"] = {
+            "type": "name",
+            "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+        }
 
-        json_dict['type'] = 'FeatureCollection'
-        json_dict['name'] = path_json.stem
-        json_dict['crs'] = {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}}
-
-        exclude_list = ['img_path', 'data_env', 'image_data_env', 'geom3d', 'geom2d', 'geo', 'geo2d', 'cropped_image']
+        exclude_list = [
+            "img_path",
+            "data_env",
+            "image_data_env",
+            "geom3d",
+            "geom2d",
+            "geo",
+            "geo2d",
+            "cropped_image",
+        ]
         keys_wanted = [val for val in data[0].keys() if val not in exclude_list]
         json_dict_features = []
 
-        field_types, env_obj_types, env_img_types = get_field_types(data,
-                                                                    keys_wanted=keys_wanted,
-                                                                    env_obj='data_env',
-                                                                    env_image='image_data_env')
+        field_types, env_obj_types, env_img_types = get_field_types(
+            data,
+            keys_wanted=keys_wanted,
+            env_obj="data_env",
+            env_image="image_data_env",
+        )
 
         for rows in data:
-
-            feature_dict = {'type': 'Feature'}
+            feature_dict = {"type": "Feature"}
             prop_dict = {}
 
             for db_key, db_value in rows.items():
                 if db_key in keys_wanted:
                     if db_value is not None:
-
                         # Test if the value is a dictionary itself
                         value_json = is_json(db_value)
                         if value_json is not None:
-                            for k, v in value_json.items():
+                            for k, v in export_json_meta_image_items(
+                                db_key, value_json
+                            ):
                                 prop_dict[k] = format_values(v, field_types[k])
                         else:
-                            prop_dict[db_key] = format_values(db_value, field_types[db_key])
+                            prop_dict[db_key] = format_values(
+                                db_value, field_types[db_key]
+                            )
 
-            if rows['data_env']:
-                data_env = json.loads(rows['data_env'])
-                prop_dict['environment_object_propagation'] = format_values(data_env['propagation'], 'int')
-                for k, v in data_env['data'].items():
-                    prop_dict['environment_object_' + k] = format_values(v, env_obj_types[k])
+            if rows["data_env"]:
+                data_env = json.loads(rows["data_env"])
+                prop_dict["environment_object_propagation"] = format_values(
+                    data_env["propagation"], "int"
+                )
+                for k, v in data_env["data"].items():
+                    prop_dict["environment_object_" + k] = format_values(
+                        v, env_obj_types[k]
+                    )
 
-            if rows['image_data_env']:
-                data_env = json.loads(rows['image_data_env'])
-                prop_dict['environment_image_propagation'] = format_values(data_env['propagation'], 'int')
-                for k, v in data_env['data'].items():
-                    prop_dict['environment_image_' + k] = format_values(v, env_img_types[k])
+            if rows["image_data_env"]:
+                data_env = json.loads(rows["image_data_env"])
+                prop_dict["environment_image_propagation"] = format_values(
+                    data_env["propagation"], "int"
+                )
+                for k, v in data_env["data"].items():
+                    prop_dict["environment_image_" + k] = format_values(
+                        v, env_img_types[k]
+                    )
 
-            feature_dict['properties'] = prop_dict
+            if rows["geo2d"]:
+                prop_dict["image_pixel_geometry"] = json.loads(rows["geo2d"])
 
-            feature_dict['geometry'] = {}
-            if rows['geo']:
+            add_bbox_dimensions(prop_dict, rows["geo"])
+
+            feature_dict["properties"] = prop_dict
+
+            feature_dict["geometry"] = {}
+            if rows["geo"]:
                 # Centroid of geometry will be stored as geojson geometry
-                geom = geometry.shape(json.loads(rows['geo']))
-                feature_dict['geometry'] = geometry.mapping(geom.centroid)
+                geom = geometry.shape(json.loads(rows["geo"]))
+                feature_dict["geometry"] = geometry.mapping(geom.centroid)
 
             json_dict_features.append(feature_dict)
 
-        json_dict['features'] = json_dict_features
+        json_dict["features"] = json_dict_features
 
         if not dict_return_only:
-            with open(path_json, 'w', encoding='utf8') as json_file:
+            with open(path_json, "w", encoding="utf8") as json_file:
                 json.dump(json_dict, json_file, ensure_ascii=False, indent=2)
 
             return len(json_dict["features"]), {}
@@ -297,7 +378,9 @@ def export_objects_as_point_json(db: DBHandler, path_json: Path | str,
     return 0, {}
 
 
-def export_footprints_json(db: DBHandler, path_json: Path | str, dict_return_only=False) -> tuple[int, dict]:
+def export_footprints_json(
+    db: DBHandler, path_json: Path | str, dict_return_only=False
+) -> tuple[int, dict]:
     """Export image footprints as JSON File in utf-8
     :param db: DBHandler to use for export
     :param path_json: The path to the json to write. Will be replaced if exists
@@ -311,58 +394,72 @@ def export_footprints_json(db: DBHandler, path_json: Path | str, dict_return_onl
     data = db.load_image_export()
     json_dict = {}
     if data:
+        json_dict["type"] = "FeatureCollection"
+        json_dict["name"] = path_json.stem
+        json_dict["crs"] = {
+            "type": "name",
+            "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+        }
 
-        json_dict['type'] = 'FeatureCollection'
-        json_dict['name'] = path_json.stem
-        json_dict['crs'] = {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}}
-
-        exclude_list = ['position', 'centerpoint', 'footprint', 'geom', 'orientation_matrix'
-                                                                        'width', 'height', 'data_env']
+        exclude_list = [
+            "position",
+            "centerpoint",
+            "footprint",
+            "geom",
+            "orientation_matrixwidth",
+            "height",
+            "data_env",
+        ]
 
         keys_wanted = [val for val in data[0].keys() if val not in exclude_list]
         json_dict_features = []
 
-        field_types, env_obj_types, env_img_types = get_field_types(data,
-                                                                    keys_wanted=keys_wanted,
-                                                                    env_obj=None,
-                                                                    env_image='data_env')
+        field_types, env_obj_types, env_img_types = get_field_types(
+            data, keys_wanted=keys_wanted, env_obj=None, env_image="data_env"
+        )
 
         for rows in data:
-
-            feature_dict = {'type': 'Feature'}
+            feature_dict = {"type": "Feature"}
 
             prop_dict = {}
             for db_key, db_value in rows.items():
                 if db_key in keys_wanted:
                     if db_value is not None:
-
                         # Test if the value is a dictionary itself
                         value_json = is_json(db_value)
                         if value_json is not None:
-                            for k, v in value_json.items():
+                            for k, v in export_json_meta_image_items(
+                                db_key, value_json
+                            ):
                                 prop_dict[k] = format_values(v, field_types[k])
                         else:
-                            prop_dict[db_key] = format_values(db_value, field_types[db_key])
+                            prop_dict[db_key] = format_values(
+                                db_value, field_types[db_key]
+                            )
 
-            if rows['data_env']:
-                data_env = json.loads(rows['data_env'])
-                prop_dict['environment_image_propagation'] = format_values(data_env['propagation'], 'int')
-                for k, v in data_env['data'].items():
-                    prop_dict['environment_image_' + k] = format_values(v, env_img_types[k])
+            if rows["data_env"]:
+                data_env = json.loads(rows["data_env"])
+                prop_dict["environment_image_propagation"] = format_values(
+                    data_env["propagation"], "int"
+                )
+                for k, v in data_env["data"].items():
+                    prop_dict["environment_image_" + k] = format_values(
+                        v, env_img_types[k]
+                    )
 
-            feature_dict['properties'] = prop_dict
+            feature_dict["properties"] = prop_dict
 
-            feature_dict['geometry'] = {}
-            if rows['geom']:
-                feature_dict['geometry'] = json.loads(rows['geom'])
+            feature_dict["geometry"] = {}
+            if rows["geom"]:
+                feature_dict["geometry"] = json.loads(rows["geom"])
 
             json_dict_features.append(feature_dict)
 
-        json_dict['features'] = json_dict_features
+        json_dict["features"] = json_dict_features
 
         # Save json
         if not dict_return_only:
-            with open(path_json, 'w', encoding='utf8') as json_file:
+            with open(path_json, "w", encoding="utf8") as json_file:
                 json.dump(json_dict, json_file, ensure_ascii=False, indent=2)
 
             # Noo dict return needed, save time for exit

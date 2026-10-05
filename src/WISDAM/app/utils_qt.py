@@ -28,7 +28,7 @@ from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import QBuffer, Qt, QRect, QPoint, QPointF, QIODevice
 from PySide6.QtWidgets import QLabel, QPushButton
 
-from app.var_classes import (source_switch, review_switch, NavRect)
+from app.var_classes import source_switch, review_switch, NavRect
 
 
 def change_led_color(item: QLabel | QPushButton, on: bool = False):
@@ -52,6 +52,7 @@ def list_of_points_to_list(pt_list: list[QPoint] | list[QPointF]):
 
     return p_list
 
+
 def crop_image_qimage(q_image: QImage, rectangle: QRect):
     cropped_image = q_image.copy(rectangle)
     ba = QtCore.QByteArray()
@@ -61,6 +62,7 @@ def crop_image_qimage(q_image: QImage, rectangle: QRect):
     assert ok
     pixmap_bytes = ba.data()
     return pixmap_bytes
+
 
 def crop_image(picture: QImage, rectangle: QRect):
     cropped_image = picture.copy(rectangle)
@@ -116,9 +118,11 @@ def image_thumb_grid_navigation_size(image_shape: tuple[int, int] = (100, 100)):
     return width, height
 
 
-def create_tooltip_cropped_image(cropped_image, image_id, object_type, resight_set, source, reviewed) -> str:
+def create_tooltip_cropped_image(
+    cropped_image, image_id, object_type, resight_set, source, reviewed
+) -> str:
     pixmap = QPixmap()
-    pixmap.loadFromData(cropped_image, 'JPG')
+    pixmap.loadFromData(cropped_image, "JPG")
 
     # if pixmap.width() >300 or pixmap.height() > 300:
     pixmap = pixmap.scaled(300, 300, Qt.KeepAspectRatio)
@@ -127,23 +131,23 @@ def create_tooltip_cropped_image(cropped_image, image_id, object_type, resight_s
     pixmap.save(buffer, "PNG", quality=100)
     image = bytes(buffer.data().toBase64()).decode()
     html = '<html><head/><body"><p>'
-    html += '<!-- -->'
-    html += '<h2>' + str(object_type) + '</h2>'
-    html += '<!-- -->'
-    html += '<p>Image: ' + str(image_id) + '</p>'
-    html += '<!-- -->'
-    html += '<p>Source: ' + source_switch(source) + '</p>'
-    html += '<!-- -->'
+    html += "<!-- -->"
+    html += "<h2>" + str(object_type) + "</h2>"
+    html += "<!-- -->"
+    html += "<p>Image: " + str(image_id) + "</p>"
+    html += "<!-- -->"
+    html += "<p>Source: " + source_switch(source) + "</p>"
+    html += "<!-- -->"
     if reviewed == 0:
         color = r'style="color:red"'
     else:
-        color = ''
-    html += '<p ' + color + '>Reviewed: ' + review_switch(reviewed) + '</p>'
-    html += '<!-- -->'
-    html += '<p>Resight Set: ' + str(resight_set) + '</p>'
-    html += '<!-- -->'
+        color = ""
+    html += "<p " + color + ">Reviewed: " + review_switch(reviewed) + "</p>"
+    html += "<!-- -->"
+    html += "<p>Resight Set: " + str(resight_set) + "</p>"
+    html += "<!-- -->"
     html += '<br><img src="data:image/png;base64,{}">'.format(image)
-    html += '</p></body></html>'
+    html += "</p></body></html>"
     # image = bytes(cropped_image.toBase64()).decode()
     # ba = QByteArray(cropped_image)
     # html = '<img src="data:image/jpg;base64,{}">'.format(ba.toBase64())
@@ -152,47 +156,52 @@ def create_tooltip_cropped_image(cropped_image, image_id, object_type, resight_s
 
 
 def create_tooltip_objects(image_id, object_type, resight_set, source, reviewed) -> str:
-    html = '<html><head/><body><p>'
-    html += '<!-- -->'
-    html += '<h2>' + str(object_type) + '</h2>'
-    html += '<!-- -->'
-    html += '<p>Image: ' + str(image_id) + '</p>'
-    html += '<!-- -->'
-    html += '<p>Source: ' + source_switch(source) + '</p>'
-    html += '<!-- -->'
+    html = "<html><head/><body><p>"
+    html += "<!-- -->"
+    html += "<h2>" + str(object_type) + "</h2>"
+    html += "<!-- -->"
+    html += "<p>Image: " + str(image_id) + "</p>"
+    html += "<!-- -->"
+    html += "<p>Source: " + source_switch(source) + "</p>"
+    html += "<!-- -->"
     if reviewed == 0:
         color = r'style="color:red"'
     else:
-        color = ''
-    html += '<p ' + color + '>Reviewed: ' + review_switch(reviewed) + '</p>'
-    html += '<!-- -->'
-    html += '<p>Resight Set: ' + str(resight_set) + '</p>'
-    html += '<!-- -->'
-    html += '</p></body></html>'
+        color = ""
+    html += "<p " + color + ">Reviewed: " + review_switch(reviewed) + "</p>"
+    html += "<!-- -->"
+    html += "<p>Resight Set: " + str(resight_set) + "</p>"
+    html += "<!-- -->"
+    html += "</p></body></html>"
 
     return html
 
 
-def change_tooltip_html(html_txt: str, object_type: str = None, resight_set: int = None, reviewed: int = None) -> str:
-    text = html_txt.split('<!-- -->')
+def change_tooltip_html(
+    html_txt: str,
+    object_type: str = None,
+    resight_set: int = None,
+    reviewed: int = None,
+) -> str:
+    text = html_txt.split("<!-- -->")
     if object_type is not None:
-        text[1] = '<h3>' + str(object_type) + '</h3>'
+        text[1] = "<h3>" + str(object_type) + "</h3>"
     if resight_set is not None:
-        text[5] = '<p>Resight Set: ' + str(resight_set) + '</p>'
+        text[5] = "<p>Resight Set: " + str(resight_set) + "</p>"
     if reviewed is not None:
         if reviewed == 0:
             color = r'style="color:red"'
         else:
-            color = ''
-        text[4] = '<p ' + color + '>Reviewed: ' + review_switch(reviewed) + '</p>'
-    text = '<!-- -->'.join(text)
+            color = ""
+        text[4] = "<p " + color + ">Reviewed: " + review_switch(reviewed) + "</p>"
+    text = "<!-- -->".join(text)
     return text
 
 
 # Toggle Frame visibility
 def toggle_visible_frame(button, frame):
-    if button.text() == '◄\n◄':
-        button.setText('►\n►')
+    if button.text() == "◄\n◄":
+        button.setText("►\n►")
     else:
-        button.setText('◄\n◄')
+        button.setText("◄\n◄")
     frame.setHidden(not frame.isHidden())

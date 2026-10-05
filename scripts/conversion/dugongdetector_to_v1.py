@@ -30,17 +30,24 @@ import pyproj
 from tqdm import tqdm
 import sys
 
+path_to_repo_main = Path(__file__).resolve().parents[2]
+path_to_src = path_to_repo_main / "src"
+path_to_wisdam = path_to_src / "WISDAM"
+
+sys.path.insert(0, path_to_src.as_posix())
+sys.path.insert(0, path_to_wisdam.as_posix())
+
 from db.dbHandler import DBHandler
 from db.createDb import init
 from core_interface.wisdamIMAGE import WISDAMImage
 from core_interface.update_image_object_geometry import update_mapped_geom_multi
 
-from WISDAMcore.mapping.plane import MappingPlane
-from WISDAMcore.image.perspective import IMAGEPerspective
-from WISDAMcore.camera.opencv_perspective import CameraOpenCVPerspective
-from WISDAMcore.transform.rotation import Rotation
-from WISDAMcore.transform.utm_converter import point_convert_utm_wgs84_egm2008
-from WISDAMcore.transform.coordinates import CoordinatesTransformer
+from weitsicht.mapping.horizontal_plane import MappingHorizontalPlane
+from weitsicht.image.perspective import ImagePerspective
+from weitsicht.geometry.coo_geojson import get_geojson
+from weitsicht.camera.opencv_perspective import CameraOpenCVPerspective
+from weitsicht.transform.rotation import Rotation
+from weitsicht.transform.utm_converter import point_convert_utm_wgs84_egm2008
 
 path_to_bin = Path(__file__).resolve().parent.parent.with_name("bin")
 
@@ -51,14 +58,20 @@ if not path_to_bin.exists():
         raise RuntimeError("Some files are missing")
 
 if (path_to_bin / "project_config_dugongdetector.json").exists():
-    config = json.load(open(path_to_bin / "project_config_dugongdetector.json", 'r'))
+    config = json.load(open(path_to_bin / "project_config_dugongdetector.json", "r"))
 elif (Path(__file__).resolve().parent / "project_config_dugongdetector.json").exists():
-    config = json.load(open(Path(__file__).resolve().parent / "project_config_dugongdetector.json", 'r'))
+    config = json.load(
+        open(
+            Path(__file__).resolve().parent / "project_config_dugongdetector.json", "r"
+        )
+    )
 else:
     raise FileNotFoundError("Config File not found under config")
 
 
-def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_images: bool):
+def convert_dugong_detector_to_v1(
+    file_convert: Path, file_save: Path, flag_all_images: bool
+):
     t1 = time.time()
     pyproj.network.set_network_enabled(active=True)
     print(file_convert.name, "start conversion")
@@ -70,11 +83,11 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
     query = "select * from configuration"
     data = db_connection_old.execute(query).fetchone()
 
-    if 'crated_by' in data.keys():
-        user = data['crated_by']
+    if "crated_by" in data.keys():
+        user = data["crated_by"]
     else:
-        user = data['created_by']
-    date_created = data['date_created']
+        user = data["created_by"]
+    date_created = data["date_created"]
 
     db_new = DBHandler.create(file_save, user, date_created, config)
 
@@ -85,10 +98,15 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
     # db_new.con.execute("PRAGMA locking_mode = EXCLUSIVE")
     # db_new.con.execute("PRAGMA temp_store = MEMORY;")
 
-    mapper = MappingPlane(plane_altitude=0.0, standard_crs=True)
+    mapper = MappingHorizontalPlane(plane_altitude=0.0, crs=CRS("EPSG:4326+3855"))
     db_new.mapper = mapper.param_dict
 
-    color_scheme_start = {"projection": {"attribute": "projection", "colors": {0: "#96ffaa00", 1: "#96ff007f"}}}
+    color_scheme_start = {
+        "projection": {
+            "attribute": "projection",
+            "colors": {0: "#96ffaa00", 1: "#96ff007f"},
+        }
+    }
     db_new.color_scheme = color_scheme_start
 
     query = r"""select images.*, 
@@ -117,7 +135,6 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
     images_dict_all = {}
     image_count = 0
     for data in tqdm(images, position=1, leave=False):
-
         # if objects:
         #    print(len(objects))
 
@@ -132,26 +149,33 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
         # Manual import of sensor width and focal length
         if data["ior_pix"]:
             ior = json.loads(data["ior_pix"])
-            focal_pixel = ior['z0']
-            c_x = ior['x0']
-            c_y = ior['y0']
+            focal_pixel = ior["z0"]
+            c_x = ior["x0"]
+            c_y = ior["y0"]
 
             if focal_pixel != 0.0:
                 try:
-                    camera = CameraOpenCVPerspective(width, height, fx=focal_pixel, fy=focal_pixel, cx=c_x, cy=c_y)
+                    camera = CameraOpenCVPerspective(
+                        width, height, fx=focal_pixel, fy=focal_pixel, cx=c_x, cy=c_y
+                    )
                 except:
-                    raise TypeError("An error occurred while creating Camera for %s" % path.as_posix())
+                    raise TypeError(
+                        "An error occurred while creating Camera for %s"
+                        % path.as_posix()
+                    )
 
         position = None
         utm_crs = None
         if data["X0"]:
-            x_utm, y_utm, z_geod, utm_crs = point_convert_utm_wgs84_egm2008(CRS("EPSG:4326+3855"),
-                                                                            x=data["X0"], y=data["Y0"],
-                                                                            z=data["Z0"])
-            x_utm, y_utm, z_geod_diff, utm_crs = point_convert_utm_wgs84_egm2008(CRS("EPSG:4979"),
-                                                                                 x=data["X0"], y=data["Y0"], z=0)
+            x_utm, y_utm, z_geod, utm_crs = point_convert_utm_wgs84_egm2008(
+                CRS("EPSG:4326+3855"), x=data["X0"], y=data["Y0"], z=data["Z0"]
+            )
+            x_utm, y_utm, z_geod_diff, utm_crs = point_convert_utm_wgs84_egm2008(
+                CRS("EPSG:4979"), x=data["X0"], y=data["Y0"], z=0
+            )
             # print(z_geod,z_geod+abs(z_geod_diff))
             position = np.array([x_utm, y_utm, z_geod + abs(z_geod_diff)])
+            position = np.array([x_utm, y_utm, z_geod])
 
         orientation = None
         if data["r11"]:
@@ -165,42 +189,71 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
             r32 = data["r32"]
             r33 = data["r33"]
 
-            orientation = Rotation(np.array([[r11, r12, r13],
-                                             [r21, r22, r23],
-                                             [r31, r32, r33]]))
+            orientation = Rotation(
+                np.array([[r11, r12, r13], [r21, r22, r23], [r31, r32, r33]])
+            )
 
-        image_model = IMAGEPerspective(width=width, height=height, mapper=mapper,
-                                       position=position, orientation=orientation, camera=camera, crs=utm_crs)
+        image_model = ImagePerspective(
+            width=width,
+            height=height,
+            mapper=mapper,
+            position=position,
+            orientation=orientation,
+            camera=camera,
+            crs=utm_crs,
+        )
 
         importer = data["uav"]
         # importer = "Aircraft AeroGlobe"
-        meta_image = {"make": data["make"], "model": data["model"], "f_number": data["fnumber"], "iso": data["iso"],
-                      "lens_info": data["lens"]}
+        meta_image = {
+            "make": data["make"],
+            "model": data["model"],
+            "f_number": data["fnumber"],
+            "iso": data["iso"],
+            "lens_info": data["lens"],
+        }
 
-        meta_user = {'operator': data["operator"], 'camera_ref': data["camera_ref"],
-                     'conditions': '', 'comments': data["comments"]}
+        meta_user = {
+            "operator": data["operator"],
+            "camera_ref": data["camera_ref"],
+            "conditions": "",
+            "comments": data["comments"],
+        }
 
-        d = datetime.strptime(data["datetime"] + '.001', "%Y:%m:%d %H:%M:%S.%f")
+        d = datetime.strptime(data["datetime"] + ".001", "%Y:%m:%d %H:%M:%S.%f")
         image_datetime = str(d)
         transect = data["transect"]
         flight_ref = data["flight_ref"]
         block = data["survey_block"]
         group_image = data["group_image"]
-        image = WISDAMImage(importer=importer, path=path, image_datetime=image_datetime,
-                            width=width, height=height, image_model=image_model,
-                            meta_user=meta_user, meta_image=meta_image,
-                            transect=transect, block=block, flight_ref=flight_ref, group_image=group_image)
+        image = WISDAMImage(
+            importer=importer,
+            path=path,
+            image_datetime=image_datetime,
+            width=width,
+            height=height,
+            image_model=image_model,
+            meta_user=meta_user,
+            meta_image=meta_image,
+            transect=transect,
+            block=block,
+            flight_ref=flight_ref,
+            group_image=group_image,
+        )
 
         data_env_new = None
         if data["data_env"]:
-            if data["data_env"].replace(' ', ''):
+            if data["data_env"].replace(" ", ""):
                 data_env = json.loads(data["data_env"])
 
-                data_env_new = {"propagation": 1 if data_env["propagation"] else 0,
-                                "data": {
-                                    "Turbidity": data_env["turbidity"],
-                                    "Sea State": data_env["sea_state"],
-                                    "Glare": data_env["glare"]}}
+                data_env_new = {
+                    "propagation": 1 if data_env["propagation"] else 0,
+                    "data": {
+                        "Turbidity": data_env["turbidity"],
+                        "Sea State": data_env["sea_state"],
+                        "Glare": data_env["glare"],
+                    },
+                }
 
             # db_new.store_image_environment_data(data_env_new, image.id)
 
@@ -216,32 +269,34 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
             # if the image is geo referenced try to calculate the footprint
             # as well estimate area and gsd
             try:
-                res = image.image_model.map_footprint()
-            except Exception as e:
+                res = image.map_footprint_to_epsg4979()
+            except Exception:
                 print("\nFootprint could not be mapped for %s" % path.as_posix())
 
             if res is not None:
-                coordinates, gsd, area = res
-                coo_wgs84 = CoordinatesTransformer.from_crs(image.image_model.crs, CRS.from_epsg(4979),
-                                                            coordinates)
-                footprint = coo_wgs84.geojson(geom_type='Polygon')
+                coo_wgs84, gsd, area = res
+                footprint = get_geojson(coo_wgs84, geom_type="Polygon")
 
             res = None
             try:
-                res = image.image_model.map_center_point()
+                res = image.map_center_to_epsg4979()
             except:
                 print("\nCenter could not be mapped for %s" % path.as_posix())
 
             if res is not None:
-                coordinates, gsd_center = res
-                point_mapped = CoordinatesTransformer.from_crs(image.image_model.crs,
-                                                               CRS.from_epsg(4979), coordinates)
-                center = point_mapped.geojson(geom_type='Point')
+                coo_wgs84, gsd_center = res
+                center = get_geojson(coo_wgs84, geom_type="Point")
 
-        images_dict[image.path.as_posix()] = {'image': image, 'user': image_user, 'data_env': data_env_new,
-                                              'gsd': gsd, 'area': area, 'center_json': center,
-                                              'inspected': data['inspected'],
-                                              'footprint_json': footprint}
+        images_dict[image.path.as_posix()] = {
+            "image": image,
+            "user": image_user,
+            "data_env": data_env_new,
+            "gsd": gsd,
+            "area": area,
+            "center_json": center,
+            "inspected": data["inspected"],
+            "footprint_json": footprint,
+        }
 
         if image_count > 1000:
             db_new.image_create_multi_all_fields(images_dict)
@@ -257,36 +312,38 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
 
     images_new = db_new.load_images_list()
 
-    images_new_dict = {item['path']: item for item in images_new}
+    images_new_dict = {item["path"]: item for item in images_new}
 
     images_dict_id = {}
     for key, value in images_dict_all.items():
-        image_id = images_new_dict[key]['id']
-        images_dict_id[image_id] = value['image']
+        image_id = images_new_dict[key]["id"]
+        images_dict_id[image_id] = value["image"]
         images_dict_id[image_id].id = image_id
 
     print(file_convert.name, "Start object insertion")
-    query = "select *, asgeojson(geom2d) as geom2d_geojson, " \
-            "asgeojson(geom3d) as geom3d_geojson, images.path as img_path " \
-            "from sightings join images where images.id = sightings.image"
+    query = (
+        "select *, asgeojson(geom2d) as geom2d_geojson, "
+        "asgeojson(geom3d) as geom3d_geojson, images.path as img_path "
+        "from sightings join images where images.id = sightings.image"
+    )
     objects = db_connection_old.execute(query).fetchall()
 
     obj_list = []
     for obj in tqdm(objects):
-
         data = json.loads(obj["data"])
 
         try:
             data_env = None
             if data.get("Turbidity", False):
-
                 if int(data["Turbidity"]) != -1:
-
-                    data_env = {"propagation": 0,
-                                "data": {
-                                    "Turbidity": data["Turbidity"],
-                                    "Sea State": data["SeaState"],
-                                    "Glare": data["Glare"]}}
+                    data_env = {
+                        "propagation": 0,
+                        "data": {
+                            "Turbidity": data["Turbidity"],
+                            "Sea State": data["SeaState"],
+                            "Glare": data["Glare"],
+                        },
+                    }
 
             if data["SpeciesSurety"] == 0:
                 spec_surety = "Certain"
@@ -295,27 +352,39 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
             else:
                 spec_surety = "Guess"
 
-            data = {"Animal/Species": data["Species"].lower(), "Water Position": data["WaterPosition"],
-                    "Species Surety": spec_surety, "Individual Type": data["MumCalf"],
-                    "comments": data["Notes"],
-                    "certainty": data["Certainty"], "firstcertain": data["FirstCertain"],
-                    "resight": data["Resight"]}
+            data = {
+                "Animal/Species": data["Species"].lower(),
+                "Water Position": data["WaterPosition"],
+                "Species Surety": spec_surety,
+                "Individual Type": data["MumCalf"],
+                "comments": data["Notes"],
+                "certainty": data["Certainty"],
+                "firstcertain": data["FirstCertain"],
+                "resight": data["Resight"],
+            }
         except:
-            print('\n Error inserting object with ID %i' % data['id'])
+            print("\n Error inserting object with ID %i" % data["id"])
             continue
         geom2d = json.loads(obj["geom2d_geojson"])
 
         img_new = images_new_dict.get(obj["img_path"], None)
         if img_new:
-
-            obj_list.append({"geom2d": json.dumps(geom2d), "image": img_new['id'], "user": obj["user"],
-                             "cropped_image": obj["cropped_image"],
-                             "object_type": obj["object_type"].lower(), "source": obj["source"],
-                             "meta_type": "wisdam_default_012024",
-                             "data": json.dumps(data),
-                             "reviewed": obj["reviewed"], "resight_set": obj["group_resight"],
-                             "data_env": None if data_env is None else json.dumps(data_env),
-                             "group_area": obj["group_area"]})
+            obj_list.append(
+                {
+                    "geom2d": json.dumps(geom2d),
+                    "image": img_new["id"],
+                    "user": obj["user"],
+                    "cropped_image": obj["cropped_image"],
+                    "object_type": obj["object_type"].lower(),
+                    "source": obj["source"],
+                    "meta_type": "wisdam_default_012024",
+                    "data": json.dumps(data),
+                    "reviewed": obj["reviewed"],
+                    "resight_set": obj["group_resight"],
+                    "data_env": None if data_env is None else json.dumps(data_env),
+                    "group_area": obj["group_area"],
+                }
+            )
 
     db_new.objects_create_all_multi(obj_list)
     # print('done')
@@ -325,27 +394,28 @@ def convert_dugong_detector_to_v1(file_convert: Path, file_save: Path, flag_all_
     db_new.close()
 
     # db_new.store_image_all_fields_many(image_list)
-    finish = file_save.parent / (file_save.stem + '_finish.sqlite')
+    finish = file_save.parent / (file_save.stem + "_finish.sqlite")
     if finish.exists():
         datetime_string = datetime.now().strftime("%H%M%S")
-        finish = file_save.parent / (file_save.stem + '_' + datetime_string + ' _finish.sqlite')
+        finish = file_save.parent / (
+            file_save.stem + "_" + datetime_string + " _finish.sqlite"
+        )
     os.rename(file_save.as_posix(), finish)
     print(file_save.name, "finish", (time.time() - t1) / 60)
 
 
 def multi_conversion(parent_path: Path, path_out: Path, flag_all_images: bool):
-    sqlite_files = parent_path.rglob('*.sqlite')
+    sqlite_files = parent_path.rglob("*.sqlite")
 
     for file_to_use in tqdm(sqlite_files, position=0, leave=False):
         datetime_str = datetime.now().strftime("%y%m%d")
-        p_output = path_out / (file_to_use.stem + '_v10X_%s.sqlite' % datetime_str)
+        p_output = path_out / (file_to_use.stem + "_v10X_%s.sqlite" % datetime_str)
 
         p_output.unlink(missing_ok=True)
         convert_dugong_detector_to_v1(file_to_use, p_output, flag_all_images)
 
 
 if __name__ == "__main__":
-
     if len(sys.argv) in (3, 4):
         path_src = sys.argv[1]
         path_out = sys.argv[2]
@@ -357,7 +427,6 @@ if __name__ == "__main__":
             all_images = sys.argv[3]
 
     else:
-
         path_src = input("Enter Source Sqlite or Folder: ")
         path_out = input("Enter Destination Folder: ")
         all_images = input("Import all images? (yes/no): ")
@@ -367,7 +436,11 @@ if __name__ == "__main__":
 
     print("Source: " + path_src)
     print("Destination: " + path_out)
-    print("All images will be imported" if all_images.lower() in ("yes", "y") else "Import only images with objects")
+    print(
+        "All images will be imported"
+        if all_images.lower() in ("yes", "y")
+        else "Import only images with objects"
+    )
 
     all_images = True if all_images.lower() in ("yes", "y") else False
     path_src = Path(path_src)
@@ -377,9 +450,9 @@ if __name__ == "__main__":
         print("The second parameter has to bhe the output directory and not a file")
         sys.exit()
 
-    sqlite_extension = path_to_bin / 'spatialite-loadable-modules-5.0.0-win-amd64'
+    sqlite_extension = path_to_bin / "mod_spatialite-5.1.0-win-amd64"
 
-    os.environ['PATH'] = ';'.join([sqlite_extension.as_posix(), os.environ['PATH']])
+    os.environ["PATH"] = ";".join([sqlite_extension.as_posix(), os.environ["PATH"]])
     # enable pyproj network capabilities for downloading raster and transformation grids
     pyproj.network.set_network_enabled(active=True)
 
@@ -387,6 +460,6 @@ if __name__ == "__main__":
         multi_conversion(path_src, path_out, all_images)
     else:
         datetime_string = datetime.now().strftime("%y%m%d")
-        p_out = path_out / (path_src.stem + '_v10X_%s.sqlite' % datetime_string)
+        p_out = path_out / (path_src.stem + "_v10X_%s.sqlite" % datetime_string)
         p_out.unlink(missing_ok=True)
         convert_dugong_detector_to_v1(path_src, p_out, all_images)

@@ -11,12 +11,14 @@ You can also contribute by:
 * help with outreach and onboard new contributors
 * **write grant proposals and help with other fundraising efforts**
 
-## Contribution to WISDAMcore
-The [WISDAMcore](https://github.com/WISDAMapp/WISDAMcore) package is the mathematical core behind WISDAM. 
+## Contribution to weitsicht
+WISDAM uses the [weitsicht](https://github.com/MartinW-S2M/weitsicht) package for the mathematical core behind
+**direct georeferencing, mapping and photogrammetry**.
 
-WISDAMcore is dealing with all the **direct-georeferencing - mapping - photogrammetry**.
+You can install it from PyPI (`pip install weitsicht`) and contribute via the GitHub repository above.
 
-We are also seeking for contributors to that package.
+WISDAMcore is deprecated and no longer maintained, and WISDAM no longer uses it.
+For legacy WISDAMapp versions only, the old repository is here: https://github.com/WISDAMapp/WISDAMcore
 
 ## Bug reporting and bug fixing
 

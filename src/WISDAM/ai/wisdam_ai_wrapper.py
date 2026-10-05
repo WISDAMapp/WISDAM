@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2024 Martin Wieser.
+# Copyright (C) 2026 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,9 +28,13 @@ from PySide6.QtCore import SignalInstance
 from ai.mad_seaforg import MADSeafrog
 from ai.generic_csv import GenericCSV
 from ai.base_class import BaseAIClass
-from ai.import_objects import process_detections_to_ai_detections, process_ai_detections_to_objects
+from ai.import_objects import (
+    process_detections_to_ai_detections,
+    process_ai_detections_to_objects,
+)
+from proj_warnings import log_collected_proj_grid_warnings_once
 
-from WISDAMcore.mapping.base_class import MappingBase
+from weitsicht.mapping.base_class import MappingBase
 
 logger = logging.getLogger(__name__)
 
@@ -56,52 +60,84 @@ class WISDAMAi:
             if ai_class.name == name:
                 self.ai_type_current = ai_class
 
-    def run_ai_single_folder(self, db_path: Path, image_folder: Path, path_images_input_original: Path | None,
-                             output_folder: Path, user: str,
-                             progress_callback: SignalInstance | None = None, **kwargs) -> bool:
+    def run_ai_single_folder(
+        self,
+        db_path: Path,
+        image_folder: Path,
+        path_images_input_original: Path | None,
+        output_folder: Path,
+        user: str,
+        progress_callback: SignalInstance | None = None,
+        **kwargs,
+    ) -> bool:
 
         success = False
 
-        detections = self.ai_type_current.run(db_path, image_folder, output_folder,
-                                              user, path_images_input_original, progress_callback=progress_callback,
-                                              **kwargs)
+        detections = self.ai_type_current.run(
+            db_path,
+            image_folder,
+            output_folder,
+            user,
+            path_images_input_original,
+            progress_callback=progress_callback,
+            **kwargs,
+        )
         logger.info("AI process finished")
         if detections:
             logger.info("\nStart import results")
-            success = process_detections_to_ai_detections(db_path, user,
-                                                          self.ai_type_current.name,
-                                                          detections, progress_callback)
+            success = process_detections_to_ai_detections(
+                db_path, user, self.ai_type_current.name, detections, progress_callback
+            )
 
         return success
 
-    def run_ai_all_folders(self, db_path: Path, image_folders: list[Path], output_folder: Path, user: str,
-                           progress_callback: SignalInstance | None = None, **kwargs) -> bool:
+    def run_ai_all_folders(
+        self,
+        db_path: Path,
+        image_folders: list[Path],
+        output_folder: Path,
+        user: str,
+        progress_callback: SignalInstance | None = None,
+        **kwargs,
+    ) -> bool:
         """Runs all image folders in a sequence of single folders"""
         success = False
         for idx, img_folder in enumerate(image_folders):
             output_folder_current = output_folder / str(idx)
 
-            success = self.ai_type_current.run(db_path, img_folder, output_folder_current,
-                                               user, progress_callback=progress_callback, **kwargs)
+            success = self.ai_type_current.run(
+                db_path,
+                img_folder,
+                output_folder_current,
+                user,
+                progress_callback=progress_callback,
+                **kwargs,
+            )
 
             if not success:
                 return success
 
         return success
 
-    def load_ai_result_filesystem(self, db_path: Path, path_to_data: Path,
-                                  user: str, progress_callback: SignalInstance | None = None, **kwargs) -> bool:
+    def load_ai_result_filesystem(
+        self,
+        db_path: Path,
+        path_to_data: Path,
+        user: str,
+        progress_callback: SignalInstance | None = None,
+        **kwargs,
+    ) -> bool:
 
         success = False
         detections = self.ai_type_current.parse_from_path(path_to_data, **kwargs)
 
         logger.info("Parsing done - start import")
         if detections:
-
             queue = Queue()
-            p = Process(target=process_detections_to_ai_detections, args=(db_path, user,
-                                                                          self.ai_type_current.name,
-                                                                          detections, queue))
+            p = Process(
+                target=process_detections_to_ai_detections,
+                args=(db_path, user, self.ai_type_current.name, detections, queue),
+            )
             p.start()
             while p.is_alive():
                 try:
@@ -115,6 +151,8 @@ class WISDAMAi:
                     raise msg[1]
                 elif msg[0] == "finished":
                     success = msg[1]
+                    warnings = msg[3] if len(msg) > 3 else None
+                    log_collected_proj_grid_warnings_once(logger, warnings)
                     if success:
                         logger.info(msg[2], extra={"finished": True})
                     else:
@@ -134,12 +172,20 @@ class WISDAMAi:
                     raise msg[1]
                 elif msg[0] == "finished":
                     success = msg[1]
+                    warnings = msg[3] if len(msg) > 3 else None
+                    log_collected_proj_grid_warnings_once(logger, warnings)
 
         return success
 
 
-def import_ai_detections_to_objects(db_path: Path, user: str, mapper: MappingBase | None, path_to_proj_dir: Path,
-                                    progress_callback: SignalInstance | None = None, **kwargs) -> bool:
+def import_ai_detections_to_objects(
+    db_path: Path,
+    user: str,
+    mapper: MappingBase | None,
+    path_to_proj_dir: Path,
+    progress_callback: SignalInstance | None = None,
+    **kwargs,
+) -> bool:
     success = False
 
     mapper_dict = None
@@ -147,8 +193,10 @@ def import_ai_detections_to_objects(db_path: Path, user: str, mapper: MappingBas
         mapper_dict = mapper.param_dict
 
     queue = Queue()
-    p = Process(target=process_ai_detections_to_objects, args=(db_path, user,
-                                                               mapper_dict, path_to_proj_dir, queue))
+    p = Process(
+        target=process_ai_detections_to_objects,
+        args=(db_path, user, mapper_dict, path_to_proj_dir, queue),
+    )
     p.start()
     while p.is_alive():
         try:
@@ -162,6 +210,8 @@ def import_ai_detections_to_objects(db_path: Path, user: str, mapper: MappingBas
             raise msg[1]
         elif msg[0] == "finished":
             success = msg[1]
+            warnings = msg[3] if len(msg) > 3 else None
+            log_collected_proj_grid_warnings_once(logger, warnings)
             if success:
                 logger.info(msg[2], extra={"finished": True})
             else:
@@ -181,5 +231,7 @@ def import_ai_detections_to_objects(db_path: Path, user: str, mapper: MappingBas
             raise msg[1]
         elif msg[0] == "finished":
             success = msg[1]
+            warnings = msg[3] if len(msg) > 3 else None
+            log_collected_proj_grid_warnings_once(logger, warnings)
 
     return success

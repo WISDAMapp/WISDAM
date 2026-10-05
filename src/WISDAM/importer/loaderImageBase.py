@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2025 Martin Wieser.
+# Copyright (C) 2026 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ from pathlib import Path
 import pandas
 
 # WISDAM core
-from WISDAMcore.image.base_class import ImageBase
+from weitsicht.image.base_class import ImageBase
 
 
 class LoaderType(Enum):
@@ -36,9 +36,8 @@ class LoaderType(Enum):
 
 
 class ImageBaseLoader:
-
     def __init__(self):
-        self.name = 'base'
+        self.name = "base"
         self.loader_type = LoaderType.EXIF_Loader
         self.crs_input_show = False
         self.crs_input_mandatory = False
@@ -47,11 +46,9 @@ class ImageBaseLoader:
     @staticmethod
     @abstractmethod
     def info_text() -> str | None:
-        """return a description of the loader or None if no description available (popup will not be shown)
-        """
+        """return a description of the loader or None if no description available (popup will not be shown)"""
 
         return None
-
 
     @abstractmethod
     def get(self, **kwargs) -> tuple[ImageBase, int, int] | None:
@@ -99,7 +96,7 @@ class ImageBaseLoader:
         You can have a look at the aeroglob importer, how columns can be renamed or only needed columns are extracted
 
         IF your logfile contains absolute image paths which can be used for image import, the image paths have to be in
-        a collumn named "path"
+        a column named "path"
         Check the opk_csv.py importer to see an example
 
         :arg log_file: Path to the logfile used to read info or path to folder containing log files.

@@ -23,8 +23,12 @@ from app.model_views.galleryView import CustomSortFilterProxyModel
 from app.model_views.aiView import AICustomSortFilterProxyModel
 
 
-def set_filter_boolean(proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel,
-                       filter_pass, caller, key):
+def set_filter_boolean(
+    proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel,
+    filter_pass,
+    caller,
+    key,
+):
     if caller.isChecked():
         filter_pass[key] = True
     else:
@@ -32,8 +36,13 @@ def set_filter_boolean(proxy_model: CustomSortFilterProxyModel | AICustomSortFil
     proxy_model.set_filter_data(filter_pass)
 
 
-def set_filter_check_value(proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel,
-                           filter_pass, caller, key, value):
+def set_filter_check_value(
+    proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel,
+    filter_pass,
+    caller,
+    key,
+    value,
+):
     if caller.isChecked():
         if key in filter_pass:
             filter_pass[key].append(value)
@@ -48,10 +57,15 @@ def set_filter_check_value(proxy_model: CustomSortFilterProxyModel | AICustomSor
     proxy_model.set_filter_data(filter_pass)
 
 
-def set_filter_value(proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel, filter_pass, caller, key,
-                     type_value):
+def set_filter_value(
+    proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel,
+    filter_pass,
+    caller,
+    key,
+    type_value,
+):
     if caller.text():
-        if type_value == 'int':
+        if type_value == "int":
             if re.match(r"[-+]?\d+(\0*)?$", caller.text()) is not None:
                 filter_pass[key] = int(caller.text())
             else:
@@ -59,14 +73,19 @@ def set_filter_value(proxy_model: CustomSortFilterProxyModel | AICustomSortFilte
                 if key in filter_pass:
                     filter_pass.pop(key, None)
 
-        elif type_value == 'string':
+        elif type_value == "string":
             filter_pass[key] = caller.text()
     else:
         filter_pass.pop(key, None)
     proxy_model.set_filter_data(filter_pass)
 
 
-def set_filter_slider(proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel, filter_pass, caller, key,
-                      scale=1):
+def set_filter_slider(
+    proxy_model: CustomSortFilterProxyModel | AICustomSortFilterProxyModel,
+    filter_pass,
+    caller,
+    key,
+    scale=1,
+):
     filter_pass[key] = float(caller.value()) / scale
     proxy_model.set_filter_data(filter_pass)

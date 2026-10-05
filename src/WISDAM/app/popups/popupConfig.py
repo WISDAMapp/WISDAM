@@ -21,7 +21,7 @@
 import logging
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import (QColor)
+from PySide6.QtGui import QColor
 
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, Signal, Slot
@@ -52,7 +52,11 @@ class POPUPConfiguration(QWidget):
 
         def move_window(event):
             if event.buttons() == Qt.MouseButton.LeftButton and not self.isMaximized():
-                self.move(self.pos() + event.globalPosition().toPoint() - self.dragPos.toPoint())
+                self.move(
+                    self.pos()
+                    + event.globalPosition().toPoint()
+                    - self.dragPos.toPoint()
+                )
                 self.dragPos = event.globalPosition()
                 event.accept()
 
@@ -68,7 +72,7 @@ class POPUPConfiguration(QWidget):
     # Slots
     @Slot(QColor)
     def get_color(self, color):
-        if self.sender().objectName() == 'btn_color_pick':
+        if self.sender().objectName() == "btn_color_pick":
             self.pick_color = color.name(QColor.HexArgb)
         else:
             self.reproject_color = color.name(QColor.HexArgb)

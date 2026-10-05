@@ -20,9 +20,6 @@
 
 import docker
 import docker.errors
-from pathlib import Path
-import time
-import os
 
 
 def docker_running():

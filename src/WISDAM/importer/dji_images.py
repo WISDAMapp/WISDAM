@@ -1,7 +1,7 @@
 # ==============================================================================
 # This file is part of the WISDAM distribution
 # https://github.com/WISDAMapp/WISDAM
-# Copyright (C) 2025 Martin Wieser.
+# Copyright (C) 2026 Martin Wieser.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,55 +29,53 @@
 
 
 import logging
-import numpy as np
-from numpy import sin, cos
 from pathlib import Path
 from pyproj import CRS
-from pyproj.crs import CompoundCRS
 
 from importer.loaderImageBase import ImageBaseLoader, LoaderType
 
-# WISDAM core
-from WISDAMcore.camera.model_selector import estimate_camera_from_meta_dict
-from WISDAMcore.image.base_class import ImageBase
-from WISDAMcore.image.perspective import IMAGEPerspective
-from WISDAMcore.transform.utm_converter import point_convert_utm_wgs84_egm2008
-from WISDAMcore.transform.rotation import Rotation
+# weitsicht
+from weitsicht.image.base_class import ImageBase
+from weitsicht.image.perspective import ImagePerspective
+from weitsicht.metadata.camera_estimator_metadata import ior_from_meta
+from weitsicht.metadata.image_from_meta import image_from_meta
+from weitsicht.metadata.tag_systems.pyexiftool_tags import PyExifToolTags
+from proj_warnings import (
+    is_probable_proj_grid_error,
+    log_proj_grid_warning_once,
+)
 
 logger = logging.getLogger(__name__)
 
-#  Angles of aircraft are defined in X forware, y right and z down
-aircraft_notation_to_front_notation = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
-
-#  Swap from NED to ENU coordinates
-swap_ned_to_enu_coo_system = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
-swap_body_cam = np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
-swap_body_cam_gimbal = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
-
 
 class DJIStandard(ImageBaseLoader):
-
     def __init__(self):
         super().__init__()
-        self.name = 'DJI Different Versions'
+        self.name = "DJI Different Versions"
         self.loader_type = LoaderType.EXIF_Loader
         self.crs_input_show = True
 
     @staticmethod
     def info_text() -> str | None:
 
-        text = ("DJI importer. This importer uses the image's metadata (EXIF/XMP) to get the exterior orientation.\n"
-                "Be aware that over the years the meta data seem to be slightly inconsistent to what they are referring.\n\n"
-                "Most problematic is the height stated. The field 'GPSAltitude' is soley used for the images altitude.\n"
-                "Some models store orthometric heights based on geoid (height above mean sea level), others store ellipsoid heights in that field."
-                "\n\nIf you think the projections are wrong try to use ellipsoid height.")
+        text = (
+            "DJI metadata importer (EXIF/XMP).\n\n"
+            "This importer reads camera + pose directly from the image metadata and builds a geo-referenced image "
+            "model.\n"
+            "It supports the common DJI tag variants (XMP/MakerNotes, gimbal angles, RelativeAltitude).\n\n"
+            "Altitude handling depends on your drone/firmware and processing chain:\n"
+            "- Orthometric: heights are geoid-based (EGM2008 / mean sea level)\n"
+            "- Ellipsoidal: heights are WGS84 ellipsoid heights\n"
+            "- Relative: uses RelativeAltitude + the provided reference height\n\n"
+            "If projections look wrong, the most common fix is switching the vertical reference mode.\n"
+            "You can also override the CRS for RTK workflows where the flight used a specific projected CRS."
+        )
 
         return text
 
     @staticmethod
     def logfile_suffix() -> list[str] | None:
-        """return the possible suffixes of your logfiles in the format as: ['*.csv'] or ['*.txt', '*.csv']
-        """
+        """return the possible suffixes of your logfiles in the format as: ['*.csv'] or ['*.txt', '*.csv']"""
 
         return None
 
@@ -85,144 +83,61 @@ class DJIStandard(ImageBaseLoader):
 
         return None
 
-    def get(self, image_path: Path, meta_data: dict, **kwargs) -> tuple[ImageBase, int, int] | None:
+    def get(
+        self, image_path: Path, meta_data: dict, **kwargs
+    ) -> tuple[ImageBase, int, int] | None:
 
-        crs_data: CRS = kwargs['crs']
-        vertical_ref: str = kwargs['vertical_ref']
-        height_rel: str = kwargs['height_rel']
+        crs_data: CRS | None = kwargs["crs"]
+        vertical_ref: str = kwargs["vertical_ref"]
+        height_rel: float = float(kwargs.get("height_rel", 0.0))
 
-        camera, width, height = estimate_camera_from_meta_dict(meta_dict=meta_data)
-        position = None
-        orientation = None
-        crs = None
+        tags = PyExifToolTags(meta_data)
 
-        if width is None or height is None:
+        # Match EXIFPose behavior: build image from metadata using weitsicht and output pose in UTM (EGM2008).
+        result = image_from_meta(
+            tags=tags,
+            crs=crs_data,
+            vertical_ref=vertical_ref,
+            height_rel=height_rel,
+            to_utm=True,
+        )
+        if result.ok is False:
+            error = getattr(result, "error", "unknown error")
+            if is_probable_proj_grid_error(error):
+                log_proj_grid_warning_once(
+                    logger,
+                    "image-import-proj-grid",
+                    "Image import coordinate transformation",
+                    error,
+                    image_path,
+                )
+            logger.warning(
+                "weitsicht image_from_meta failed: %s",
+                error,
+            )
+            return self._image_from_ior(tags, crs_data)
+
+        image = result.image
+        return image, int(image.width), int(image.height)
+
+    @staticmethod
+    def _image_from_ior(
+        tags: PyExifToolTags, crs_data: CRS | None
+    ) -> tuple[ImageBase, int, int] | None:
+        ior_res = ior_from_meta(
+            tags_ior=tags.get_ior_base(), tags_ior_extended=tags.get_ior_extended()
+        )
+        if ior_res.ok is False:
+            logger.warning(
+                "weitsicht ior_from_meta failed: %s",
+                getattr(ior_res, "error", "unknown error"),
+            )
             return None
 
-        if {'EXIF:GPSLongitude', 'EXIF:GPSLatitude', 'EXIF:GPSAltitude'} <= meta_data.keys():
-
-            x_exif = meta_data.get('EXIF:GPSLongitude', None)
-            if meta_data.get('EXIF:GPSLongitudeRef', 'E') == 'W':
-                x_exif = -x_exif
-            y_exif = meta_data.get('EXIF:GPSLatitude', None)
-            if meta_data.get('EXIF:GPSLatitudeRef', 'N') == 'S':
-                y_exif = -y_exif
-
-            z_exif = meta_data.get('EXIF:GPSAltitude', None)
-
-            rel_z_exif = None
-            if vertical_ref == 'relative':
-                rel_z_exif = meta_data.get('XMP:RelativeAltitude', None)
-                if rel_z_exif is not None:
-                    z_exif = height_rel + float(rel_z_exif)
-
-            # if meta_data.get('XMP:RelativeAltitude', None):
-            #    z_exif = meta_data['XMP:RelativeAltitude']
-            #    crs_hor_exif = 4326
-            #    crs_vert_exif = 3855
-
-            if crs_data is None:
-
-                if vertical_ref == 'orthometric':
-                    crs_hor_exif = 4326
-                    crs_vert_exif = 3855
-
-                else:
-                    crs_hor_exif = meta_data.get('XMP:HorizCS', 4979)
-                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
-
-                if meta_data.get('XMP:HorizCS', None) is not None:
-                    crs_hor_exif = meta_data['XMP:HorizCS']
-                    crs_vert_exif = meta_data.get('XMP:VertCS', 'ellipsoidal')
-
-                # This is now an override if relative height is specified:
-                if rel_z_exif is not None:
-                    crs_hor_exif = 4326
-                    crs_vert_exif = 3855
-
-                if crs_vert_exif == 'ellipsoidal':
-                    crs_data = CRS(crs_hor_exif).to_3d()
-                else:
-                    crs_data = CompoundCRS(str(crs_hor_exif) + '+' + str(crs_vert_exif), [crs_hor_exif, crs_vert_exif])
-
-            result = point_convert_utm_wgs84_egm2008(crs_data, x_exif, y_exif, z_exif)
-
-            if result is not None:
-                x, y, z, crs = result
-                position = np.array([x, y, z])
-
-        roll = None
-        yaw = None
-        pitch = None
-        angle_in_direction_of_view = False
-
-        if {'XMP:CameraRoll', 'XMP:CameraYaw', 'XMP:CameraPitch'} <= meta_data.keys():
-            angle_in_direction_of_view = True
-            pitch = float(meta_data['XMP:CameraPitch']) * np.pi / 180.0
-            roll = float(meta_data['XMP:CameraRoll']) * np.pi / 180.0
-            yaw = float(meta_data['XMP:CameraYaw']) * np.pi / 180.0
-
-        elif {'MakerNotes:CameraRoll', 'MakerNotes:CameraYaw', 'MakerNotes:CameraPitch'} <= meta_data.keys():
-            angle_in_direction_of_view = True
-            pitch = float(meta_data['MakerNotes:CameraPitch']) * np.pi / 180.0
-            roll = float(meta_data['MakerNotes:CameraRoll']) * np.pi / 180.0
-            yaw = float(meta_data['MakerNotes:CameraYaw']) * np.pi / 180.0
-
-        elif {'XMP:Roll', 'XMP:Yaw', 'XMP:Pitch'} <= meta_data.keys():
-            pitch = float(meta_data.get('XMP:Pitch', 0.0)) * np.pi / 180.0
-            roll = float(meta_data.get('XMP:Roll', 0.0)) * np.pi / 180.0
-            yaw = float(meta_data.get('XMP:Yaw', 0.0)) * np.pi / 180.0
-
-        elif {'MakerNotes:Roll', 'MakerNotes:Yaw', 'MakerNotes:Pitch'} <= meta_data.keys():
-            pitch = float(meta_data.get('MakerNotes:Pitch', 0.0)) * np.pi / 180.0
-            roll = float(meta_data.get('MakerNotes:Roll', 0.0)) * np.pi / 180.0
-            yaw = float(meta_data.get('MakerNotes:Yaw', 0.0)) * np.pi / 180.0
-        # elif {'XMP:FlightRollDegree', 'XMP:FlightYawDegree', 'XMP:FlightPitchDegree'} <= meta_data.keys():
-        #    roll = float(meta_data['XMP:FlightRollDegree']) * np.pi / 180.0
-        #    yaw = float(meta_data['XMP:FlightYawDegree']) * np.pi / 180.0
-        #    pitch = float(meta_data['XMP:FlightPitchDegree']) * np.pi / 180.0
-
-        elif {'XMP:GimbalRollDegree', 'XMP:GimbalYawDegree', 'XMP:GimbalPitchDegree'} <= meta_data.keys():
-            angle_in_direction_of_view = True
-            roll = float(meta_data['XMP:GimbalRollDegree']) * np.pi / 180.0
-            yaw = float(meta_data['XMP:GimbalYawDegree']) * np.pi / 180.0
-            pitch = (float(meta_data['XMP:GimbalPitchDegree'])) * np.pi / 180.0
-
-        elif {'MakerNotes:GimbalRollDegree',
-              'MakerNotes:GimbalYawDegree',
-              'MakerNotes:GimbalPitchDegree'} <= meta_data.keys():
-            angle_in_direction_of_view = True
-            roll = float(meta_data['MakerNotes:GimbalRollDegree']) * np.pi / 180.0
-            yaw = float(meta_data['MakerNotes:GimbalYawDegree']) * np.pi / 180.0
-            pitch = (float(meta_data['MakerNotes:GimbalPitchDegree'])) * np.pi / 180.0
-        if pitch is not None and roll is not None and yaw is not None:
-
-            # Rotation of IMAGE in Body System
-            rot_sys = np.array([[cos(pitch) * cos(yaw), sin(roll) * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw),
-                                 cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw)],
-                                [cos(pitch) * sin(yaw), sin(roll) * sin(pitch) * sin(yaw) + cos(roll) * cos(yaw),
-                                 cos(roll) * sin(pitch) * sin(yaw) - sin(roll) * cos(yaw)],
-                                [-sin(pitch), sin(roll) * cos(pitch), cos(roll) * cos(pitch)]])
-
-            # Bring rotation into the cameras coordinate system. X left, Y top, Z backwards of viewing direction
-            rot_enu_body = (swap_ned_to_enu_coo_system @ rot_sys) @ aircraft_notation_to_front_notation
-
-            # If angle_in_direction_of_view is True we will assume the Angles refere to a system where
-            # the viewing direction is specified in the angles
-            # The other version is that the sensor direction is the one used.
-            # So for nadir images the sensor is horizontal
-            if angle_in_direction_of_view:
-                rot_enu_cam = rot_enu_body @ swap_body_cam_gimbal
-            else:
-                rot_enu_cam = rot_enu_body @ swap_body_cam
-
-            orientation = Rotation(rot_enu_cam)
-
-            # rot_cam = np.matmul(np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, -1.0]]), rot_sys)
-            # rot_cam = np.array([rot_cam[:, 1], - rot_cam[:, 2], -rot_cam[:, 0]]).transpose()
-            # orientation = Rotation(rot_cam)
-
-        image = IMAGEPerspective(width=width, height=height, camera=camera, position=position,
-                                 crs=crs, orientation=orientation)
-
-        return image, width, height
+        image = ImagePerspective(
+            width=ior_res.width,
+            height=ior_res.height,
+            camera=ior_res.camera,
+            crs=crs_data,
+        )
+        return image, int(image.width), int(image.height)

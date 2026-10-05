@@ -20,15 +20,34 @@
 
 from __future__ import annotations
 from enum import IntEnum
+import os
 from pathlib import Path
 
-from PySide6.QtCore import (Qt, Signal, SignalInstance, QAbstractItemModel, QModelIndex,
-                            QItemSelectionModel, QPersistentModelIndex)
-from PySide6.QtWidgets import QStyleOptionViewItem, QStyledItemDelegate, QMenu, QTreeView
-from PySide6.QtGui import QBrush, QIcon, QMouseEvent
+from PySide6.QtCore import (
+    Qt,
+    QUrl,
+    Signal,
+    SignalInstance,
+    QAbstractItemModel,
+    QModelIndex,
+    QItemSelectionModel,
+    QPersistentModelIndex,
+)
+from PySide6.QtWidgets import (
+    QStyleOptionViewItem,
+    QStyledItemDelegate,
+    QMenu,
+    QTreeView,
+)
+from PySide6.QtGui import QBrush, QDesktopServices, QIcon, QMouseEvent
 
-from app.var_classes import image_list_header, ColorGui, ImageList, image_list_folder_dummy
-from WISDAMcore.image.base_class import ImageType
+from app.var_classes import (
+    image_list_header,
+    ColorGui,
+    ImageList,
+    image_list_folder_dummy,
+)
+from weitsicht.image.base_class import ImageType
 
 
 class RolesImagePane(IntEnum):
@@ -38,7 +57,7 @@ class RolesImagePane(IntEnum):
 class IconCenterDelegate(QStyledItemDelegate):
     def initStyleOption(self, option, index):
         super(IconCenterDelegate, self).initStyleOption(option, index)
-        option.decorationAlignment = (Qt.AlignHCenter | Qt.AlignCenter)
+        option.decorationAlignment = Qt.AlignHCenter | Qt.AlignCenter
         option.decorationPosition = QStyleOptionViewItem.Top
 
 
@@ -48,11 +67,16 @@ class ImageTreeView(QTreeView):
     delete_folder: SignalInstance = Signal(object)
     change_image_meta_folder: SignalInstance = Signal(object)
     change_image_meta_list: SignalInstance = Signal(list)
+    show_image_metadata: SignalInstance = Signal(object)
     assign_environment: SignalInstance = Signal(int, list, bool)
 
     def __init__(self, parent=None):
         super(ImageTreeView, self).__init__(parent)
         self.context_menu = QMenu()
+
+    @staticmethod
+    def open_in_explorer(location: Path | str) -> None:
+        QDesktopServices.openUrl(QUrl.fromLocalFile(os.fspath(location)))
 
     def select_images(self, persistent_index_list):
 
@@ -67,69 +91,120 @@ class ImageTreeView(QTreeView):
         #            child_index = self.model().index(idx_child, 0, parent_item)
         #            select.select(child_index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
         for p_index in persistent_index_list:
-            select.select(p_index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+            select.select(
+                p_index, QItemSelectionModel.Select | QItemSelectionModel.Rows
+            )
         self.setSelectionModel(select)
         # self.selectionModel().select(child_index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
 
+        model = self.model()
+        if model is None:
+            super(ImageTreeView, self).mousePressEvent(event)
+            return
+
         if event.button() == Qt.RightButton:
             self.context_menu = QMenu()
 
             index_mouse = self.indexAt(event.position().toPoint())
+            if not index_mouse.isValid():
+                super(ImageTreeView, self).mousePressEvent(event)
+                return
 
-            if self.model().get_item(index_mouse).child_count() > 1:
+            if model.get_item(index_mouse).child_count() > 0:
                 self.clearSelection()
+                path = model.get_item(index_mouse).data(ImageList.path)
+
+                text = "Open folder in Explorer"
+                open_folder = self.context_menu.addAction(text)
+                open_folder.triggered.connect(lambda: self.open_in_explorer(path))
+
                 text = "Delete all data from folder"
                 delete_image = self.context_menu.addAction(text)
-                path = self.model().get_item(index_mouse).data(ImageList.path)
                 delete_image.triggered.connect(lambda: self.delete_folder.emit(path))
 
-                text = "Change metad data"
+                text = "Change user meta data"
                 change_image = self.context_menu.addAction(text)
-                change_image.triggered.connect(lambda: self.change_image_meta_folder.emit(path))
+                change_image.triggered.connect(
+                    lambda: self.change_image_meta_folder.emit(path)
+                )
 
                 global_pos = event.screenPos().toPoint()
                 self.context_menu.popup(global_pos)
                 return
 
-            selected_index_child = [self.model().get_item(x).data(ImageList.id) for x in self.selectedIndexes()
-                                    if self.model().get_item(x).child_count() == 0]
+            selected_index_child = [
+                model.get_item(x).data(ImageList.id)
+                for x in self.selectedIndexes()
+                if model.get_item(x).child_count() == 0
+            ]
             selected_index_child = list(set(selected_index_child))
+            if (
+                not selected_index_child
+                and model.get_item(index_mouse).child_count() == 0
+            ):
+                selected_index_child = [model.get_item(index_mouse).data(ImageList.id)]
 
             if len(selected_index_child) > 0:
-
-                clicked_image_id = self.model().get_item(index_mouse).data(ImageList.id)
+                clicked_image_id = model.get_item(index_mouse).data(ImageList.id)
+                clicked_image_path = Path(
+                    model.get_item(index_mouse).data(ImageList.path)
+                )
+                clicked_image_metadata = model.get_item(index_mouse).data(
+                    ImageList.meta_image
+                )
 
                 if clicked_image_id in selected_index_child:
-                    #text = "Change geo-reference"
-                    #georef_action = self.context_menu.addAction(text)
-                    #georef_action.triggered.connect(lambda: self.georef_signal.emit(selected_index_child))
+                    text = "Open image folder in Explorer"
+                    open_folder = self.context_menu.addAction(text)
+                    open_folder.triggered.connect(
+                        lambda: self.open_in_explorer(clicked_image_path.parent)
+                    )
+
+                    text = "Show image metadata"
+                    show_image_metadata = self.context_menu.addAction(text)
+                    show_image_metadata.triggered.connect(
+                        lambda: self.show_image_metadata.emit(clicked_image_metadata)
+                    )
+
+                    # text = "Change geo-reference"
+                    # georef_action = self.context_menu.addAction(text)
+                    # georef_action.triggered.connect(lambda: self.georef_signal.emit(selected_index_child))
 
                     text = "Delete images"
                     delete_image = self.context_menu.addAction(text)
-                    delete_image.triggered.connect(lambda: self.delete_images.emit(selected_index_child))
+                    delete_image.triggered.connect(
+                        lambda: self.delete_images.emit(selected_index_child)
+                    )
 
-                    text = "Change image meta data"
+                    text = "Change user meta data"
                     change_image_meta = self.context_menu.addAction(text)
-                    change_image_meta.triggered.connect(lambda:
-                                                        self.change_image_meta_list.emit(selected_index_child))
+                    change_image_meta.triggered.connect(
+                        lambda: self.change_image_meta_list.emit(selected_index_child)
+                    )
 
                 # Make sure that if only one index is selected, and it's the one to copy from do not show that menu
-                if self.model().get_item(index_mouse).child_count() == 0:
-                    if not (len(selected_index_child) == 1 and clicked_image_id == selected_index_child[0]):
+                if model.get_item(index_mouse).child_count() == 0:
+                    if not (
+                        len(selected_index_child) == 1
+                        and clicked_image_id == selected_index_child[0]
+                    ):
                         text = "Assign environment to selected images"
                         assign_environment = self.context_menu.addAction(text)
-                        assign_environment.triggered.connect(lambda:
-                                                             self.assign_environment.emit(clicked_image_id,
-                                                                                          selected_index_child,
-                                                                                          False))
+                        assign_environment.triggered.connect(
+                            lambda: self.assign_environment.emit(
+                                clicked_image_id, selected_index_child, False
+                            )
+                        )
 
                         text = "Assign environment to selected images and sightings"
                         assign_environment = self.context_menu.addAction(text)
-                        assign_environment.triggered.connect(lambda: self.assign_environment.emit(clicked_image_id,
-                                                                                                  selected_index_child,
-                                                                                                  True))
+                        assign_environment.triggered.connect(
+                            lambda: self.assign_environment.emit(
+                                clicked_image_id, selected_index_child, True
+                            )
+                        )
                 global_pos = event.screenPos().toPoint()
                 self.context_menu.popup(global_pos)
                 return
@@ -197,15 +272,14 @@ class TreeItem:
 
 
 class ImageListModel(QAbstractItemModel):
-
     def __init__(self, headers: list):
         super(ImageListModel, self).__init__()
 
         self.root_data = headers
         self.root_item = TreeItem(self.root_data.copy())
-        self.flat_tick = QIcon(u":icons/icons/flat_tick_icon.svg")
-        self.flat_cross = QIcon(u":icons/icons/flat_cross_icon.svg")
-        self.flat_tick_yellow = QIcon(u":icons/icons/flat_tick_icon_yellow.svg")
+        self.flat_tick = QIcon(":icons/icons/flat_tick_icon.svg")
+        self.flat_cross = QIcon(":icons/icons/flat_cross_icon.svg")
+        self.flat_tick_yellow = QIcon(":icons/icons/flat_tick_icon_yellow.svg")
 
     def columnCount(self, parent: QModelIndex = None) -> int:
         return self.root_item.column_count()
@@ -230,7 +304,6 @@ class ImageListModel(QAbstractItemModel):
                 return item.data(ImageList.path).as_posix()
 
         else:
-
             if role == Qt.DisplayRole:
                 # See below for the nested-list data structure.
                 # .row() indexes into the outer list,
@@ -239,8 +312,15 @@ class ImageListModel(QAbstractItemModel):
                     return item.data(index.column())
 
             if role == Qt.TextAlignmentRole:
-                if index.column() in [ImageList.georef, ImageList.inspected, ImageList.nr_sightings,
-                                      ImageList.gsd, ImageList.area, ImageList.importers, ImageList.ortho]:
+                if index.column() in [
+                    ImageList.georef,
+                    ImageList.inspected,
+                    ImageList.nr_sightings,
+                    ImageList.gsd,
+                    ImageList.area,
+                    ImageList.importers,
+                    ImageList.ortho,
+                ]:
                     return Qt.AlignCenter
 
             if role == RolesImagePane.id:
@@ -255,7 +335,7 @@ class ImageListModel(QAbstractItemModel):
 
                 # ortho indication field
                 if index.column() == ImageList.ortho:
-                    if value == 'ortho':
+                    if value == "ortho":
                         return QBrush(ColorGui.color_ortho)
 
                 if index.column() == ImageList.name:
@@ -289,14 +369,17 @@ class ImageListModel(QAbstractItemModel):
 
         return self.root_item
 
-    def headerData(self, section: int, orientation: Qt.Orientation,
-                   role: int = Qt.DisplayRole):
+    def headerData(
+        self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole
+    ):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.root_item.data(section)
 
         return None
 
-    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+    def index(
+        self, row: int, column: int, parent: QModelIndex = QModelIndex()
+    ) -> QModelIndex:
         if parent.isValid() and parent.column() != 0:
             return QModelIndex()
 
@@ -309,8 +392,9 @@ class ImageListModel(QAbstractItemModel):
             return self.createIndex(row, column, child_item)
         return QModelIndex()
 
-    def insertRows(self, position: int, rows: int,
-                   data: list, parent: QModelIndex = QModelIndex()) -> bool:
+    def insertRows(
+        self, position: int, rows: int, data: list, parent: QModelIndex = QModelIndex()
+    ) -> bool:
         parent_item: TreeItem = self.get_item(parent)
         if not parent_item:
             return False
@@ -336,8 +420,9 @@ class ImageListModel(QAbstractItemModel):
 
         return self.createIndex(parent_item.child_number(), 0, parent_item)
 
-    def removeRows(self, position: int, rows: int,
-                   parent: QModelIndex = QModelIndex()) -> bool:
+    def removeRows(
+        self, position: int, rows: int, parent: QModelIndex = QModelIndex()
+    ) -> bool:
         parent_item: TreeItem = self.get_item(parent)
         if not parent_item:
             return False
@@ -357,7 +442,7 @@ class ImageListModel(QAbstractItemModel):
             return 0
         return parent_item.child_count()
 
-    #def setData(self, index: QModelIndex| QPersistentModelIndex, value,
+    # def setData(self, index: QModelIndex| QPersistentModelIndex, value,
     #            role: int = ...) -> bool:
     def setData(self, index: QModelIndex, column: int, value) -> bool:
 
@@ -365,21 +450,26 @@ class ImageListModel(QAbstractItemModel):
         result: bool = item.set_data(column, value)
 
         if result:
-            self.dataChanged.emit(QModelIndex(), QModelIndex())#index, index)
+            self.dataChanged.emit(QModelIndex(), QModelIndex())  # index, index)
 
-        #self.layoutChanged.emit()
+        # self.layoutChanged.emit()
         return result
 
     def add_object(self, index):
         item: TreeItem = self.get_item(index)
-        self.setData(index, ImageList.nr_sightings, item.data(ImageList.nr_sightings) + 1)
+        self.setData(
+            index, ImageList.nr_sightings, item.data(ImageList.nr_sightings) + 1
+        )
 
     def remove_object(self, index):
         item: TreeItem = self.get_item(index)
-        self.setData(index, ImageList.nr_sightings, item.data(ImageList.nr_sightings) - 1)
+        self.setData(
+            index, ImageList.nr_sightings, item.data(ImageList.nr_sightings) - 1
+        )
 
-    def setHeaderData(self, section: int, orientation: Qt.Orientation, value,
-                      role: int = None) -> bool:
+    def setHeaderData(
+        self, section: int, orientation: Qt.Orientation, value, role: int = None
+    ) -> bool:
         if role != Qt.EditRole or orientation != Qt.Horizontal:
             return False
 
@@ -394,7 +484,9 @@ class ImageListModel(QAbstractItemModel):
         select = QItemSelectionModel()
         select.setModel(self)
         for p_index in persistent_index_list:
-            select.select(p_index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+            select.select(
+                p_index, QItemSelectionModel.Select | QItemSelectionModel.Rows
+            )
         return select
 
     def image_count(self):
@@ -408,14 +500,20 @@ class ImageListModel(QAbstractItemModel):
         gsd = []
         root_childs = self.root_item.child_items
         for child in root_childs:
-            gsd += [float(x.data(ImageList.gsd)) for x in child.child_items if x.data(ImageList.gsd) > 0.0]
+            gsd += [
+                float(x.data(ImageList.gsd))
+                for x in child.child_items
+                if x.data(ImageList.gsd) > 0.0
+            ]
         return gsd
 
     def nr_images_georef(self):
         nr_georef = 0
         root_childs = self.root_item.child_items
         for child in root_childs:
-            nr_georef += len([1 for x in child.child_items if x.data(ImageList.gsd) > 0.0])
+            nr_georef += len(
+                [1 for x in child.child_items if x.data(ImageList.gsd) > 0.0]
+            )
         return nr_georef
 
     def nr_images_missing(self):
@@ -430,7 +528,9 @@ class ImageListModel(QAbstractItemModel):
         inpsected = 0
         root_childs = self.root_item.child_items
         for child in root_childs:
-            inpsected += len([1 for x in child.child_items if x.data(ImageList.inspected)])
+            inpsected += len(
+                [1 for x in child.child_items if x.data(ImageList.inspected)]
+            )
         return inpsected
 
     def image_importers(self):
@@ -444,14 +544,17 @@ class ImageListModel(QAbstractItemModel):
         folder = []
         root_childs = self.root_item.child_items
         for child in root_childs:
-            folder += [Path(x.data(ImageList.path)).parent.as_posix() for x in child.child_items]
+            folder += [
+                Path(x.data(ImageList.path)).parent.as_posix()
+                for x in child.child_items
+            ]
         return folder
 
     def change_value(self, index, value):
 
         item: TreeItem = self.get_item(index)
         item.set_data(index.column(), value)
-        #self.layoutChanged.emit()
+        # self.layoutChanged.emit()
 
     def next_index(self, index: QModelIndex):
         parent = index.parent()
@@ -489,13 +592,13 @@ def digitizer_image_panel_assign_model(data) -> tuple[ImageListModel, dict]:
     list_persistent_index_image = {}
 
     for x in data:
-        pt = Path(x['path'])
+        pt = Path(x["path"])
         if pt.parent not in list_folder:
             list_folder.append(pt.parent)
 
     list_children = [[] for _ in list_folder]
     for x in data:
-        pt = Path(x['path'])
+        pt = Path(x["path"])
         folder_index = list_folder.index(pt.parent)
         list_children[folder_index].append(x)
 
@@ -506,9 +609,8 @@ def digitizer_image_panel_assign_model(data) -> tuple[ImageListModel, dict]:
     parent: TreeItem = model.root_item
 
     for folder in list_children:
-
         data_folder = image_list_folder_dummy
-        pt = Path(folder[0]['path'])
+        pt = Path(folder[0]["path"])
         data_folder[ImageList.name] = pt.parent.name
         data_folder[ImageList.path] = pt.parent
         parent.insert_children(parent.child_count(), 1, data_folder)
@@ -516,22 +618,37 @@ def digitizer_image_panel_assign_model(data) -> tuple[ImageListModel, dict]:
         parent_item = model.index(parent.child_count() - 1, 0)
 
         for rows in folder:
-
             georef = False
-            if rows['geom']:
+            if rows["geom"]:
                 georef = True
 
-            type_image = ImageType(rows['type']).fullname
+            type_image = ImageType(rows["type"]).fullname
 
-            path = Path(rows['path'])
-            a = [path.name, rows['id'], rows['inspected'], rows['s_count'],
-                 georef, type_image, rows['importer'], rows['gsd'] * 100, rows['area'], rows['path'], False,
-                 path.exists()]
+            path = Path(rows["path"])
+            a = [
+                path.name,
+                rows["id"],
+                rows["inspected"],
+                rows["s_count"],
+                georef,
+                type_image,
+                rows["importer"],
+                rows["gsd"] * 100,
+                rows["area"],
+                rows["path"],
+                False,
+                path.exists(),
+                rows["meta_image"],
+            ]
 
             success = parent_child.insert_children(parent_child.child_count(), 1, a)
 
             if success:
-                child_index = model.index(parent_child.child_count()-1, 0, parent_item)
-                list_persistent_index_image[path.as_posix()] = QPersistentModelIndex(child_index)
+                child_index = model.index(
+                    parent_child.child_count() - 1, 0, parent_item
+                )
+                list_persistent_index_image[path.as_posix()] = QPersistentModelIndex(
+                    child_index
+                )
 
     return model, list_persistent_index_image

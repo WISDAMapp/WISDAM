@@ -42,7 +42,9 @@ class POPUPConfigProject(QWidget):
         self.ui.setupUi(self)
         self.dragPos = QtCore.QPointF(0, 0)
 
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
@@ -70,7 +72,11 @@ class POPUPConfigProject(QWidget):
         # move window
         def move_window(event):
             if event.buttons() == Qt.MouseButton.LeftButton and not self.isMaximized():
-                self.move(self.pos() + event.globalPosition().toPoint() - self.dragPos.toPoint())
+                self.move(
+                    self.pos()
+                    + event.globalPosition().toPoint()
+                    - self.dragPos.toPoint()
+                )
                 self.dragPos = event.globalPosition()
                 event.accept()
 
@@ -81,24 +87,26 @@ class POPUPConfigProject(QWidget):
         self.dragPos = event.globalPosition()
 
     def sub_type_frame_visible(self):
-        self.ui.frame_object_sub_types.setVisible(self.ui.rd_sub_type_active.isChecked())
+        self.ui.frame_object_sub_types.setVisible(
+            self.ui.rd_sub_type_active.isChecked()
+        )
 
     def load_object_names(self):
         self.ui.cmb_object_main.clear()
         self.ui.cmb_object_sub.clear()
         self.object_types = OrderedDict()
 
-        path_file, _ = QFileDialog.getOpenFileName(self, caption="Open object type names",
-                                                   dir='.', filter='Text Files (*.txt)')
+        path_file, _ = QFileDialog.getOpenFileName(
+            self, caption="Open object type names", dir=".", filter="Text Files (*.txt)"
+        )
         if path_file:
-
             try:
-                with open(path_file, 'r') as f:
+                with open(path_file, "r") as f:
                     lines = f.readlines()
                     for line in lines:
                         line = line.strip().lower()
-                        if line[0] != '#':
-                            object_import = line.split(';')
+                        if line[0] != "#":
+                            object_import = line.split(";")
                             self.object_types[object_import[0]] = object_import[1:]
                 if self.object_types:
                     main_names = list(self.object_types.keys())
@@ -112,17 +120,18 @@ class POPUPConfigProject(QWidget):
     def save_object_names(self):
 
         if self.object_types:
-
-            path_file, _ = QFileDialog.getSaveFileName(self, caption="Save object type names",
-                                                       dir='.', filter='Text Files (*.txt)')
+            path_file, _ = QFileDialog.getSaveFileName(
+                self,
+                caption="Save object type names",
+                dir=".",
+                filter="Text Files (*.txt)",
+            )
             if path_file:
-
-                with open(path_file, 'w') as f:
-
+                with open(path_file, "w") as f:
                     f.write(object_name_file_header)
 
                     for name, value in self.object_types.items():
-                        f.write(';'.join([name] + value) + '\n')
+                        f.write(";".join([name] + value) + "\n")
 
     @Slot(str)
     def add_new_subtype(self, name: str):
@@ -139,7 +148,9 @@ class POPUPConfigProject(QWidget):
 
     def change_sub_items(self):
         self.ui.cmb_object_sub.clear()
-        self.ui.cmb_object_sub.addItems(self.object_types[self.ui.cmb_object_main.currentText()])
+        self.ui.cmb_object_sub.addItems(
+            self.object_types[self.ui.cmb_object_main.currentText()]
+        )
         self.ui.cmb_object_sub.setCurrentIndex(0)
 
     @Slot(str)
@@ -152,26 +163,35 @@ class POPUPConfigProject(QWidget):
         self.object_types.pop(name, None)
         self.ui.cmb_object_sub.clear()
         if len(self.object_types) > 0:
-            self.ui.cmb_object_sub.addItems(self.object_types[self.ui.cmb_object_main.currentText()])
+            self.ui.cmb_object_sub.addItems(
+                self.object_types[self.ui.cmb_object_main.currentText()]
+            )
 
     def save_config(self):
 
         config = self.generate_config()
 
         if config is not None:
-
-            path_file, _ = QFileDialog.getSaveFileName(self, caption="Save Configuration File",
-                                                       dir='.', filter='Json Files (*.json)')
+            path_file, _ = QFileDialog.getSaveFileName(
+                self,
+                caption="Save Configuration File",
+                dir=".",
+                filter="Json Files (*.json)",
+            )
             if path_file:
-                fid = open(path_file, 'w')
+                fid = open(path_file, "w")
                 json.dump(config, fid, indent=3)
 
     def load_config(self):
-        path_file, _ = QFileDialog.getOpenFileName(self, caption="Load Configuration File",
-                                                   dir='.', filter='Json Files (*.json)')
+        path_file, _ = QFileDialog.getOpenFileName(
+            self,
+            caption="Load Configuration File",
+            dir=".",
+            filter="Json Files (*.json)",
+        )
         if path_file:
             try:
-                fid = open(path_file, 'r')
+                fid = open(path_file, "r")
                 config = json.load(fid)
                 self.set_config(config)
             except json.decoder.JSONDecodeError:
@@ -294,14 +314,16 @@ class POPUPConfigProject(QWidget):
     def set_config(self, config: dict):
 
         self.clear_config()
-        env_data: dict | None = config.get('environment_data', None)
-        env_propagate: dict | None = config.get('environment_propagation', None)
-        self.config_name = list(config['meta_config'].keys())[0]
-        config = config['meta_config'][self.config_name]
+        env_data: dict | None = config.get("environment_data", None)
+        env_propagate: dict | None = config.get("environment_propagation", None)
+        self.config_name = list(config["meta_config"].keys())[0]
+        config = config["meta_config"][self.config_name]
 
-        object_type: dict | None = config.get('object_types', None)
+        object_type: dict | None = config.get("object_types", None)
 
-        object_main_type_naming: dict | None = config["object_main_type"].get('naming', '')
+        object_main_type_naming: dict | None = config["object_main_type"].get(
+            "naming", ""
+        )
         self.ui.le_custom_object_naming.setText(object_main_type_naming)
 
         main_names = []
@@ -312,16 +334,15 @@ class POPUPConfigProject(QWidget):
             self.ui.cmb_object_main.setCurrentIndex(0)
 
         # Main Type Option Slider
-        if config["object_main_type"].get('object_main_type_option', False):
+        if config["object_main_type"].get("object_main_type_option", False):
             duo_slider = config["object_main_type"]["object_main_type_option"]
-            self.ui.le_main_type_option_name.setText(duo_slider['name'])
-            self.ui.le_main_type_option_value_0.setText(duo_slider['value_0'])
-            self.ui.le_main_type_option_value_1.setText(duo_slider['value_1'])
-            self.ui.duo_main_type.setValue(duo_slider['start_value'])
+            self.ui.le_main_type_option_name.setText(duo_slider["name"])
+            self.ui.le_main_type_option_value_0.setText(duo_slider["value_0"])
+            self.ui.le_main_type_option_value_1.setText(duo_slider["value_1"])
+            self.ui.duo_main_type.setValue(duo_slider["start_value"])
 
         # Subtype Option Slider
         if config.get("object_sub_type", False):
-
             self.ui.rd_sub_type_active.setChecked(True)
             self.ui.frame_object_sub_types.show()
 
@@ -330,109 +351,113 @@ class POPUPConfigProject(QWidget):
                     self.ui.cmb_object_sub.addItems(self.object_types[main_names[0]])
                     self.ui.cmb_object_sub.setCurrentIndex(0)
 
-            object_sub_type_naming: dict | None = config["object_sub_type"].get('naming', '')
+            object_sub_type_naming: dict | None = config["object_sub_type"].get(
+                "naming", ""
+            )
             self.ui.le_custom_object_sub_naming.setText(object_sub_type_naming)
 
             if config["object_sub_type"].get("object_sub_type_option", False):
-                triple_slider = config['object_sub_type']["object_sub_type_option"]
-                self.ui.le_sub_type_option_name.setText(triple_slider['name'])
-                self.ui.le_sub_type_option_value_0.setText(triple_slider['value_0'])
-                self.ui.le_sub_type_option_value_1.setText(triple_slider['value_1'])
-                self.ui.le_sub_type_option_value_2.setText(triple_slider['value_2'])
-                self.ui.triple_sub_type.setValue(triple_slider['start_value'])
+                triple_slider = config["object_sub_type"]["object_sub_type_option"]
+                self.ui.le_sub_type_option_name.setText(triple_slider["name"])
+                self.ui.le_sub_type_option_value_0.setText(triple_slider["value_0"])
+                self.ui.le_sub_type_option_value_1.setText(triple_slider["value_1"])
+                self.ui.le_sub_type_option_value_2.setText(triple_slider["value_2"])
+                self.ui.triple_sub_type.setValue(triple_slider["start_value"])
         else:
             self.ui.rd_sub_type_active.setChecked(False)
             self.ui.frame_object_sub_types.hide()
-        if config.get('combo_meta_1', False):
-            combo_meta = config['combo_meta_1']
-            self.ui.cmb_meta_1.addItems(combo_meta['items'])
-            self.ui.le_meta_cmb_name_1.setText(combo_meta['name'])
+        if config.get("combo_meta_1", False):
+            combo_meta = config["combo_meta_1"]
+            self.ui.cmb_meta_1.addItems(combo_meta["items"])
+            self.ui.le_meta_cmb_name_1.setText(combo_meta["name"])
             self.ui.cmb_meta_1.setCurrentIndex(0)
 
-        if config.get('combo_meta_2', False):
-            combo_meta = config['combo_meta_2']
-            self.ui.cmb_meta_2.addItems(combo_meta['items'])
-            self.ui.le_meta_cmb_name_2.setText(combo_meta['name'])
+        if config.get("combo_meta_2", False):
+            combo_meta = config["combo_meta_2"]
+            self.ui.cmb_meta_2.addItems(combo_meta["items"])
+            self.ui.le_meta_cmb_name_2.setText(combo_meta["name"])
             self.ui.cmb_meta_2.setCurrentIndex(0)
 
-        if config.get('combo_meta_3', False):
-            combo_meta = config['combo_meta_3']
-            self.ui.cmb_meta_3.addItems(combo_meta['items'])
-            self.ui.le_meta_cmb_name_3.setText(combo_meta['name'])
+        if config.get("combo_meta_3", False):
+            combo_meta = config["combo_meta_3"]
+            self.ui.cmb_meta_3.addItems(combo_meta["items"])
+            self.ui.le_meta_cmb_name_3.setText(combo_meta["name"])
             self.ui.cmb_meta_3.setCurrentIndex(0)
 
-        if config.get('input_text_1', False):
-            self.ui.le_meta_input_txt_1.setText(config['input_text_1'])
+        if config.get("input_text_1", False):
+            self.ui.le_meta_input_txt_1.setText(config["input_text_1"])
 
-        if config.get('input_text_2', False):
-            self.ui.le_meta_input_txt_2.setText(config['input_text_2'])
+        if config.get("input_text_2", False):
+            self.ui.le_meta_input_txt_2.setText(config["input_text_2"])
 
-        if config.get('input_text_3', False):
-            self.ui.le_meta_input_txt_3.setText(config['input_text_3'])
+        if config.get("input_text_3", False):
+            self.ui.le_meta_input_txt_3.setText(config["input_text_3"])
 
         # DUO SLIDER
-        if config.get('slider_duo1', False):
-            duo_slider = config['slider_duo1']
-            self.ui.le_meta_duo_name_1.setText(duo_slider['name'])
-            self.ui.le_meta_duo_1_value_0.setText(duo_slider['value_0'])
-            self.ui.le_meta_duo_1_value_1.setText(duo_slider['value_1'])
-            self.ui.duo_meta_1.setValue(duo_slider['start_value'])
+        if config.get("slider_duo1", False):
+            duo_slider = config["slider_duo1"]
+            self.ui.le_meta_duo_name_1.setText(duo_slider["name"])
+            self.ui.le_meta_duo_1_value_0.setText(duo_slider["value_0"])
+            self.ui.le_meta_duo_1_value_1.setText(duo_slider["value_1"])
+            self.ui.duo_meta_1.setValue(duo_slider["start_value"])
 
-        if config.get('slider_duo2', False):
-            duo_slider = config['slider_duo2']
-            self.ui.le_meta_duo_name_2.setText(duo_slider['name'])
-            self.ui.le_meta_duo_2_value_0.setText(duo_slider['value_0'])
-            self.ui.le_meta_duo_2_value_1.setText(duo_slider['value_1'])
-            self.ui.duo_meta_2.setValue(duo_slider['start_value'])
+        if config.get("slider_duo2", False):
+            duo_slider = config["slider_duo2"]
+            self.ui.le_meta_duo_name_2.setText(duo_slider["name"])
+            self.ui.le_meta_duo_2_value_0.setText(duo_slider["value_0"])
+            self.ui.le_meta_duo_2_value_1.setText(duo_slider["value_1"])
+            self.ui.duo_meta_2.setValue(duo_slider["start_value"])
 
-        if config.get('slider_duo3', False):
-            duo_slider = config['slider_duo3']
-            self.ui.le_meta_duo_name_3.setText(duo_slider['name'])
-            self.ui.le_meta_duo_3_value_0.setText(duo_slider['value_0'])
-            self.ui.le_meta_duo_3_value_1.setText(duo_slider['value_1'])
-            self.ui.duo_meta_3.setValue(duo_slider['start_value'])
+        if config.get("slider_duo3", False):
+            duo_slider = config["slider_duo3"]
+            self.ui.le_meta_duo_name_3.setText(duo_slider["name"])
+            self.ui.le_meta_duo_3_value_0.setText(duo_slider["value_0"])
+            self.ui.le_meta_duo_3_value_1.setText(duo_slider["value_1"])
+            self.ui.duo_meta_3.setValue(duo_slider["start_value"])
 
         # Triple Slider
-        if config.get('slider_triple1', False):
-            triple_slider = config['slider_triple1']
-            self.ui.le_meta_triple_name_1.setText(triple_slider['name'])
-            self.ui.le_meta_triple_1_value_0.setText(triple_slider['value_0'])
-            self.ui.le_meta_triple_1_value_1.setText(triple_slider['value_1'])
-            self.ui.le_meta_triple_1_value_2.setText(triple_slider['value_2'])
-            self.ui.triple_meta_1.setValue(triple_slider['start_value'])
+        if config.get("slider_triple1", False):
+            triple_slider = config["slider_triple1"]
+            self.ui.le_meta_triple_name_1.setText(triple_slider["name"])
+            self.ui.le_meta_triple_1_value_0.setText(triple_slider["value_0"])
+            self.ui.le_meta_triple_1_value_1.setText(triple_slider["value_1"])
+            self.ui.le_meta_triple_1_value_2.setText(triple_slider["value_2"])
+            self.ui.triple_meta_1.setValue(triple_slider["start_value"])
 
-        if config.get('slider_triple2', False):
-            triple_slider = config['slider_triple2']
-            self.ui.le_meta_triple_name_2.setText(triple_slider['name'])
-            self.ui.le_meta_triple_2_value_0.setText(triple_slider['value_0'])
-            self.ui.le_meta_triple_2_value_1.setText(triple_slider['value_1'])
-            self.ui.le_meta_triple_2_value_2.setText(triple_slider['value_2'])
-            self.ui.triple_meta_2.setValue(triple_slider['start_value'])
+        if config.get("slider_triple2", False):
+            triple_slider = config["slider_triple2"]
+            self.ui.le_meta_triple_name_2.setText(triple_slider["name"])
+            self.ui.le_meta_triple_2_value_0.setText(triple_slider["value_0"])
+            self.ui.le_meta_triple_2_value_1.setText(triple_slider["value_1"])
+            self.ui.le_meta_triple_2_value_2.setText(triple_slider["value_2"])
+            self.ui.triple_meta_2.setValue(triple_slider["start_value"])
 
-        if config.get('slider_triple3', False):
-            triple_slider = config['slider_triple3']
-            self.ui.le_meta_triple_name_3.setText(triple_slider['name'])
-            self.ui.le_meta_triple_3_value_0.setText(triple_slider['value_0'])
-            self.ui.le_meta_triple_3_value_1.setText(triple_slider['value_1'])
-            self.ui.le_meta_triple_3_value_2.setText(triple_slider['value_2'])
-            self.ui.triple_meta_3.setValue(triple_slider['start_value'])
+        if config.get("slider_triple3", False):
+            triple_slider = config["slider_triple3"]
+            self.ui.le_meta_triple_name_3.setText(triple_slider["name"])
+            self.ui.le_meta_triple_3_value_0.setText(triple_slider["value_0"])
+            self.ui.le_meta_triple_3_value_1.setText(triple_slider["value_1"])
+            self.ui.le_meta_triple_3_value_2.setText(triple_slider["value_2"])
+            self.ui.triple_meta_3.setValue(triple_slider["start_value"])
 
-        if config.get('slider_triple4', False):
-            triple_slider = config['slider_triple4']
-            self.ui.le_meta_triple_name_4.setText(triple_slider['name'])
-            self.ui.le_meta_triple_4_value_0.setText(triple_slider['value_0'])
-            self.ui.le_meta_triple_4_value_1.setText(triple_slider['value_1'])
-            self.ui.le_meta_triple_4_value_2.setText(triple_slider['value_2'])
-            self.ui.triple_meta_4.setValue(triple_slider['start_value'])
+        if config.get("slider_triple4", False):
+            triple_slider = config["slider_triple4"]
+            self.ui.le_meta_triple_name_4.setText(triple_slider["name"])
+            self.ui.le_meta_triple_4_value_0.setText(triple_slider["value_0"])
+            self.ui.le_meta_triple_4_value_1.setText(triple_slider["value_1"])
+            self.ui.le_meta_triple_4_value_2.setText(triple_slider["value_2"])
+            self.ui.triple_meta_4.setValue(triple_slider["start_value"])
 
         # Environment data loaded from a saved config file
         if env_propagate is not None:
-            self.ui.rd_env_object_override.setChecked(env_propagate["first_object_set_override_none_image"])
-            self.ui.rd_env_object_override_propagate.setChecked(env_propagate[
-                                                                    "first_object_set_override_porpagated_image"])
+            self.ui.rd_env_object_override.setChecked(
+                env_propagate["first_object_set_override_none_image"]
+            )
+            self.ui.rd_env_object_override_propagate.setChecked(
+                env_propagate["first_object_set_override_porpagated_image"]
+            )
 
         if env_data is not None:
-
             env_keys = list(env_data.keys())
 
             if len(env_keys) >= 1:
@@ -475,234 +500,387 @@ class POPUPConfigProject(QWidget):
             logger.error("Object main type naming not specified")
             return None
 
-        variable_names = ['certainty', 'firstcertain', 'resight']
+        variable_names = ["certainty", "firstcertain", "resight"]
 
-        config_dict = {'meta_config': {self.config_name: {}}}
-        config_specific_type = config_dict['meta_config']["wisdam_default_012024"]
-        config_specific_type['object_types'] = self.object_types
-        config_specific_type['object_main_type'] = {'naming': self.ui.le_custom_object_naming.text()}
+        config_dict = {"meta_config": {self.config_name: {}}}
+        config_specific_type = config_dict["meta_config"]["wisdam_default_012024"]
+        config_specific_type["object_types"] = self.object_types
+        config_specific_type["object_main_type"] = {
+            "naming": self.ui.le_custom_object_naming.text()
+        }
 
         # Main type option
-        if self.ui.le_main_type_option_name.text() and self.ui.le_main_type_option_value_0.text() and \
-                self.ui.le_main_type_option_value_1.text():
-            config_specific_type['object_main_type']['object_main_type_option'] = {
-                'name': self.ui.le_main_type_option_name.text(),
-                'value_0': self.ui.le_main_type_option_value_0.text(),
-                'value_1': self.ui.le_main_type_option_value_1.text(),
-                'start_value': self.ui.duo_main_type.value()}
+        if (
+            self.ui.le_main_type_option_name.text()
+            and self.ui.le_main_type_option_value_0.text()
+            and self.ui.le_main_type_option_value_1.text()
+        ):
+            config_specific_type["object_main_type"]["object_main_type_option"] = {
+                "name": self.ui.le_main_type_option_name.text(),
+                "value_0": self.ui.le_main_type_option_value_0.text(),
+                "value_1": self.ui.le_main_type_option_value_1.text(),
+                "start_value": self.ui.duo_main_type.value(),
+            }
 
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_main_type_option_name.text()):
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_main_type_option_name.text()
+            ):
                 return
-        elif self.ui.le_main_type_option_name.text() or self.ui.le_main_type_option_value_0.text() or \
-                self.ui.le_main_type_option_value_1.text():
+        elif (
+            self.ui.le_main_type_option_name.text()
+            or self.ui.le_main_type_option_value_0.text()
+            or self.ui.le_main_type_option_value_1.text()
+        ):
             logger.warning("Object main type option not fully set")
             return
 
         if self.ui.rd_sub_type_active.isChecked():
-
             if not self.ui.le_custom_object_sub_naming.text():
                 logger.error("Object sub type naming not specified")
                 return None
 
-            config_specific_type['object_sub_type'] = {'naming': self.ui.le_custom_object_sub_naming.text()}
+            config_specific_type["object_sub_type"] = {
+                "naming": self.ui.le_custom_object_sub_naming.text()
+            }
 
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_custom_object_sub_naming.text()):
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_custom_object_sub_naming.text()
+            ):
                 return
 
-            if self.ui.le_sub_type_option_name.text() and self.ui.le_sub_type_option_value_0.text() and \
-                    self.ui.le_sub_type_option_value_1.text() and self.ui.le_sub_type_option_value_2.text():
-                dump = {'name': self.ui.le_sub_type_option_name.text(),
-                        'value_0': self.ui.le_sub_type_option_value_0.text(),
-                        'value_1': self.ui.le_sub_type_option_value_1.text(),
-                        'value_2': self.ui.le_sub_type_option_value_2.text(),
-                        'start_value': self.ui.triple_sub_type.value()}
-                config_specific_type['object_sub_type']['object_sub_type_option'] = dump
+            if (
+                self.ui.le_sub_type_option_name.text()
+                and self.ui.le_sub_type_option_value_0.text()
+                and self.ui.le_sub_type_option_value_1.text()
+                and self.ui.le_sub_type_option_value_2.text()
+            ):
+                dump = {
+                    "name": self.ui.le_sub_type_option_name.text(),
+                    "value_0": self.ui.le_sub_type_option_value_0.text(),
+                    "value_1": self.ui.le_sub_type_option_value_1.text(),
+                    "value_2": self.ui.le_sub_type_option_value_2.text(),
+                    "start_value": self.ui.triple_sub_type.value(),
+                }
+                config_specific_type["object_sub_type"]["object_sub_type_option"] = dump
 
-                if not self.check_variable_names_duplicates(variable_names, self.ui.le_sub_type_option_name.text()):
+                if not self.check_variable_names_duplicates(
+                    variable_names, self.ui.le_sub_type_option_name.text()
+                ):
                     return
-            elif self.ui.le_sub_type_option_name.text() or self.ui.le_sub_type_option_value_0.text() or \
-                    self.ui.le_sub_type_option_value_1.text() or self.ui.le_sub_type_option_value_2.text():
+            elif (
+                self.ui.le_sub_type_option_name.text()
+                or self.ui.le_sub_type_option_value_0.text()
+                or self.ui.le_sub_type_option_value_1.text()
+                or self.ui.le_sub_type_option_value_2.text()
+            ):
                 logger.warning("Object sub type option not fully set")
                 return
 
         if self.ui.le_meta_cmb_name_1.text() and self.ui.cmb_meta_1.count() > 0:
-            items = [self.ui.cmb_meta_1.itemText(i) for i in range(self.ui.cmb_meta_1.count())]
-            config_specific_type['combo_meta_1'] = {'name': self.ui.le_meta_cmb_name_1.text(),
-                                                    'items': items}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_cmb_name_1.text()):
+            items = [
+                self.ui.cmb_meta_1.itemText(i)
+                for i in range(self.ui.cmb_meta_1.count())
+            ]
+            config_specific_type["combo_meta_1"] = {
+                "name": self.ui.le_meta_cmb_name_1.text(),
+                "items": items,
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_cmb_name_1.text()
+            ):
                 return
         elif self.ui.le_meta_cmb_name_1.text() or self.ui.cmb_meta_1.count() > 0:
             logger.warning("Some combo-box variable is not correct configured")
             return
 
         if self.ui.le_meta_cmb_name_2.text() and self.ui.cmb_meta_2.count() > 0:
-            items = [self.ui.cmb_meta_2.itemText(i) for i in range(self.ui.cmb_meta_2.count())]
-            config_specific_type['combo_meta_2'] = {'name': self.ui.le_meta_cmb_name_2.text(),
-                                                    'items': items}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_cmb_name_2.text()):
+            items = [
+                self.ui.cmb_meta_2.itemText(i)
+                for i in range(self.ui.cmb_meta_2.count())
+            ]
+            config_specific_type["combo_meta_2"] = {
+                "name": self.ui.le_meta_cmb_name_2.text(),
+                "items": items,
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_cmb_name_2.text()
+            ):
                 return
         elif self.ui.le_meta_cmb_name_2.text() or self.ui.cmb_meta_2.count() > 0:
             logger.warning("Some combo-box variable is not correct configured")
             return
 
         if self.ui.le_meta_cmb_name_3.text() and self.ui.cmb_meta_3.count() > 0:
-            items = [self.ui.cmb_meta_3.itemText(i) for i in range(self.ui.cmb_meta_3.count())]
-            config_specific_type['combo_meta_3'] = {'name': self.ui.le_meta_cmb_name_3.text(),
-                                                    'items': items}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_cmb_name_3.text()):
+            items = [
+                self.ui.cmb_meta_3.itemText(i)
+                for i in range(self.ui.cmb_meta_3.count())
+            ]
+            config_specific_type["combo_meta_3"] = {
+                "name": self.ui.le_meta_cmb_name_3.text(),
+                "items": items,
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_cmb_name_3.text()
+            ):
                 return
         elif self.ui.le_meta_cmb_name_3.text() or self.ui.cmb_meta_3.count() > 0:
             logger.warning("Some combo-box variable is not correct configured")
             return
 
         if self.ui.le_meta_input_txt_1.text():
-            config_specific_type['input_text_1'] = self.ui.le_meta_input_txt_1.text()
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_input_txt_1.text()):
+            config_specific_type["input_text_1"] = self.ui.le_meta_input_txt_1.text()
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_input_txt_1.text()
+            ):
                 return
 
         if self.ui.le_meta_input_txt_2.text():
-            config_specific_type['input_text_2'] = self.ui.le_meta_input_txt_2.text()
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_input_txt_2.text()):
+            config_specific_type["input_text_2"] = self.ui.le_meta_input_txt_2.text()
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_input_txt_2.text()
+            ):
                 return
 
             if self.ui.le_meta_input_txt_3.text():
-                config_specific_type['input_text_3'] = self.ui.le_meta_input_txt_3.text()
-                if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_input_txt_3.text()):
+                config_specific_type["input_text_3"] = (
+                    self.ui.le_meta_input_txt_3.text()
+                )
+                if not self.check_variable_names_duplicates(
+                    variable_names, self.ui.le_meta_input_txt_3.text()
+                ):
                     return
 
         # DUO SLIDER
-        if self.ui.le_meta_duo_name_1.text() and self.ui.le_meta_duo_1_value_0.text() and \
-                self.ui.le_meta_duo_1_value_1.text():
-            config_specific_type['slider_duo1'] = {'name': self.ui.le_meta_duo_name_1.text(),
-                                                   'value_0': self.ui.le_meta_duo_1_value_0.text(),
-                                                   'value_1': self.ui.le_meta_duo_1_value_1.text(),
-                                                   'start_value': self.ui.duo_meta_1.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_duo_name_1.text()):
+        if (
+            self.ui.le_meta_duo_name_1.text()
+            and self.ui.le_meta_duo_1_value_0.text()
+            and self.ui.le_meta_duo_1_value_1.text()
+        ):
+            config_specific_type["slider_duo1"] = {
+                "name": self.ui.le_meta_duo_name_1.text(),
+                "value_0": self.ui.le_meta_duo_1_value_0.text(),
+                "value_1": self.ui.le_meta_duo_1_value_1.text(),
+                "start_value": self.ui.duo_meta_1.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_duo_name_1.text()
+            ):
                 return
-        elif self.ui.le_meta_duo_name_1.text() or self.ui.le_meta_duo_1_value_0.text() or \
-                self.ui.le_meta_duo_1_value_1.text():
+        elif (
+            self.ui.le_meta_duo_name_1.text()
+            or self.ui.le_meta_duo_1_value_0.text()
+            or self.ui.le_meta_duo_1_value_1.text()
+        ):
             logger.warning("Some double slider option not fully set")
             return
 
-        if self.ui.le_meta_duo_name_2.text() and self.ui.le_meta_duo_2_value_0.text() and \
-                self.ui.le_meta_duo_2_value_1.text():
-            config_specific_type['slider_duo2'] = {'name': self.ui.le_meta_duo_name_2.text(),
-                                                   'value_0': self.ui.le_meta_duo_2_value_0.text(),
-                                                   'value_1': self.ui.le_meta_duo_2_value_1.text(),
-                                                   'start_value': self.ui.duo_meta_2.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_duo_name_2.text()):
+        if (
+            self.ui.le_meta_duo_name_2.text()
+            and self.ui.le_meta_duo_2_value_0.text()
+            and self.ui.le_meta_duo_2_value_1.text()
+        ):
+            config_specific_type["slider_duo2"] = {
+                "name": self.ui.le_meta_duo_name_2.text(),
+                "value_0": self.ui.le_meta_duo_2_value_0.text(),
+                "value_1": self.ui.le_meta_duo_2_value_1.text(),
+                "start_value": self.ui.duo_meta_2.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_duo_name_2.text()
+            ):
                 return
-        elif self.ui.le_meta_duo_name_2.text() or self.ui.le_meta_duo_2_value_0.text() or \
-                self.ui.le_meta_duo_2_value_1.text():
+        elif (
+            self.ui.le_meta_duo_name_2.text()
+            or self.ui.le_meta_duo_2_value_0.text()
+            or self.ui.le_meta_duo_2_value_1.text()
+        ):
             logger.warning("Some double slider option not fully set")
             return
 
-        if self.ui.le_meta_duo_name_3.text() and self.ui.le_meta_duo_3_value_0.text() and \
-                self.ui.le_meta_duo_3_value_1.text():
-            config_specific_type['slider_duo3'] = {'name': self.ui.le_meta_duo_name_3.text(),
-                                                   'value_0': self.ui.le_meta_duo_3_value_0.text(),
-                                                   'value_1': self.ui.le_meta_duo_3_value_1.text(),
-                                                   'start_value': self.ui.duo_meta_3.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_duo_name_3.text()):
+        if (
+            self.ui.le_meta_duo_name_3.text()
+            and self.ui.le_meta_duo_3_value_0.text()
+            and self.ui.le_meta_duo_3_value_1.text()
+        ):
+            config_specific_type["slider_duo3"] = {
+                "name": self.ui.le_meta_duo_name_3.text(),
+                "value_0": self.ui.le_meta_duo_3_value_0.text(),
+                "value_1": self.ui.le_meta_duo_3_value_1.text(),
+                "start_value": self.ui.duo_meta_3.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_duo_name_3.text()
+            ):
                 return
-        elif self.ui.le_meta_duo_name_3.text() or self.ui.le_meta_duo_3_value_0.text() or \
-                self.ui.le_meta_duo_3_value_1.text():
+        elif (
+            self.ui.le_meta_duo_name_3.text()
+            or self.ui.le_meta_duo_3_value_0.text()
+            or self.ui.le_meta_duo_3_value_1.text()
+        ):
             logger.warning("Some double slider option not fully set")
             return
 
         # Triple Slider
-        if self.ui.le_meta_triple_name_1.text() and self.ui.le_meta_triple_1_value_0.text() and \
-                self.ui.le_meta_triple_1_value_1.text() and self.ui.le_meta_triple_1_value_2.text():
-            config_specific_type['slider_triple1'] = {'name': self.ui.le_meta_triple_name_1.text(),
-                                                      'value_0': self.ui.le_meta_triple_1_value_0.text(),
-                                                      'value_1': self.ui.le_meta_triple_1_value_1.text(),
-                                                      'value_2': self.ui.le_meta_triple_1_value_2.text(),
-                                                      'start_value': self.ui.triple_meta_1.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_triple_name_1.text()):
+        if (
+            self.ui.le_meta_triple_name_1.text()
+            and self.ui.le_meta_triple_1_value_0.text()
+            and self.ui.le_meta_triple_1_value_1.text()
+            and self.ui.le_meta_triple_1_value_2.text()
+        ):
+            config_specific_type["slider_triple1"] = {
+                "name": self.ui.le_meta_triple_name_1.text(),
+                "value_0": self.ui.le_meta_triple_1_value_0.text(),
+                "value_1": self.ui.le_meta_triple_1_value_1.text(),
+                "value_2": self.ui.le_meta_triple_1_value_2.text(),
+                "start_value": self.ui.triple_meta_1.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_triple_name_1.text()
+            ):
                 return
-        elif self.ui.le_meta_triple_name_1.text() or self.ui.le_meta_triple_1_value_0.text() or \
-                self.ui.le_meta_triple_1_value_1.text() or self.ui.le_meta_triple_1_value_2.text():
+        elif (
+            self.ui.le_meta_triple_name_1.text()
+            or self.ui.le_meta_triple_1_value_0.text()
+            or self.ui.le_meta_triple_1_value_1.text()
+            or self.ui.le_meta_triple_1_value_2.text()
+        ):
             logger.warning("Some triple slider option not fully set")
             return
 
-        if self.ui.le_meta_triple_name_2.text() and self.ui.le_meta_triple_2_value_0.text() and \
-                self.ui.le_meta_triple_2_value_1.text() and self.ui.le_meta_triple_2_value_2.text():
-            config_specific_type['slider_triple2'] = {'name': self.ui.le_meta_triple_name_2.text(),
-                                                      'value_0': self.ui.le_meta_triple_2_value_0.text(),
-                                                      'value_1': self.ui.le_meta_triple_2_value_1.text(),
-                                                      'value_2': self.ui.le_meta_triple_2_value_2.text(),
-                                                      'start_value': self.ui.triple_meta_2.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_triple_name_2.text()):
+        if (
+            self.ui.le_meta_triple_name_2.text()
+            and self.ui.le_meta_triple_2_value_0.text()
+            and self.ui.le_meta_triple_2_value_1.text()
+            and self.ui.le_meta_triple_2_value_2.text()
+        ):
+            config_specific_type["slider_triple2"] = {
+                "name": self.ui.le_meta_triple_name_2.text(),
+                "value_0": self.ui.le_meta_triple_2_value_0.text(),
+                "value_1": self.ui.le_meta_triple_2_value_1.text(),
+                "value_2": self.ui.le_meta_triple_2_value_2.text(),
+                "start_value": self.ui.triple_meta_2.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_triple_name_2.text()
+            ):
                 return
-        elif self.ui.le_meta_triple_name_2.text() or self.ui.le_meta_triple_2_value_0.text() or \
-                self.ui.le_meta_triple_2_value_1.text() or self.ui.le_meta_triple_2_value_2.text():
+        elif (
+            self.ui.le_meta_triple_name_2.text()
+            or self.ui.le_meta_triple_2_value_0.text()
+            or self.ui.le_meta_triple_2_value_1.text()
+            or self.ui.le_meta_triple_2_value_2.text()
+        ):
             logger.warning("Some triple slider option not fully set")
             return
 
-        if self.ui.le_meta_triple_name_3.text() and self.ui.le_meta_triple_3_value_0.text() and \
-                self.ui.le_meta_triple_3_value_1.text() and self.ui.le_meta_triple_3_value_2.text():
-            config_specific_type['slider_triple3'] = {'name': self.ui.le_meta_triple_name_3.text(),
-                                                      'value_0': self.ui.le_meta_triple_3_value_0.text(),
-                                                      'value_1': self.ui.le_meta_triple_3_value_1.text(),
-                                                      'value_2': self.ui.le_meta_triple_3_value_2.text(),
-                                                      'start_value': self.ui.triple_meta_3.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_triple_name_3.text()):
+        if (
+            self.ui.le_meta_triple_name_3.text()
+            and self.ui.le_meta_triple_3_value_0.text()
+            and self.ui.le_meta_triple_3_value_1.text()
+            and self.ui.le_meta_triple_3_value_2.text()
+        ):
+            config_specific_type["slider_triple3"] = {
+                "name": self.ui.le_meta_triple_name_3.text(),
+                "value_0": self.ui.le_meta_triple_3_value_0.text(),
+                "value_1": self.ui.le_meta_triple_3_value_1.text(),
+                "value_2": self.ui.le_meta_triple_3_value_2.text(),
+                "start_value": self.ui.triple_meta_3.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_triple_name_3.text()
+            ):
                 return
-        elif self.ui.le_meta_triple_name_3.text() or self.ui.le_meta_triple_3_value_0.text() or \
-                self.ui.le_meta_triple_3_value_1.text() or self.ui.le_meta_triple_3_value_2.text():
+        elif (
+            self.ui.le_meta_triple_name_3.text()
+            or self.ui.le_meta_triple_3_value_0.text()
+            or self.ui.le_meta_triple_3_value_1.text()
+            or self.ui.le_meta_triple_3_value_2.text()
+        ):
             logger.warning("Some triple slider option not fully set")
             return
 
-        if self.ui.le_meta_triple_name_4.text() and self.ui.le_meta_triple_4_value_0.text() and \
-                self.ui.le_meta_triple_4_value_1.text() and self.ui.le_meta_triple_4_value_2.text():
-            config_specific_type['slider_triple4'] = {'name': self.ui.le_meta_triple_name_4.text(),
-                                                      'value_0': self.ui.le_meta_triple_4_value_0.text(),
-                                                      'value_1': self.ui.le_meta_triple_4_value_1.text(),
-                                                      'value_2': self.ui.le_meta_triple_4_value_2.text(),
-                                                      'start_value': self.ui.triple_meta_4.value()}
-            if not self.check_variable_names_duplicates(variable_names, self.ui.le_meta_triple_name_4.text()):
+        if (
+            self.ui.le_meta_triple_name_4.text()
+            and self.ui.le_meta_triple_4_value_0.text()
+            and self.ui.le_meta_triple_4_value_1.text()
+            and self.ui.le_meta_triple_4_value_2.text()
+        ):
+            config_specific_type["slider_triple4"] = {
+                "name": self.ui.le_meta_triple_name_4.text(),
+                "value_0": self.ui.le_meta_triple_4_value_0.text(),
+                "value_1": self.ui.le_meta_triple_4_value_1.text(),
+                "value_2": self.ui.le_meta_triple_4_value_2.text(),
+                "start_value": self.ui.triple_meta_4.value(),
+            }
+            if not self.check_variable_names_duplicates(
+                variable_names, self.ui.le_meta_triple_name_4.text()
+            ):
                 return
-        elif self.ui.le_meta_triple_name_4.text() or self.ui.le_meta_triple_4_value_0.text() or \
-                self.ui.le_meta_triple_4_value_1.text() or self.ui.le_meta_triple_4_value_2.text():
+        elif (
+            self.ui.le_meta_triple_name_4.text()
+            or self.ui.le_meta_triple_4_value_0.text()
+            or self.ui.le_meta_triple_4_value_1.text()
+            or self.ui.le_meta_triple_4_value_2.text()
+        ):
             logger.warning("Some triple slider option not fully set")
             return
 
         env_config = {}
         # Environment data
         if self.ui.le_custom_1.text() and self.ui.cmb_custom_1.count() > 0:
-            items = [self.ui.cmb_custom_1.itemText(i) for i in range(self.ui.cmb_custom_1.count())]
+            items = [
+                self.ui.cmb_custom_1.itemText(i)
+                for i in range(self.ui.cmb_custom_1.count())
+            ]
             env_config[self.ui.le_custom_1.text()] = items
 
         if self.ui.le_custom_2.text() and self.ui.cmb_custom_2.count() > 0:
-            items = [self.ui.cmb_custom_2.itemText(i) for i in range(self.ui.cmb_custom_2.count())]
+            items = [
+                self.ui.cmb_custom_2.itemText(i)
+                for i in range(self.ui.cmb_custom_2.count())
+            ]
             env_config[self.ui.le_custom_2.text()] = items
 
         if self.ui.le_custom_3.text() and self.ui.cmb_custom_3.count() > 0:
-            items = [self.ui.cmb_custom_3.itemText(i) for i in range(self.ui.cmb_custom_3.count())]
+            items = [
+                self.ui.cmb_custom_3.itemText(i)
+                for i in range(self.ui.cmb_custom_3.count())
+            ]
             env_config[self.ui.le_custom_3.text()] = items
 
         if self.ui.le_custom_4.text() and self.ui.cmb_custom_4.count() > 0:
-            items = [self.ui.cmb_custom_4.itemText(i) for i in range(self.ui.cmb_custom_4.count())]
+            items = [
+                self.ui.cmb_custom_4.itemText(i)
+                for i in range(self.ui.cmb_custom_4.count())
+            ]
             env_config[self.ui.le_custom_4.text()] = items
 
         if self.ui.le_custom_5.text() and self.ui.cmb_custom_5.count() > 0:
-            items = [self.ui.cmb_custom_5.itemText(i) for i in range(self.ui.cmb_custom_5.count())]
+            items = [
+                self.ui.cmb_custom_5.itemText(i)
+                for i in range(self.ui.cmb_custom_5.count())
+            ]
             env_config[self.ui.le_custom_5.text()] = items
 
         if self.ui.le_custom_6.text() and self.ui.cmb_custom_6.count() > 0:
-            items = [self.ui.cmb_custom_6.itemText(i) for i in range(self.ui.cmb_custom_6.count())]
+            items = [
+                self.ui.cmb_custom_6.itemText(i)
+                for i in range(self.ui.cmb_custom_6.count())
+            ]
             env_config[self.ui.le_custom_6.text()] = items
 
         if not env_config:
             logger.error("At least one environment data must be specified")
             return None
 
-        config_dict['environment_data'] = env_config
+        config_dict["environment_data"] = env_config
 
         config_dict["environment_propagation"] = {}
         config_dict["environment_propagation"][
-            "first_object_set_override_none_image"] = self.ui.rd_env_object_override.isChecked()
+            "first_object_set_override_none_image"
+        ] = self.ui.rd_env_object_override.isChecked()
         config_dict["environment_propagation"][
-            "first_object_set_override_porpagated_image"] = self.ui.rd_env_object_override_propagate.isChecked()
+            "first_object_set_override_porpagated_image"
+        ] = self.ui.rd_env_object_override_propagate.isChecked()
 
         return config_dict

@@ -22,14 +22,18 @@ import geopandas as gpd
 from PySide6.QtGui import QPen, QColor, QPainter, QPolygonF
 from PySide6.QtCore import QPoint, Qt, QPointF
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
-from PySide6.QtWidgets import (QApplication, QGraphicsItem, QGraphicsPolygonItem, QGraphicsView,
-                               QGraphicsItemGroup)
+from PySide6.QtWidgets import (
+    QApplication,
+    QGraphicsItem,
+    QGraphicsPolygonItem,
+    QGraphicsView,
+    QGraphicsItemGroup,
+)
 
 from app.var_classes import Selection
 
 
 class Node(QGraphicsSvgItem):
-
     def __init__(self, *args, **kwargs):
         QGraphicsSvgItem.__init__(self, *args, **kwargs)
 
@@ -41,7 +45,6 @@ class Node(QGraphicsSvgItem):
 
 
 class GISView(QGraphicsView):
-
     def __init__(self, parent=None):
         super(GISView, self).__init__(parent)
 
@@ -135,8 +138,12 @@ class GISView(QGraphicsView):
         if self.middlePressed:
             diff = new_pos - self._dragPos
             self._dragPos = new_pos
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - diff.x())
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - diff.y())
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() - diff.x()
+            )
+            self.verticalScrollBar().setValue(
+                self.verticalScrollBar().value() - diff.y()
+            )
             event.accept()
         super(GISView, self).mouseMoveEvent(event)
 
@@ -148,7 +155,7 @@ class GISView(QGraphicsView):
             # to extract the polygons of a multipolygon
 
             # if it is a polygon, we use a list to make it iterable
-            if polygon.geom_type == 'Polygon':
+            if polygon.geom_type == "Polygon":
                 polygon = [polygon]
             else:
                 polygon = list(polygon.geoms)

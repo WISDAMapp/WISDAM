@@ -27,7 +27,6 @@ dist_compare_search = 100
 
 
 class CompareType:
-
     def __init__(self, ai: bool, path: Path):
 
         self.ai = ai
@@ -35,8 +34,18 @@ class CompareType:
 
 
 class CompareSighting:
-
-    def __init__(self, id_comp, image, img_path, meta_type, object_type, resight_set, geometry, data, data_env):
+    def __init__(
+        self,
+        id_comp,
+        image,
+        img_path,
+        meta_type,
+        object_type,
+        resight_set,
+        geometry,
+        data,
+        data_env,
+    ):
         self.id = id_comp
         self.image = image
         self.img_path = img_path
@@ -72,10 +81,29 @@ class CompareList:
     c2_data_env = 20
 
 
-compare_list_header = ['first obj. ID', 'Type', 'DB', 'Seen', 'Nrs. DB1', 'Nrs. DB2', 'Groups',
-                       'c1_ids', 'c2_ids', 'valid', 'type_other', 'c1_valid', 'c2_valid',
-                       'c1_group', 'c2_group', 'c1_image', 'c2_image', 'c1_data', 'c2_data',
-                       'c1_data_env', 'c2_data_env']
+compare_list_header = [
+    "first obj. ID",
+    "Type",
+    "DB",
+    "Seen",
+    "Nrs. DB1",
+    "Nrs. DB2",
+    "Groups",
+    "c1_ids",
+    "c2_ids",
+    "valid",
+    "type_other",
+    "c1_valid",
+    "c2_valid",
+    "c1_group",
+    "c2_group",
+    "c1_image",
+    "c2_image",
+    "c1_data",
+    "c2_data",
+    "c1_data_env",
+    "c2_data_env",
+]
 
 
 class CompareData:
@@ -84,8 +112,8 @@ class CompareData:
     active = 0
     image_type = 0
     source = 0
-    extension = 'JPG'
-    object_type = 'none'
+    extension = "JPG"
+    object_type = "none"
     group_area = []
     resight_set = []
     thumbnail = []
@@ -99,8 +127,8 @@ class CompareIconData:
     index = 0
     id = 0
     valid = []
-    text = ''
-    object_type = ''
+    text = ""
+    object_type = ""
     group_ident = 0
 
 

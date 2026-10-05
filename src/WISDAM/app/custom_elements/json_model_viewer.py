@@ -74,7 +74,9 @@ class TreeItem:
         self._value_type = value
 
     @classmethod
-    def load(cls, value: Union[List, Dict], parent: TreeItem = None, sort=True) -> TreeItem:
+    def load(
+        cls, value: Union[List, Dict], parent: TreeItem = None, sort=True
+    ) -> TreeItem:
         root_item = TreeItem(parent)
         root_item.key = "root"
 
@@ -90,8 +92,8 @@ class TreeItem:
         elif isinstance(value, list):
             for index, value in enumerate(value):
                 child = cls.load(value, root_item)
-                child.key = value['Name']
-                child.value = value['License']
+                child.key = value["Name"]
+                child.value = value["License"]
                 child.value_type = type(value)
                 root_item.append_child(child)
 
@@ -110,7 +112,7 @@ class JsonModel(QAbstractItemModel):
         self._headers = ("key", "value")
 
     def clear(self):
-        """ Clear data from the model """
+        """Clear data from the model"""
         self.load({})
 
     def load(self, document: dict | list[dict]):
@@ -154,7 +156,9 @@ class JsonModel(QAbstractItemModel):
 
         return False
 
-    def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole):
+    def headerData(
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+    ):
         if role != Qt.DisplayRole:
             return None
 

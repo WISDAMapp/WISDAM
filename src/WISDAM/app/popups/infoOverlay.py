@@ -31,7 +31,9 @@ class CtmWidget(QWidget):
 
         self.ui = Ui_info()
         self.ui.setupUi(self)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.ui.btn_save.clicked.connect(self.save_logs)
         self.ui.info_screen.ensureCursorVisible()
@@ -41,9 +43,15 @@ class CtmWidget(QWidget):
 
     def save_logs(self):
 
-        dir_to_use = QDir.homePath() + "/" + datetime.now().strftime("%Y%m%d_%H%M%S_logs.txt")
-        log_path, _ = QFileDialog.getSaveFileName(self, caption="Save Logs",
-                                                  dir=dir_to_use, filter='Text File (*.txt)')
+        dir_to_use = (
+            QDir.homePath() + "/" + datetime.now().strftime("%Y%m%d_%H%M%S_logs.txt")
+        )
+        log_path, _ = QFileDialog.getSaveFileName(
+            self, caption="Save Logs", dir=dir_to_use, filter="Text File (*.txt)"
+        )
         if log_path:
-            with open(log_path, 'a+', ) as fid:
+            with open(
+                log_path,
+                "a+",
+            ) as fid:
                 fid.write(self.ui.info_screen.toPlainText())

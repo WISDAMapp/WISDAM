@@ -18,9 +18,9 @@
 # ==============================================================================
 
 
-from PySide6.QtCore import (Qt, Signal)
-from PySide6.QtGui import (QMouseEvent)
-from PySide6.QtWidgets import (QComboBox, QMenu)
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtWidgets import QComboBox, QMenu
 
 from app.popups.popupTextInput import POPUPTextInput
 
@@ -56,7 +56,6 @@ class InteractiveCombo(QComboBox):
             if name:
                 if not name.isspace():
                     if self.findText(name, flags=Qt.MatchFixedString) < 0:
-
                         self.insertItem(self.count() + 1, name)
                         self.add_signal.emit(name)
 

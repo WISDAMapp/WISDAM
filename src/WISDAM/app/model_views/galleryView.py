@@ -36,7 +36,7 @@ from PySide6.QtCore import (
     QPersistentModelIndex,
     SignalInstance,
     QPointF,
-    Qt
+    Qt,
 )
 
 from PySide6.QtWidgets import (
@@ -47,7 +47,8 @@ from PySide6.QtWidgets import (
     QStyle,
     QMenu,
     QAbstractItemView,
-    QFrame)
+    QFrame,
+)
 from PySide6.QtGui import (
     QPainter,
     QFontMetricsF,
@@ -57,13 +58,24 @@ from PySide6.QtGui import (
     QIcon,
     QKeyEvent,
     QPen,
-    QPixmap, QColor)
+    QPixmap,
+    QColor,
+)
 
 from db.dbHandler import DBHandler
-from app.var_classes import (GalleryData, ColorGui, GalleryRoles, icon_margin, spacing_grid,
-                             text_margin, source_switch, icon_footer_padding, GalleryIconSize)
+from app.var_classes import (
+    GalleryData,
+    ColorGui,
+    GalleryRoles,
+    icon_margin,
+    spacing_grid,
+    text_margin,
+    source_switch,
+    icon_footer_padding,
+    GalleryIconSize,
+)
 from app.popups.popupConfirm import POPUPConfirm
-from WISDAMcore.image.base_class import ImageType
+from weitsicht.image.base_class import ImageType
 
 
 class GalleryListModel(QAbstractListModel):
@@ -207,7 +219,7 @@ class GalleryListModel(QAbstractListModel):
 
         if position is not None:
             self.beginRemoveRows(model_index, position, position)
-            del (self._data[position])
+            del self._data[position]
             self.endRemoveRows()
         self.layoutChanged.emit()
         return True
@@ -221,7 +233,7 @@ class GalleryListModel(QAbstractListModel):
         self.layoutAboutToBeChanged.emit()
         self.beginRemoveRows(model_index, position, position + rows - 1)
         for i in range(rows):
-            del (self._data[position])
+            del self._data[position]
         self.endRemoveRows()
         self.layoutChanged.emit()
         return True
@@ -236,6 +248,7 @@ class GalleryView(QListView):
     """
     Gallery view which shows the objects. QListView in icon mode.
     """
+
     goto_image: SignalInstance = Signal(int)
     object_delete: SignalInstance = Signal(int, int)
     open_meta: SignalInstance = Signal(int)
@@ -261,7 +274,7 @@ class GalleryView(QListView):
         self.clickedIndex = QPersistentModelIndex()
         self.possiblyPreserveSelectionPostClick = False
         self.context_menu = QMenu()
-        #self.setMouseTracking(False)
+        # self.setMouseTracking(False)
 
         # Track how many columns the user sees
         # QListView IconMode indexes are always set to column 0
@@ -296,58 +309,81 @@ class GalleryView(QListView):
         """
 
         if self.model() is not None:
-
             index = self.indexAt(event.position().toPoint())
             # return
             self.clickedIndex = QPersistentModelIndex(index)
             modifiers = QApplication.queryKeyboardModifiers()
 
             if self.clickedIndex.isValid():
-
                 if event.button() == Qt.LeftButton:
-
                     if self.fast_activate and not self.selection:
                         self.activate()
                     if not modifiers == Qt.ControlModifier:
                         self.deselect()
 
                 if event.button() == Qt.RightButton:
-
                     if self.clickedIndex.isValid():
                         self.context_menu = QMenu()
                         # self.contextMenu.addAction()
 
                         if self.selection:
-
                             if not self.fast_activate:
-
-                                self.selected_index = [QPersistentModelIndex(x.model().mapToSource(x))
-                                                       for x in self.selectedIndexes()]
+                                self.selected_index = [
+                                    QPersistentModelIndex(x.model().mapToSource(x))
+                                    for x in self.selectedIndexes()
+                                ]
 
                                 if len(self.selected_index) > 1:
                                     text = "Resight Set"
-                                    context_resight_set = self.context_menu.addAction(text)
-                                    context_resight_set.triggered.connect(lambda:
-                                                                            self.assign_resight(clear_group=False))
+                                    context_resight_set = self.context_menu.addAction(
+                                        text
+                                    )
+                                    context_resight_set.triggered.connect(
+                                        lambda: self.assign_resight(clear_group=False)
+                                    )
+
+                                    delete_act = self.context_menu.addAction(
+                                        "Delete Selection"
+                                    )
+                                    delete_act.triggered.connect(self.delete_multiple)
+
                                 else:
                                     text = "Clear Resight Set"
-                                    context_group_clear_resight = self.context_menu.addAction(text)
+                                    context_group_clear_resight = (
+                                        self.context_menu.addAction(text)
+                                    )
                                     context_group_clear_resight.triggered.connect(
-                                        lambda: self.assign_resight(clear_group=True))
+                                        lambda: self.assign_resight(clear_group=True)
+                                    )
 
                         else:
                             if self.clickedIndex.isValid():
                                 if not self.fast_activate:
-                                    text = "Activate" if not self.clickedIndex.data(GalleryRoles.active) else "Deactivate"
+                                    text = (
+                                        "Activate"
+                                        if not self.clickedIndex.data(
+                                            GalleryRoles.active
+                                        )
+                                        else "Deactivate"
+                                    )
                                     activate_act = self.context_menu.addAction(text)
                                     activate_act.triggered.connect(self.activate)
 
-                                text = "Highlight Object" if not self.clickedIndex.data(
-                                    GalleryRoles.highlighted) else "Un highlight Object"
+                                text = (
+                                    "Highlight Object"
+                                    if not self.clickedIndex.data(
+                                        GalleryRoles.highlighted
+                                    )
+                                    else "Un highlight Object"
+                                )
                                 star_image_act = self.context_menu.addAction(text)
-                                goto_image_act = self.context_menu.addAction("Go To Image")
+                                goto_image_act = self.context_menu.addAction(
+                                    "Go To Image"
+                                )
                                 self.context_menu.addSeparator()
-                                copy_path_act = self.context_menu.addAction("Copy Path of image")
+                                copy_path_act = self.context_menu.addAction(
+                                    "Copy Path of image"
+                                )
                                 self.context_menu.addSeparator()
                                 delete_act = self.context_menu.addAction("Delete")
                                 star_image_act.triggered.connect(self.highlight_action)
@@ -355,24 +391,37 @@ class GalleryView(QListView):
                                 copy_path_act.triggered.connect(self.copy_path_action)
                                 delete_act.triggered.connect(self.delete)
 
-                        self.context_menu.popup(self.mapToGlobal(event.position().toPoint()))
+                        self.context_menu.popup(
+                            self.mapToGlobal(event.position().toPoint())
+                        )
 
             else:
                 self.deselect()
         super().mousePressEvent(event)
 
+    def _refresh_items(self):
+        model = self.model()
+        if model is None:
+            return
+
+        source_model = model.sourceModel() if hasattr(model, "sourceModel") else model
+        if source_model is not None and source_model.rowCount() > 0:
+            top_left = source_model.index(0, 0)
+            bottom_right = source_model.index(source_model.rowCount() - 1, 0)
+            source_model.dataChanged.emit(top_left, bottom_right, [])
+        self.viewport().update()
+
     def keyReleaseEvent(self, event: QKeyEvent):
         self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.clearSelection()
-        if self.model() is not None:
-            self.model().sourceModel().dataChanged.emit(0, 0)
+        self._refresh_items()
         self.selection = False
         super().keyReleaseEvent(event)
 
     def deselect(self):
         self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.clearSelection()
-        self.model().sourceModel().dataChanged.emit(0, 0)
+        self._refresh_items()
         self.selection = False
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -405,7 +454,9 @@ class GalleryView(QListView):
         if index.isValid():
             index_model = index.model().mapToSource(index)
             active = 0 if index_model.data(GalleryRoles.active) else 1
-            index.model().sourceModel().set_active(index_model, 0 if index_model.data(GalleryRoles.active) else 1)
+            index.model().sourceModel().set_active(
+                index_model, 0 if index_model.data(GalleryRoles.active) else 1
+            )
             self._db.set_active(active, index_model.data(GalleryRoles.id))
 
     @Slot()
@@ -414,8 +465,9 @@ class GalleryView(QListView):
         if index.isValid():
             highlighted = 0 if index.data(GalleryRoles.highlighted) else 1
             index_model = index.model().mapToSource(index)
-            index.model().sourceModel().set_highlighted(index_model,
-                                                        0 if index_model.data(GalleryRoles.highlighted) else 1)
+            index.model().sourceModel().set_highlighted(
+                index_model, 0 if index_model.data(GalleryRoles.highlighted) else 1
+            )
             self._db.set_highlighted(highlighted, index_model.data(GalleryRoles.id))
 
     @Slot()
@@ -439,13 +491,30 @@ class GalleryView(QListView):
 
         v = POPUPConfirm("Are you sure about that operation?")
         if v.exec():
-
             index = self.clickedIndex
             if index.isValid():
                 index_model = index.model().mapToSource(index)
-                self.object_delete.emit(index_model.data(GalleryRoles.id),
-                                        index_model.data(GalleryRoles.image))
+                self.object_delete.emit(
+                    index_model.data(GalleryRoles.id),
+                    index_model.data(GalleryRoles.image),
+                )
             self.clickedIndex = QPersistentModelIndex()
+
+    @Slot()
+    def delete_multiple(self) -> None:
+
+        v = POPUPConfirm("Are you sure about that operation?")
+        if v.exec():
+            objects_to_delete = [
+                (item.data(GalleryRoles.id), item.data(GalleryRoles.image))
+                for item in self.selected_index
+                if item.isValid()
+            ]
+
+            for obj_id, image_id in objects_to_delete:
+                self.object_delete.emit(obj_id, image_id)
+
+            self.selected_index = []
 
     def top_left(self):
         return QPoint(icon_margin, icon_margin)
@@ -455,9 +524,9 @@ class GalleryView(QListView):
 
     def width_required(self, no_thumbnails: int) -> int:
         return (
-                no_thumbnails * (self.thumbnail_width() + self.spacing())
-                + self.spacing()
-                + self.frameWidth() * 2
+            no_thumbnails * (self.thumbnail_width() + self.spacing())
+            + self.spacing()
+            + self.frameWidth() * 2
         )
 
     def resizeEvent(self, event) -> None:
@@ -472,14 +541,16 @@ class GalleryIconDelegate(QStyledItemDelegate):
     Render gallery icons
     """
 
-    def __init__(self, parent=None, thumb_size=GalleryIconSize, db: DBHandler | None = None) -> None:
+    def __init__(
+        self, parent=None, thumb_size=GalleryIconSize, db: DBHandler | None = None
+    ) -> None:
         super().__init__(parent)
 
         size24 = QSize(30, 30)
 
-        self.db=db
+        self.db = db
 
-        star_icon = QIcon(u":/icons/icons/starred.svg")
+        star_icon = QIcon(":/icons/icons/starred.svg")
         self.icon_starred = star_icon.pixmap(size24)
 
         self.image_width = thumb_size.width
@@ -489,14 +560,11 @@ class GalleryIconDelegate(QStyledItemDelegate):
 
         # self.shadow_size = 2.0
         self.width = self.image_width + self.horizontal_margin * 2
-        self.height = (
-                self.image_height
-                + self.vertical_margin * 2
-        )
+        self.height = self.image_height + self.vertical_margin * 2
 
         font_factor = thumb_size.width / GalleryIconSize.width
         self.emblemFont = QFont()
-        self.emblemFont.setPointSize(int(self.emblemFont.pointSize() * font_factor)+2)
+        self.emblemFont.setPointSize(int(self.emblemFont.pointSize() * font_factor) + 2)
         self.emblemFont.setBold(True)
         self.metrics = QFontMetricsF(self.emblemFont)
 
@@ -509,7 +577,9 @@ class GalleryIconDelegate(QStyledItemDelegate):
         # Size is always fixed, so calculate it here
         self.fixedSizeHint = QSizeF(self.width, self.height).toSize()
 
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+    def paint(
+        self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex
+    ) -> None:
         if index is None:
             return
 
@@ -551,12 +621,16 @@ class GalleryIconDelegate(QStyledItemDelegate):
         box_rect = QRectF(x + 1.5, y + 1.5, self.width - 3, self.height - 3)
         painter.drawRect(box_rect)
 
-        thumbnail_x = (self.horizontal_margin + x)
-        thumbnail_y = (self.vertical_margin + y)
+        thumbnail_x = self.horizontal_margin + x
+        thumbnail_y = self.vertical_margin + y
 
         # Draw pixmap of item
-        target = QRectF(thumbnail_x, thumbnail_y, self.width - self.horizontal_margin * 2,
-                        self.height - self.vertical_margin * 2)
+        target = QRectF(
+            thumbnail_x,
+            thumbnail_y,
+            self.width - self.horizontal_margin * 2,
+            self.height - self.vertical_margin * 2,
+        )
 
         # size = thumbnail.size().scaled(target.width(), target.height(), Qt.KeepAspectRatio)
         # painter.drawPixmap(target.x(), target.y(), size.width(), size.height(), thumbnail)
@@ -564,10 +638,14 @@ class GalleryIconDelegate(QStyledItemDelegate):
             thumbnail_db = self.db.get_cropped_image(obj_id)
             if thumbnail_db:
                 thumbnail = QPixmap()
-                thumbnail.loadFromData(thumbnail_db['cropped_image'], "JPG")
+                thumbnail.loadFromData(thumbnail_db["cropped_image"], "JPG")
         if thumbnail is not None:
-            size = thumbnail.size().scaled(target.width(), target.height(), Qt.KeepAspectRatio)
-            painter.drawPixmap(target.x(), target.y(), size.width(), size.height(), thumbnail)
+            size = thumbnail.size().scaled(
+                target.width(), target.height(), Qt.KeepAspectRatio
+            )
+            painter.drawPixmap(
+                target.x(), target.y(), size.width(), size.height(), thumbnail
+            )
 
         # Draw highlighted icon
         if highlighted:
@@ -585,7 +663,9 @@ class GalleryIconDelegate(QStyledItemDelegate):
         emblem_width = tbr.width() + text_margin * 2
         emblem_rect_x = self.width - self.horizontal_margin - emblem_width + x
         emblem_rect_y = y + self.image_height - self.emblem_height
-        emblem_rect = QRectF(emblem_rect_x, emblem_rect_y, emblem_width, self.emblem_height)  # type: QRectF
+        emblem_rect = QRectF(
+            emblem_rect_x, emblem_rect_y, emblem_width, self.emblem_height
+        )  # type: QRectF
         color = ColorGui.color_extension
         path = QPainterPath()
         path.addRoundedRect(emblem_rect, 5, 5)
@@ -607,7 +687,7 @@ class GalleryIconDelegate(QStyledItemDelegate):
 
         # reviewed tag
         if not reviewed:
-            text = 'not reviewed'
+            text = "not reviewed"
             tbr = self.metrics.tightBoundingRect(text)  # type QRectF
             sec_width = tbr.width() + text_margin * 2
             rect_x = x + self.horizontal_margin
@@ -718,7 +798,7 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
             # self.sourceModel().dataChanged.connect(self.sourceDataChanged),
             self.sourceModel().rowsRemoved.connect(self.reload_model),
             self.sourceModel().modelReset.connect(self.reload_model),
-            self.sourceModel().rowsInserted.connect(self.reload_model)
+            self.sourceModel().rowsInserted.connect(self.reload_model),
         ]
         self.reload_model()
 
@@ -794,7 +874,6 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
                 if data[key] not in filter_function[key]:
                     return False
             elif key == "object_type":
-
                 # When we submit new object for the time before setting object type it is None
                 # So we need to check that because None has not lower value
                 if data[key] is None:
@@ -810,12 +889,11 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
         return True
 
 
-def gallery_loader(db: DBHandler, order_value='id'):
+def gallery_loader(db: DBHandler, order_value="id"):
     objects = db.load_objects_all_sort_by_group(order_value=order_value)
 
     # We want to order 0 group ids ad the end
-    if order_value in ['resight_set', 'group_area']:
-
+    if order_value in ["resight_set", "group_area"]:
         objects_resight_set = []
         objects_no_resight_set = []
         for single_object in objects:
@@ -829,30 +907,30 @@ def gallery_loader(db: DBHandler, order_value='id'):
     entries = []
     for single_object in objects:
         data = GalleryData()
-        #pixmap = QPixmap()
-        #pixmap.loadFromData(single_object['cropped_image'], "JPG")
-        #data.thumbnail = pixmap
-        data.id = single_object['id']
-        data.image = single_object['image']
-        data.folder = single_object['img_path']
+        # pixmap = QPixmap()
+        # pixmap.loadFromData(single_object['cropped_image'], "JPG")
+        # data.thumbnail = pixmap
+        data.id = single_object["id"]
+        data.image = single_object["image"]
+        data.folder = single_object["img_path"]
 
         image_type = ImageType(0).fullname
-        if single_object['math_model']:
-            math_model = json.loads(single_object['math_model'])
+        if single_object["math_model"]:
+            math_model = json.loads(single_object["math_model"])
 
-            image_type = math_model.get('type', ImageType(0).fullname)
+            image_type = math_model.get("type", ImageType(0).fullname)
 
         data.image_type = image_type
-        data.source = single_object['source']
-        data.active = single_object['active']
-        data.tags = single_object['tags']
-        data.highlighted = single_object['highlighted']
-        data.group_area = single_object['group_area']
-        data.resight_set = single_object['resight_set']
-        data.extension = Path(single_object['img_path']).suffix[1:]
-        data.reviewed = single_object['reviewed']
+        data.source = single_object["source"]
+        data.active = single_object["active"]
+        data.tags = single_object["tags"]
+        data.highlighted = single_object["highlighted"]
+        data.group_area = single_object["group_area"]
+        data.resight_set = single_object["resight_set"]
+        data.extension = Path(single_object["img_path"]).suffix[1:]
+        data.reviewed = single_object["reviewed"]
 
-        data.object_type = single_object['object_type']
+        data.object_type = single_object["object_type"]
         entries.append(data)
 
     model = GalleryListModel(entries)
@@ -864,30 +942,30 @@ def gallery_loader_single(db: DBHandler, object_id) -> GalleryData:
     obj = db.load_objects_single_object(object_id)
 
     data = GalleryData()
-    #pixmap = QPixmap()
-    #pixmap.loadFromData(obj['cropped_image'], "JPG")
-    #data.thumbnail = pixmap
-    data.id = obj['id']
-    data.image = obj['image']
-    data.folder = obj['img_path']
+    # pixmap = QPixmap()
+    # pixmap.loadFromData(obj['cropped_image'], "JPG")
+    # data.thumbnail = pixmap
+    data.id = obj["id"]
+    data.image = obj["image"]
+    data.folder = obj["img_path"]
 
     # TODO maybe again add image type to db as own entry
     image_type = ImageType.Unknown.fullname
-    if obj['math_model']:
-        math_model = json.loads(obj['math_model'])
+    if obj["math_model"]:
+        math_model = json.loads(obj["math_model"])
 
-        image_type = math_model.get('type', 'unknown')
+        image_type = math_model.get("type", "unknown")
 
     data.image_type = image_type
-    data.source = obj['source']
-    data.active = obj['active']
-    data.tags = obj['tags']
-    data.highlighted = obj['highlighted']
-    data.group_area = obj['group_area']
-    data.resight_set = obj['resight_set']
-    data.extension = Path(obj['img_path']).suffix[1:]
+    data.source = obj["source"]
+    data.active = obj["active"]
+    data.tags = obj["tags"]
+    data.highlighted = obj["highlighted"]
+    data.group_area = obj["group_area"]
+    data.resight_set = obj["resight_set"]
+    data.extension = Path(obj["img_path"]).suffix[1:]
 
-    data.object_type = obj['object_type']
-    data.reviewed = obj['reviewed']
+    data.object_type = obj["object_type"]
+    data.reviewed = obj["reviewed"]
 
     return data
