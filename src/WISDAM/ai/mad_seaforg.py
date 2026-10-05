@@ -107,10 +107,15 @@ def read_file_detections(path_file: Path) -> list | None:
                         ai_detection_image,
                         object_type,
                         probability,
-                        rectangle[0],
+                       # rectangle[0],
+                       # rectangle[1],
+                       # rectangle[2],
+                       # rectangle[3],
                         rectangle[1],
-                        rectangle[2],
+                        rectangle[0],
                         rectangle[3],
+                        rectangle[2],
+
                     ]
                     ai_detections.append(detection)
 
