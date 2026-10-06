@@ -200,7 +200,11 @@ from compare.export import compare_export
 
 from db.dbHandler import DBHandler
 from db.exporter.ai_wisdam import export_trainings_data_worker
-from db.exporter.export import export_file_in_process
+from db.exporter.export import (
+    export_count_and_warnings,
+    export_file_in_process,
+    export_log_message,
+)
 from db.release_value_changes import check_update_color_config
 from proj_warnings import is_probable_proj_grid_error, log_proj_grid_warning_once
 
@@ -4980,10 +4984,31 @@ class MainWindow(QMainWindow):
 
     @Slot(object)
     def thread_output_export(self, success_nr):
-        if success_nr:
+        if success_nr is False:
+            logger.warning("Export failed. File probably looked")
+            return
+
+        (
+            success_count,
+            no_geometry_available,
+            no_geometry_label,
+        ) = export_count_and_warnings(success_nr)
+
+        if success_count:
             logger.info(
-                "Export finished - Nr of exports: %i" % success_nr,
+                export_log_message(
+                    None,
+                    None,
+                    success_count,
+                    no_geometry_available,
+                    no_geometry_label,
+                ),
                 extra={"finished": True},
+            )
+        elif no_geometry_available:
+            logger.warning(
+                "Nothing to export - %i %s have no geometry available"
+                % (no_geometry_available, no_geometry_label)
             )
         else:
             logger.warning("Nothing to export")

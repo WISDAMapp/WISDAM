@@ -32,6 +32,42 @@ logger = logging.getLogger(__name__)
 # from WISDAMapp.exporter.kml import export_kml_footprint
 
 
+def export_count_and_warnings(export_result) -> tuple[int, int, str]:
+    if isinstance(export_result, dict):
+        return (
+            export_result.get("count", 0),
+            export_result.get("no_geometry_available", 0),
+            export_result.get("no_geometry_label", "objects"),
+        )
+
+    return export_result, 0, "objects"
+
+
+def export_log_message(
+    file_suffix: str | None,
+    export_path: str | None,
+    export_count: int,
+    no_geometry_available: int,
+    no_geometry_label: str,
+) -> str:
+    if file_suffix and export_path:
+        message = 'Created "%s" file in %s - Nr of exports: %i' % (
+            file_suffix.upper(),
+            export_path,
+            export_count,
+        )
+    else:
+        message = "Export finished - Nr of exports: %i" % export_count
+
+    if no_geometry_available:
+        message += " - %i %s have no geometry available" % (
+            no_geometry_available,
+            no_geometry_label,
+        )
+
+    return message
+
+
 def get_path_create_export(db: DBHandler):
     path_db = db.path
     path_export = Path.joinpath(Path(path_db.parent), path_db.stem + "_export")
@@ -156,11 +192,30 @@ def export_file(
             logger.warning("Export format not implemented")
             return False
 
-        if success_nr:
+        if success_nr is False:
+            return False
+
+        (
+            success_count,
+            no_geometry_available,
+            no_geometry_label,
+        ) = export_count_and_warnings(success_nr)
+
+        if success_count:
             logger.info(
-                'Created "%s" file in %s - Nr of exports: %i'
-                % (outfile.suffix.upper(), outfile.parent.as_posix(), success_nr),
+                export_log_message(
+                    outfile.suffix,
+                    outfile.parent.as_posix(),
+                    success_count,
+                    no_geometry_available,
+                    no_geometry_label,
+                ),
                 extra={"finished": True},
+            )
+        elif no_geometry_available:
+            logger.warning(
+                "Nothing to export - %i %s have no geometry available"
+                % (no_geometry_available, no_geometry_label)
             )
 
         else:

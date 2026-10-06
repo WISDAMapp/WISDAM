@@ -30,6 +30,16 @@ from statistic.object_geometry import minimum_bounding_box_dimensions
 logger = logging.getLogger(__name__)
 
 
+def geometry_export_result(
+    count: int, no_geometry_available: int = 0, no_geometry_label: str = "objects"
+) -> dict:
+    return {
+        "count": count,
+        "no_geometry_available": no_geometry_available,
+        "no_geometry_label": no_geometry_label,
+    }
+
+
 def is_numeric(s):
     try:
         return float(s)
@@ -154,7 +164,7 @@ def export_objects_json(
     flag_include_ai: bool = False,
     flag_only_ai: bool = False,
     dict_return_only=False,
-) -> tuple[int, dict]:
+) -> tuple[int | dict, dict]:
     """Export objects as JSON File in utf-8
     :param db: DBHandler to use for export
     :param path_json: The path to the json to write. Will be replaced if exists
@@ -197,6 +207,8 @@ def export_objects_json(
             env_obj="data_env",
             env_image="image_data_env",
         )
+
+        no_geometry_available_count = 0
 
         for rows in data:
             feature_dict = {"type": "Feature"}
@@ -247,6 +259,8 @@ def export_objects_json(
             feature_dict["geometry"] = {}
             if rows["geo"]:
                 feature_dict["geometry"] = json.loads(rows["geo"])
+            else:
+                no_geometry_available_count += 1
 
             json_dict_features.append(feature_dict)
 
@@ -256,9 +270,9 @@ def export_objects_json(
             with open(path_json, "w", encoding="utf8") as json_file:
                 json.dump(json_dict, json_file, ensure_ascii=False, indent=2)
 
-            return len(data), {}
+            return geometry_export_result(len(data), no_geometry_available_count), {}
 
-        return len(data), json_dict
+        return geometry_export_result(len(data), no_geometry_available_count), json_dict
 
     return 0, {}
 
@@ -270,7 +284,7 @@ def export_objects_as_point_json(
     flag_include_ai: bool = False,
     flag_only_ai: bool = False,
     dict_return_only=False,
-) -> tuple[int, dict]:
+) -> tuple[int | dict, dict]:
     """Export objects as points(center point) as JSON File in utf-8
     :param db: DBHandler to use for export
     :param path_json: The path to the json to write. Will be replaced if exists
@@ -311,6 +325,8 @@ def export_objects_as_point_json(
             env_obj="data_env",
             env_image="image_data_env",
         )
+
+        no_geometry_available_count = 0
 
         for rows in data:
             feature_dict = {"type": "Feature"}
@@ -363,6 +379,8 @@ def export_objects_as_point_json(
                 # Centroid of geometry will be stored as geojson geometry
                 geom = geometry.shape(json.loads(rows["geo"]))
                 feature_dict["geometry"] = geometry.mapping(geom.centroid)
+            else:
+                no_geometry_available_count += 1
 
             json_dict_features.append(feature_dict)
 
@@ -372,15 +390,25 @@ def export_objects_as_point_json(
             with open(path_json, "w", encoding="utf8") as json_file:
                 json.dump(json_dict, json_file, ensure_ascii=False, indent=2)
 
-            return len(json_dict["features"]), {}
-        return len(json_dict["features"]), json_dict
+            return (
+                geometry_export_result(
+                    len(json_dict["features"]), no_geometry_available_count
+                ),
+                {},
+            )
+        return (
+            geometry_export_result(
+                len(json_dict["features"]), no_geometry_available_count
+            ),
+            json_dict,
+        )
 
     return 0, {}
 
 
 def export_footprints_json(
     db: DBHandler, path_json: Path | str, dict_return_only=False
-) -> tuple[int, dict]:
+) -> tuple[int | dict, dict]:
     """Export image footprints as JSON File in utf-8
     :param db: DBHandler to use for export
     :param path_json: The path to the json to write. Will be replaced if exists
@@ -418,6 +446,8 @@ def export_footprints_json(
             data, keys_wanted=keys_wanted, env_obj=None, env_image="data_env"
         )
 
+        no_geometry_available_count = 0
+
         for rows in data:
             feature_dict = {"type": "Feature"}
 
@@ -452,6 +482,8 @@ def export_footprints_json(
             feature_dict["geometry"] = {}
             if rows["geom"]:
                 feature_dict["geometry"] = json.loads(rows["geom"])
+            else:
+                no_geometry_available_count += 1
 
             json_dict_features.append(feature_dict)
 
@@ -463,8 +495,22 @@ def export_footprints_json(
                 json.dump(json_dict, json_file, ensure_ascii=False, indent=2)
 
             # Noo dict return needed, save time for exit
-            return len(json_dict["features"]), {}
+            return (
+                geometry_export_result(
+                    len(json_dict["features"]),
+                    no_geometry_available_count,
+                    "footprints",
+                ),
+                {},
+            )
 
-        return len(json_dict["features"]), json_dict
+        return (
+            geometry_export_result(
+                len(json_dict["features"]),
+                no_geometry_available_count,
+                "footprints",
+            ),
+            json_dict,
+        )
 
     return 0, {}
